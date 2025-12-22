@@ -153,8 +153,17 @@ class LiveTripViewModel extends ChangeNotifier {
 
           final data = snapshot.data();
           final status = data?['status'];
+          final String? cancelledBy = data?['cancelledBy'];
 
-          if (status == 'cancelled' || status == 'closed') {
+          if (status == 'cancelled') {
+            if (cancelledBy == 'user') {
+              _gpsStream?.cancel();
+              onRideCancelledByUser?.call();
+            }
+            return;
+          }
+
+          if (status == 'closed') {
             _gpsStream?.cancel();
             onRideCancelledByUser?.call();
             return;
@@ -206,6 +215,52 @@ class LiveTripViewModel extends ChangeNotifier {
                 );
           }
         });
+  }
+
+  Future<void> cancelRide(
+    BuildContext context,
+    AppStateViewModel appState,
+  ) async {
+    if (currentRideId == null) return;
+
+    try {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) =>
+              const Center(child: CircularProgressIndicator(color: Colors.red)),
+        );
+      }
+
+      await FirebaseFirestore.instance
+          .collection('rideRequests')
+          .doc(currentRideId)
+          .update({
+            'status': 'cancelled',
+            'cancelledBy': 'driver',
+            'cancelledAt': FieldValue.serverTimestamp(),
+          });
+
+      await DriverPreferences.clearCurrentRideId();
+
+      appState.endTrip();
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error cancelling: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<bool> verifyOtpAndStartTrip(String inputOtp) async {

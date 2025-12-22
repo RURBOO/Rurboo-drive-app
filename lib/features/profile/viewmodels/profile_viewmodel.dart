@@ -9,6 +9,10 @@ import '../../auth/views/login_screen.dart';
 class ProfileViewModel extends ChangeNotifier {
   bool isLoading = true;
 
+  String? profileImageBase64;
+  String? licenseImageBase64;
+  String? rcImageBase64;
+
   String name = "";
   String vehicle = "";
   String rating = "5.0";
@@ -41,6 +45,10 @@ class ProfileViewModel extends ChangeNotifier {
 
         final double bal = (data['walletBalance'] as num?)?.toDouble() ?? 0.0;
         earnings = "₹${bal.toStringAsFixed(0)}";
+
+        profileImageBase64 = data['profileImage'];
+        licenseImageBase64 = data['licenseImage'];
+        rcImageBase64 = data['rcImage'];
 
         if (data['createdAt'] != null) {
           final DateTime date = (data['createdAt'] as Timestamp).toDate();

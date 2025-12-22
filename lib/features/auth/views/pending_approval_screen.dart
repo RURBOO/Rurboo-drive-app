@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
+import 'location_disclosure_screen.dart';
 import 'login_screen.dart';
 import '../../home/views/home_screen.dart';
 
@@ -32,7 +33,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            MaterialPageRoute(builder: (_) => const LocationDisclosureScreen()),
             (route) => false,
           );
         }

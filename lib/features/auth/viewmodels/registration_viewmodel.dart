@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/services/driver_preferences.dart';
+import '../../../core/utils/image_utils.dart';
 import '../views/pending_approval_screen.dart';
 
 class RegistrationViewModel extends ChangeNotifier {
@@ -64,6 +65,32 @@ class RegistrationViewModel extends ChangeNotifier {
       final String cleanPhone = phoneController.text.trim();
       final String dummyEmail = "$cleanPhone@rubodriver.com";
 
+      final existingDocs = await FirebaseFirestore.instance
+          .collection('drivers')
+          .where('phone', isEqualTo: cleanPhone)
+          .limit(1)
+          .get();
+
+      if (existingDocs.docs.isNotEmpty) {
+        throw Exception(
+          "This phone number is already registered. Please login.",
+        );
+      }
+
+      final String? licenseBase64 = await ImageUtils.convertFileToBase64(
+        licenseFile!,
+      );
+      final String? rcBase64 = await ImageUtils.convertFileToBase64(
+        registrationFile!,
+      );
+      final String? profileBase64 = await ImageUtils.convertFileToBase64(
+        profileFile!,
+      );
+
+      if (licenseBase64 == null || rcBase64 == null || profileBase64 == null) {
+        throw Exception("Failed to process images. Please try again.");
+      }
+
       UserCredential userCredential;
       try {
         userCredential = await FirebaseAuth.instance
@@ -72,7 +99,10 @@ class RegistrationViewModel extends ChangeNotifier {
               password: passwordController.text.trim(),
             );
       } catch (e) {
-        throw Exception("Registration failed: ${e.toString()}");
+        if (e.toString().contains('email-already-in-use')) {
+          throw Exception("Account already exists. Please login instead.");
+        }
+        rethrow;
       }
 
       final String uid = userCredential.user!.uid;
@@ -86,18 +116,18 @@ class RegistrationViewModel extends ChangeNotifier {
         'vehicleModel': vehicleModelController.text.trim(),
         'vehicleNumber': vehicleNumberController.text.trim().toUpperCase(),
 
-        'licenseUrl': "",
-        'rcUrl': "",
-        'profileUrl': "",
+        'licenseImage': licenseBase64,
+        'rcImage': rcBase64,
+        'profileImage': profileBase64,
 
         'isOnline': false,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
         'rating': 5.0,
-        'totalRides': 0,
-        'walletBalance': 0.0,
         'ratingSum': 0.0,
         'ratingCount': 0,
+        'totalRides': 0,
+        'walletBalance': 0.0,
       };
 
       await FirebaseFirestore.instance
@@ -126,15 +156,12 @@ class RegistrationViewModel extends ChangeNotifier {
         await FirebaseAuth.instance.currentUser!.delete();
       }
 
-      String errorMsg = "Error: $e";
-      if (e.toString().contains("email-already-in-use")) {
-        errorMsg = "This Phone Number is already registered. Please Login.";
-      }
+      final String msg = e.toString().replaceAll("Exception:", "").trim();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMsg)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
       }
     }
   }

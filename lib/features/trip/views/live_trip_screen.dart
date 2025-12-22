@@ -119,6 +119,42 @@ class _LiveTripScreenBody extends StatelessWidget {
     );
   }
 
+  void _showCancelConfirmation(
+    BuildContext context,
+    LiveTripViewModel vm,
+    AppStateViewModel appState,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Cancel Ride?", style: TextStyle(color: Colors.red)),
+        content: const Text(
+          "Are you sure you want to cancel this ride? Frequent cancellations may affect your rating.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              "No, Go Back",
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              vm.cancelRide(context, appState);
+            },
+            child: const Text("Yes, Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<LiveTripViewModel>();
@@ -343,6 +379,31 @@ class _LiveTripScreenBody extends StatelessWidget {
                               ? "START TRIP (ENTER OTP)"
                               : "END TRIP",
                           style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showCancelConfirmation(context, vm, appState),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          foregroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.cancel_outlined),
+                        label: const Text(
+                          "Cancel Ride",
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),

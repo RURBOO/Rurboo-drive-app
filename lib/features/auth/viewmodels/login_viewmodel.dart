@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../splash/views/splash_screen.dart';
+import '../views/pending_approval_screen.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final phoneController = TextEditingController();
@@ -52,7 +53,7 @@ class LoginViewModel extends ChangeNotifier {
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
+          MaterialPageRoute(builder: (_) => const PendingApprovalScreen()),
           (route) => false,
         );
       }

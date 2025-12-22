@@ -1,10 +1,12 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../navigation/views/auth_gate.dart';
 import '../../../state/app_state_viewmodel.dart';
+import '../../auth/views/location_disclosure_screen.dart';
 import '../../auth/views/login_screen.dart';
 import '../../auth/views/pending_approval_screen.dart';
 import '../../trip/views/live_trip_screen.dart';
@@ -70,18 +72,25 @@ class _SplashScreenState extends State<SplashScreen> {
           .collection('drivers')
           .doc(driverId)
           .get();
-      if (!driverDoc.exists || driverDoc.data()?['status'] != 'verified') {
+
+      final status = driverDoc.data()?['status'];
+
+      if (!driverDoc.exists || status != 'verified') {
         if (mounted) _nav(const PendingApprovalScreen());
+        return;
+      }
+
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) _nav(const LocationDisclosureScreen());
         return;
       }
 
       final activeRideQuery = await FirebaseFirestore.instance
           .collection('rideRequests')
           .where('driverId', isEqualTo: driverId)
-          .where(
-            'status',
-            whereIn: ['accepted', 'in_progress'],
-          )
+          .where('status', whereIn: ['accepted', 'in_progress'])
           .limit(1)
           .get();
 
