@@ -1,12 +1,14 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rubo_driver/features/profile/views/support_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../wallet/views/wallet_screen.dart';
 import '../viewmodels/profile_viewmodel.dart';
-import 'delete_account_screen.dart';
 import 'driver_documents_screen.dart';
+import 'support_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_screen.dart';
+import 'faq_screen.dart';
+import 'delete_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -23,21 +25,6 @@ class ProfileScreen extends StatelessWidget {
 class _ProfileScreenBody extends StatelessWidget {
   const _ProfileScreenBody();
 
-  Future<void> _launchURL(BuildContext context, String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    try {
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw 'Could not launch $url';
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Could not open link")));
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
@@ -45,25 +32,29 @@ class _ProfileScreenBody extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const Text(
+          "My Profile",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black,
+        elevation: 1,
+        centerTitle: true,
       ),
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.all(16),
               children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
-                  decoration: const BoxDecoration(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(24),
-                    ),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 10),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                      ),
                     ],
                   ),
                   child: Column(
@@ -76,9 +67,7 @@ class _ProfileScreenBody extends StatelessWidget {
                                 vm.profileImageBase64!.isNotEmpty)
                             ? MemoryImage(base64Decode(vm.profileImageBase64!))
                             : null,
-                        child:
-                            (vm.profileImageBase64 == null ||
-                                vm.profileImageBase64!.isEmpty)
+                        child: (vm.profileImageBase64 == null)
                             ? const Icon(
                                 Icons.person,
                                 size: 50,
@@ -86,20 +75,23 @@ class _ProfileScreenBody extends StatelessWidget {
                               )
                             : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Text(
                         vm.name,
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Text(
-                        vm.joinDate,
-                        style: TextStyle(color: Colors.grey[600]),
+                        "Joined ${vm.joinDate}",
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
-                      const SizedBox(height: 30),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Divider(height: 1),
+                      ),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -113,7 +105,7 @@ class _ProfileScreenBody extends StatelessWidget {
                           Container(
                             width: 1,
                             height: 40,
-                            color: Colors.grey[300],
+                            color: Colors.grey[200],
                           ),
                           _buildStat(
                             "Rides",
@@ -124,10 +116,10 @@ class _ProfileScreenBody extends StatelessWidget {
                           Container(
                             width: 1,
                             height: 40,
-                            color: Colors.grey[300],
+                            color: Colors.grey[200],
                           ),
                           _buildStat(
-                            "Earnings",
+                            "Wallet",
                             vm.earnings,
                             Icons.account_balance_wallet,
                             Colors.green,
@@ -141,7 +133,6 @@ class _ProfileScreenBody extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -149,103 +140,111 @@ class _ProfileScreenBody extends StatelessWidget {
                   child: Column(
                     children: [
                       _buildMenuItem(
-                        icon: Icons.directions_car,
-                        title: 'Vehicle Details',
-                        subtitle: vm.vehicle,
-                        onTap: () {},
+                        icon: Icons.document_scanner_rounded,
+                        title: 'My Documents',
+                        subtitle: 'License, RC & Profile',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DriverDocumentsScreen(
+                              licenseBase64: vm.licenseImageBase64,
+                              rcBase64: vm.rcImageBase64,
+                            ),
+                          ),
+                        ),
                       ),
-
-                      const Divider(height: 1, indent: 60),
+                      const Divider(indent: 60),
 
                       _buildMenuItem(
-                        icon: Icons.document_scanner_outlined,
-                        title: 'Documents',
-                        subtitle: 'License, RC, Insurance',
+                        icon: Icons.account_balance_wallet_outlined,
+                        title: 'Wallet',
+                        subtitle: 'Balance & Recharge',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => DriverDocumentsScreen(
-                                licenseBase64: vm.licenseImageBase64,
-                                rcBase64: vm.rcImageBase64,
-                              ),
+                              builder: (_) => const WalletScreen(),
                             ),
                           );
                         },
                       ),
 
-                      const Divider(height: 1, indent: 60),
+                      const Divider(indent: 60),
 
                       _buildMenuItem(
-                        icon: Icons.help_outline,
+                        icon: Icons.help_outline_rounded,
                         title: 'Help & Support',
-                        subtitle: 'Contact us for assistance',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SupportScreen(),
-                            ),
-                          );
-                        },
+                        subtitle: 'Call or Email us',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SupportScreen(),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 60),
+                      const Divider(indent: 60),
+
+                      _buildMenuItem(
+                        icon: Icons.question_answer_outlined,
+                        title: 'Driver FAQ',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const FAQScreen()),
+                        ),
+                      ),
+                      const Divider(indent: 60),
+
                       _buildMenuItem(
                         icon: Icons.privacy_tip_outlined,
                         title: 'Privacy Policy',
-                        onTap: () => _launchURL(
+                        onTap: () => Navigator.push(
                           context,
-                          'https://www.yourdomain.com/privacy',
+                          MaterialPageRoute(
+                            builder: (_) => const PrivacyPolicyScreen(),
+                          ),
                         ),
                       ),
-                      const Divider(height: 1, indent: 60),
+                      const Divider(indent: 60),
                       _buildMenuItem(
                         icon: Icons.description_outlined,
                         title: 'Terms & Conditions',
-                        onTap: () => _launchURL(
+                        onTap: () => Navigator.push(
                           context,
-                          'https://www.yourdomain.com/terms',
+                          MaterialPageRoute(
+                            builder: (_) => const TermsScreen(),
+                          ),
                         ),
                       ),
-                      const Divider(height: 1, indent: 60),
+                      const Divider(indent: 60),
+
                       _buildMenuItem(
                         icon: Icons.delete_forever,
                         title: 'Delete Account',
                         color: Colors.red,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const DeleteAccountScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DeleteAccountScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(indent: 60),
+
+                      _buildMenuItem(
+                        icon: Icons.logout,
+                        title: 'Logout',
+                        color: Colors.red,
+                        onTap: () => vm.logout(context),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: _buildMenuItem(
-                    icon: Icons.logout,
-                    title: 'Logout',
-                    color: Colors.red,
-                    onTap: () => vm.logout(context),
-                  ),
-                ),
-
                 const SizedBox(height: 30),
-                const Center(
+                Center(
                   child: Text(
-                    "App Version 1.0.0",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    "Rubo Driver v1.0.0",
+                    style: TextStyle(color: Colors.grey[400]),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -260,11 +259,11 @@ class _ProfileScreenBody extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 6),
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 4),
             Text(
               value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -285,24 +284,26 @@ class _ProfileScreenBody extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: color),
+        child: Icon(icon, color: color, size: 20),
       ),
       title: Text(
         title,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             )
           : null,
-      trailing: (title != 'Logout')
-          ? const Icon(Icons.chevron_right, color: Colors.grey)
-          : null,
+      trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
       onTap: onTap,
     );
   }

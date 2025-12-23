@@ -293,42 +293,27 @@ class LiveTripViewModel extends ChangeNotifier {
           .collection('drivers')
           .doc(driverId)
           .get();
-
       final configDoc = await FirebaseFirestore.instance
           .collection('config')
           .doc('rates')
           .get();
 
-      if (!driverDoc.exists) throw Exception("Driver profile missing");
-
       final driverData = driverDoc.data()!;
-      final configData = configDoc.data();
+      final rates = configDoc.data();
 
-      final double fare = tripDetails!.fare;
+      final double totalFare = tripDetails!.fare;
 
-      final int trialDays = (configData?['trial_days'] ?? 15) as int;
-      final double percent = (configData?['commission_percent'] ?? 15)
-          .toDouble();
-      final double minLimit =
-          (configData?['min_wallet_balance_limit'] as num?)?.toDouble() ??
-          -500.0;
-
-      final Timestamp createdAtTs = driverData['createdAt'] ?? Timestamp.now();
-      final DateTime joinedDate = createdAtTs.toDate();
-      final int daysSinceJoining = DateTime.now().difference(joinedDate).inDays;
-
-      double commissionAmount = 0.0;
-      if (daysSinceJoining >= trialDays) {
-        commissionAmount = (fare * percent) / 100;
-      }
+      final double commPercent =
+          (rates?['commission_percent'] as num?)?.toDouble() ?? 20.0;
+      final double commissionAmount = (totalFare * commPercent) / 100;
 
       final double currentWallet =
           (driverData['walletBalance'] as num?)?.toDouble() ?? 0.0;
       final double newWalletBalance = currentWallet - commissionAmount;
 
-      final bool allowedOnline = newWalletBalance >= minLimit;
+      bool isAllowedOnline = newWalletBalance >= 0;
 
-      final batch = FirebaseFirestore.instance.batch();
+      final WriteBatch batch = FirebaseFirestore.instance.batch();
 
       final rideRef = FirebaseFirestore.instance
           .collection('rideRequests')
@@ -338,68 +323,89 @@ class LiveTripViewModel extends ChangeNotifier {
           .collection('drivers')
           .doc(driverId);
 
-      final earningRef = driverRef.collection('earnings').doc();
+      final walletRef = driverRef.collection('walletHistory').doc();
+      final earningsRef = driverRef.collection('earnings').doc();
 
       batch.update(rideRef, {
         'status': 'completed',
         'completedAt': FieldValue.serverTimestamp(),
+        'finalFare': totalFare,
         'commissionDeducted': commissionAmount,
       });
 
-      batch.set(earningRef, {
+      batch.update(driverRef, {
+        'totalRides': FieldValue.increment(1),
+        'walletBalance': FieldValue.increment(-commissionAmount),
+        'totalCommissionPaid': FieldValue.increment(commissionAmount),
+        'isOnline': isAllowedOnline,
+      });
+
+      batch.set(walletRef, {
+        'amount': commissionAmount,
+        'type': 'debit',
+        'description': 'Commission (Ride)',
         'rideId': currentRideId,
-        'amount': fare,
-        'pickup': tripDetails!.pickupAddress,
-        'drop': tripDetails!.destinationAddress,
-        'grossAmount': fare,
-        'commission': commissionAmount,
-        'isTrial': daysSinceJoining < trialDays,
         'balanceAfter': newWalletBalance,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      batch.update(driverRef, {
-        'walletBalance': FieldValue.increment(-commissionAmount),
-        'totalRides': FieldValue.increment(1),
-        'isOnline': allowedOnline,
-        'lastWalletUpdate': FieldValue.serverTimestamp(),
+      batch.set(earningsRef, {
+        'rideId': currentRideId,
+        'amount': totalFare,
+        'commission': commissionAmount,
+        'netEarnings': totalFare - commissionAmount,
+        'pickup': tripDetails!.pickupAddress,
+        'drop': tripDetails!.destinationAddress,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       await batch.commit().timeout(const Duration(seconds: 10));
       await DriverPreferences.clearCurrentRideId();
 
-      if (!allowedOnline) {
+      if (!isAllowedOnline) {
         appState.goOffline();
         if (context.mounted) {
-          _showImmediateBlockDialog(context, newWalletBalance);
+          _showLowBalanceDialog(context, newWalletBalance);
         }
       } else {
         appState.endTrip();
         if (context.mounted) {
-          final msg = daysSinceJoining < trialDays
-              ? "Free Trial Active. You kept 100% of fare."
-              : "Trip ended. ₹${commissionAmount.toStringAsFixed(0)} platform fee deducted.";
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(msg),
-              backgroundColor: daysSinceJoining < trialDays
-                  ? Colors.green
-                  : Colors.orange,
+              content: Text(
+                "Ride Complete. ₹${commissionAmount.toStringAsFixed(0)} commission deducted.",
+              ),
+              backgroundColor: Colors.green,
             ),
           );
         }
       }
     } catch (e) {
       debugPrint("End Trip Error: $e");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Error ending trip. Please check internet."),
-          ),
-        );
-      }
     }
+  }
+
+  void _showLowBalanceDialog(BuildContext context, double balance) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text("Wallet Negative"),
+          content: Text(
+            "Your wallet balance is low (₹${balance.toStringAsFixed(0)}).\n\nYou have been taken offline. Please recharge to receive new rides.",
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showImmediateBlockDialog(BuildContext context, double balance) {

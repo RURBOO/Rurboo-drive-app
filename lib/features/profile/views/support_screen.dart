@@ -7,47 +7,82 @@ class SupportScreen extends StatelessWidget {
   Future<void> _launch(BuildContext context, Uri uri) async {
     try {
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        await launchUrl(uri);
+      } else {
+        if (context.mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cannot perform action")),
+          );
       }
     } catch (e) {
-      if (context.mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Cannot open app")));
+      debugPrint("Error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Driver Support")),
-      body: ListView(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text(
-              "Contact Us",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Driver Support"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Partner Support",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.phone, color: Colors.green),
-            title: const Text("Emergency / Helpline"),
-            subtitle: const Text("+91 98765 43210"),
-            onTap: () =>
-                _launch(context, Uri(scheme: 'tel', path: '+919876543210')),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.email, color: Colors.blue),
-            title: const Text("Email Support"),
-            subtitle: const Text("drivers@rubo.com"),
-            onTap: () => _launch(
-              context,
-              Uri(scheme: 'mailto', path: 'drivers@rubo.com'),
+            const SizedBox(height: 8),
+            const Text(
+              "We are here to help you earn more.",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.phone_in_talk, color: Colors.green),
+                title: const Text('Emergency Helpline'),
+                subtitle: const Text('+91 98765 43210'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () =>
+                    _launch(context, Uri(scheme: 'tel', path: '+919876543210')),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.email_outlined, color: Colors.blue),
+                title: const Text('Email Support'),
+                subtitle: const Text('drivers@rubo.com'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _launch(
+                  context,
+                  Uri(
+                    scheme: 'mailto',
+                    path: 'drivers@rubo.com',
+                    query: 'subject=Driver Query',
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

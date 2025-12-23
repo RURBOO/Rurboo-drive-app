@@ -10,6 +10,7 @@ import '../../../core/utils/safe_parser.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/services/polyline_service.dart';
+import '../../wallet/views/wallet_screen.dart';
 import '../services/location_service.dart';
 
 class RideRequest {
@@ -411,110 +412,42 @@ class HomeViewModel extends ChangeNotifier {
     if (driverId == null) return;
 
     try {
-      final driverRef = FirebaseFirestore.instance
+      final doc = await FirebaseFirestore.instance
           .collection('drivers')
-          .doc(driverId);
-      final configRef = FirebaseFirestore.instance
-          .collection('config')
-          .doc('rates');
-
-      final driverSnap = await driverRef.get();
-      final configSnap = await configRef.get();
-
-      if (!driverSnap.exists) return;
-
-      final data = driverSnap.data()!;
-      final config = configSnap.data();
+          .doc(driverId)
+          .get();
+      if (!doc.exists) return;
 
       final double walletBalance =
-          (data['walletBalance'] as num?)?.toDouble() ?? 0.0;
-
-      final double minLimit =
-          (config?['min_wallet_balance_limit'] as num?)?.toDouble() ?? -500.0;
-      final int trialDays = (config?['trial_days'] ?? 15) as int;
-
-      if (walletBalance < minLimit) {
-        _showBlockScreen(
-          context,
-          walletBalance,
-          "Credit Limit Exceeded.\n\n"
-          "Your balance is ₹${walletBalance.toStringAsFixed(0)} "
-          "(Limit: ₹${minLimit.toStringAsFixed(0)}).\n\n"
-          "Please recharge to continue working.",
-        );
-        _safeNotifyListeners();
-        return;
-      }
-
-      final Timestamp createdAtTs = data['createdAt'] ?? Timestamp.now();
-      final DateTime joinedDate = createdAtTs.toDate();
-      final int daysSinceJoining = DateTime.now().difference(joinedDate).inDays;
-
-      if (daysSinceJoining < trialDays) {
-        _proceedOnline(appState);
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "Free Trial Active (${trialDays - daysSinceJoining} days left)",
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-        return;
-      }
+          (doc.data()!['walletBalance'] as num?)?.toDouble() ?? 0.0;
 
       if (walletBalance < 0) {
-        final Timestamp? lastUpdateTs = data['lastWalletUpdate'];
-        bool updatedToday = false;
-
-        if (lastUpdateTs != null) {
-          final lastUpdate = lastUpdateTs.toDate();
-          final now = DateTime.now();
-          updatedToday =
-              lastUpdate.year == now.year &&
-              lastUpdate.month == now.month &&
-              lastUpdate.day == now.day;
-        }
-
-        if (!updatedToday) {
+        if (context.mounted) {
           _showBlockScreen(
             context,
             walletBalance,
-            "Settlement Required.\n\n"
-            "You have pending dues of ₹${walletBalance.abs().toStringAsFixed(0)} "
-            "from previous days.\n\n"
-            "Please clear this to go online today.",
+            "Insufficient Balance.\nYour wallet is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start receiving rides.",
           );
-          _safeNotifyListeners();
-          return;
         }
+
+        notifyListeners();
+        return;
       }
 
       _proceedOnline(appState);
     } catch (e) {
-      debugPrint("Online check failed: $e");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Network error. Could not verify account."),
+            content: Text("Connection Error. Could not verify wallet."),
           ),
         );
       }
-      _safeNotifyListeners();
+      notifyListeners();
     }
   }
 
-  void _proceedOnline(AppStateViewModel appState) {
-    appState.goOnline();
-    _startListeningToLocation();
-    _startListeningToRides();
-    _safeNotifyListeners();
-  }
-
-  void _showBlockScreen(BuildContext context, double balance, String message) {
+  void _showBlockScreen(BuildContext context, double balance, String msg) {
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -528,35 +461,46 @@ class HomeViewModel extends ChangeNotifier {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_clock, size: 60, color: Colors.redAccent),
+            const Icon(
+              Icons.account_balance_wallet,
+              size: 60,
+              color: Colors.redAccent,
+            ),
             const SizedBox(height: 16),
             const Text(
-              "Action Required",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              "Wallet Recharge Required",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
-              message,
+              msg,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, height: 1.4),
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.4,
+                color: Colors.grey,
+              ),
             ),
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _simulateRecharge(context, balance.abs()),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WalletScreen()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text(
-                  "Pay ₹${balance.abs().toStringAsFixed(0)} Now",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: const Text(
+                  "Go to Wallet & Recharge",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -564,12 +508,19 @@ class HomeViewModel extends ChangeNotifier {
 
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("Close", style: TextStyle(color: Colors.grey)),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _proceedOnline(AppStateViewModel appState) {
+    appState.goOnline();
+    _startListeningToLocation();
+    _startListeningToRides();
+    _safeNotifyListeners();
   }
 
   Future<void> _simulateRecharge(BuildContext context, double amount) async {
