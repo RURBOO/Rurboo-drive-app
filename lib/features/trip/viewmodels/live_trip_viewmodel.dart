@@ -299,89 +299,58 @@ class LiveTripViewModel extends ChangeNotifier {
           .get();
 
       final driverData = driverDoc.data()!;
-      final rates = configDoc.data();
+      final configData = configDoc.data();
 
       final double totalFare = tripDetails!.fare;
-
-      final double commPercent =
-          (rates?['commission_percent'] as num?)?.toDouble() ?? 20.0;
-      final double commissionAmount = (totalFare * commPercent) / 100;
-
-      final double currentWallet =
-          (driverData['walletBalance'] as num?)?.toDouble() ?? 0.0;
-      final double newWalletBalance = currentWallet - commissionAmount;
-
-      bool isAllowedOnline = newWalletBalance >= 0;
+      final double percent =
+          (configData?['commission_percent'] as num?)?.toDouble() ?? 20.0;
+      final double commission = (totalFare * percent) / 100;
 
       final WriteBatch batch = FirebaseFirestore.instance.batch();
-
       final rideRef = FirebaseFirestore.instance
           .collection('rideRequests')
           .doc(currentRideId);
-
       final driverRef = FirebaseFirestore.instance
           .collection('drivers')
           .doc(driverId);
-
-      final walletRef = driverRef.collection('walletHistory').doc();
       final earningsRef = driverRef.collection('earnings').doc();
 
       batch.update(rideRef, {
         'status': 'completed',
         'completedAt': FieldValue.serverTimestamp(),
         'finalFare': totalFare,
-        'commissionDeducted': commissionAmount,
+        'commission': commission,
       });
 
       batch.update(driverRef, {
         'totalRides': FieldValue.increment(1),
-        'walletBalance': FieldValue.increment(-commissionAmount),
-        'totalCommissionPaid': FieldValue.increment(commissionAmount),
-        'isOnline': isAllowedOnline,
-      });
-
-      batch.set(walletRef, {
-        'amount': commissionAmount,
-        'type': 'debit',
-        'description': 'Commission (Ride)',
-        'rideId': currentRideId,
-        'balanceAfter': newWalletBalance,
-        'createdAt': FieldValue.serverTimestamp(),
+        'dailyCommissionDue': FieldValue.increment(commission),
+        'isOnline': true,
       });
 
       batch.set(earningsRef, {
         'rideId': currentRideId,
         'amount': totalFare,
-        'commission': commissionAmount,
-        'netEarnings': totalFare - commissionAmount,
-        'pickup': tripDetails!.pickupAddress,
-        'drop': tripDetails!.destinationAddress,
+        'commission': commission,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       await batch.commit().timeout(const Duration(seconds: 10));
       await DriverPreferences.clearCurrentRideId();
 
-      if (!isAllowedOnline) {
-        appState.goOffline();
-        if (context.mounted) {
-          _showLowBalanceDialog(context, newWalletBalance);
-        }
-      } else {
-        appState.endTrip();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "Ride Complete. ₹${commissionAmount.toStringAsFixed(0)} commission deducted.",
-              ),
-              backgroundColor: Colors.green,
+      appState.endTrip();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Trip Ended. ₹${commission.toStringAsFixed(0)} added to Today's Dues.",
             ),
-          );
-        }
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint("End Trip Error: $e");
+      debugPrint("EndTrip Error: $e");
     }
   }
 

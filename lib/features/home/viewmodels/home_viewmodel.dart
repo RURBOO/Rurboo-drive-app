@@ -404,7 +404,7 @@ class HomeViewModel extends ChangeNotifier {
       _locationSubscription?.cancel();
       _isLocationReady = false;
       _clearRoute();
-      _safeNotifyListeners();
+      notifyListeners();
       return;
     }
 
@@ -412,39 +412,27 @@ class HomeViewModel extends ChangeNotifier {
     if (driverId == null) return;
 
     try {
+      await _checkAndSettleDues(driverId);
+
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
           .doc(driverId)
           .get();
-      if (!doc.exists) return;
-
       final double walletBalance =
           (doc.data()!['walletBalance'] as num?)?.toDouble() ?? 0.0;
 
       if (walletBalance < 0) {
-        if (context.mounted) {
-          _showBlockScreen(
-            context,
-            walletBalance,
-            "Insufficient Balance.\nYour wallet is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start receiving rides.",
-          );
-        }
-
+        _showBlockScreen(
+          context,
+          walletBalance,
+          "Daily Settlement Complete.\nYour wallet balance is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start today's shift.",
+        );
         notifyListeners();
         return;
       }
 
       _proceedOnline(appState);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Connection Error. Could not verify wallet."),
-          ),
-        );
-      }
-      notifyListeners();
-    }
+    } catch (e) {}
   }
 
   void _showBlockScreen(BuildContext context, double balance, String msg) {
@@ -636,6 +624,61 @@ class HomeViewModel extends ChangeNotifier {
 
       _startListeningToLocation();
       _startListeningToRides();
+    }
+  }
+
+  Future<void> _checkAndSettleDues(String driverId) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('drivers')
+        .doc(driverId)
+        .get();
+    if (!doc.exists) return;
+
+    final data = doc.data()!;
+    final double commissionDue =
+        (data['dailyCommissionDue'] as num?)?.toDouble() ?? 0.0;
+
+    final Timestamp? lastSettlementTs = data['lastSettlementDate'];
+    final DateTime now = DateTime.now();
+    bool needsSettlement = true;
+
+    if (lastSettlementTs != null) {
+      final DateTime lastDate = lastSettlementTs.toDate();
+      if (lastDate.year == now.year &&
+          lastDate.month == now.month &&
+          lastDate.day == now.day) {
+        needsSettlement = false;
+      }
+    }
+
+    if (needsSettlement && commissionDue > 0) {
+      print("Performing Daily Settlement: -₹$commissionDue");
+
+      final batch = FirebaseFirestore.instance.batch();
+      final driverRef = FirebaseFirestore.instance
+          .collection('drivers')
+          .doc(driverId);
+      final walletRef = driverRef.collection('walletHistory').doc();
+
+      batch.update(driverRef, {
+        'walletBalance': FieldValue.increment(-commissionDue),
+        'dailyCommissionDue': 0,
+        'lastSettlementDate': FieldValue.serverTimestamp(),
+      });
+
+      batch.set(walletRef, {
+        'amount': commissionDue,
+        'type': 'debit',
+        'description': 'Daily Settlement (Yesterday)',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+    } else if (needsSettlement && commissionDue == 0) {
+      await FirebaseFirestore.instance
+          .collection('drivers')
+          .doc(driverId)
+          .update({'lastSettlementDate': FieldValue.serverTimestamp()});
     }
   }
 

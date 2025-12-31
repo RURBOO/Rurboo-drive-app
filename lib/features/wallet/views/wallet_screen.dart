@@ -12,7 +12,8 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  double balance = 0.0;
+  double walletBalance = 0.0;
+  double todaysDue = 0.0;
   bool isLoading = true;
   List<WalletTransaction> transactions = [];
 
@@ -41,11 +42,17 @@ class _WalletScreenState extends State<WalletScreen> {
 
     if (mounted) {
       setState(() {
-        balance =
+        walletBalance =
             (driverDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+
+        todaysDue =
+            (driverDoc.data()?['dailyCommissionDue'] as num?)?.toDouble() ??
+            0.0;
+
         transactions = historyQuery.docs
             .map((d) => WalletTransaction.fromFirestore(d))
             .toList();
+
         isLoading = false;
       });
     }
@@ -53,6 +60,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Future<void> _addMoney() async {
     final amountController = TextEditingController();
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -99,7 +107,7 @@ class _WalletScreenState extends State<WalletScreen> {
         'amount': amount,
         'type': 'credit',
         'description': 'Wallet Recharge (UPI)',
-        'balanceAfter': balance + amount,
+        'balanceAfter': walletBalance + amount,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -117,6 +125,33 @@ class _WalletScreenState extends State<WalletScreen> {
     } catch (e) {}
   }
 
+  Widget _buildCard(String title, double amount, Color bg) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "₹${amount.toStringAsFixed(0)}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,44 +160,46 @@ class _WalletScreenState extends State<WalletScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      const Text(
-                        "Current Balance",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "₹ ${balance.toStringAsFixed(0)}",
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: balance < 0 ? Colors.redAccent : Colors.white,
+                      Expanded(
+                        child: _buildCard(
+                          "Wallet Balance",
+                          walletBalance,
+                          Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _addMoney,
-                        icon: const Icon(Icons.add),
-                        label: const Text("Add Money"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildCard(
+                          "Today's Due",
+                          todaysDue,
+                          Colors.orange,
                         ),
                       ),
                     ],
                   ),
                 ),
 
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ElevatedButton.icon(
+                    onPressed: _addMoney,
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Money"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
                 const Divider(),
+
                 const Padding(
                   padding: EdgeInsets.only(left: 16, top: 8, bottom: 8),
                   child: Align(
@@ -183,6 +220,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     itemBuilder: (context, index) {
                       final tx = transactions[index];
                       final isCredit = tx.type == 'credit';
+
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isCredit
