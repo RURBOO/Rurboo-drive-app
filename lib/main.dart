@@ -13,6 +13,7 @@ import 'features/home/viewmodels/driver_voice_viewmodel.dart';
 import 'features/auth/viewmodels/login_viewmodel.dart';
 import 'features/auth/viewmodels/registration_viewmodel.dart';
 import 'features/profile/viewmodels/vehicles_viewmodel.dart';
+import 'state/language_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,28 +70,34 @@ class DriverApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => DriverVoiceViewModel()..init(),
         ),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
-      child: MaterialApp(
-        title: 'RURBOO Driver',
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en'), // English
-          Locale('hi'), // Hindi
-        ],
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
-        builder: (context, child) {
-          return ConnectivityWrapper(child: child!);
+      child: Consumer<LanguageProvider>(
+        builder: (context, languageProvider, child) {
+          return MaterialApp(
+            title: 'RURBOO Driver',
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'), // English
+              Locale('hi'), // Hindi
+            ],
+            locale: languageProvider.currentLocale,
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            builder: (context, child) {
+              return ConnectivityWrapper(child: child!);
+            },
+            home: const SplashScreen(),
+          );
         },
-        home: const SplashScreen(),
       ),
     );
   }

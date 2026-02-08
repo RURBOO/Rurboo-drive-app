@@ -14,9 +14,11 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => 
-      context.read<VehiclesViewModel>().fetchVehicles()
-    );
+    Future.microtask(() {
+      if (mounted) {
+        context.read<VehiclesViewModel>().fetchVehicles();
+      }
+    });
   }
 
   @override

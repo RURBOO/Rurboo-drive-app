@@ -128,131 +128,184 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withValues(alpha: 0.8),
-                          Colors.black.withValues(alpha: 0.0),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black.withValues(alpha: 0.0),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Status Card
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: isOnline ? Colors.green : Colors.grey,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isOnline 
+                                        ? AppLocalizations.of(context)!.youAreOnline 
+                                        : AppLocalizations.of(context)!.youAreOffline,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Transform.scale(
+                                    scale: 0.8,
+                                    child: Switch(
+                                      value: isOnline,
+                                      onChanged: (newStatus) {
+                                          if (appState.currentState == DriverState.onTrip) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(AppLocalizations.of(context)!.cannotGoOfflineTrip),
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        if (newStatus && !isGpsEnabled) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(AppLocalizations.of(context)!.turnOnGpsFirst)),
+                                          );
+                                          return;
+                                        }
+                                        homeVm.toggleOnlineStatus(newStatus, appState, context);
+                                      },
+                                      activeThumbColor: Colors.white,
+                                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            const Spacer(),
+                            
+                            // GPS Status
+                            GestureDetector(
+                              onTap: () {
+                                homeVm.recenterMap();
+                                showModalBottomSheet(
+                                  context: context,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                  ),
+                                  builder: (ctx) => _GPSInfoSheet(homeVm: homeVm),
+                                );
+                              },
+                              child: Container(
+                                 width: 40,
+                                 height: 40,
+                                 decoration: BoxDecoration(
+                                   color: Colors.white,
+                                   shape: BoxShape.circle,
+                                   boxShadow: [
+                                     BoxShadow(
+                                       color: Colors.black.withValues(alpha: 0.1),
+                                       blurRadius: 8,
+                                     ),
+                                   ],
+                                 ),
+                                 child: Icon(
+                                   Icons.gps_fixed,
+                                   size: 20,
+                                   color: homeVm.isLocationReady ? Colors.green : Colors.orange,
+                                 ),
+                              ),
+                            ),
+                            
+                            const SizedBox(width: 12),
+                            
+                            // SOS Button
+                            GestureDetector(
+                              onTap: () => SafetyService().callPolice(),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.sos, color: Colors.white, size: 20),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Status Card
+                      
+                      // 🔒 SECURITY BANNER (Only when Online)
+                      if (isOnline)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          width: double.infinity,
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
+                            color: Colors.blue.withValues(alpha: 0.9), // Slightly transparent blue
+                            borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
+                                blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: isOnline ? Colors.green : Colors.grey,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                              const Icon(Icons.security, color: Colors.white, size: 16),
                               const SizedBox(width: 8),
-                              Text(
-                                isOnline 
-                                    ? AppLocalizations.of(context)!.youAreOnline 
-                                    : AppLocalizations.of(context)!.youAreOffline,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Transform.scale(
-                                scale: 0.8,
-                                child: Switch(
-                                  value: isOnline,
-                                  onChanged: (newStatus) {
-                                    if (appState.currentState == DriverState.onTrip) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text("Cannot go offline during a trip"),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    if (newStatus && !isGpsEnabled) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("Turn on GPS first!")),
-                                      );
-                                      return;
-                                    }
-                                    homeVm.toggleOnlineStatus(newStatus, appState, context);
-                                  },
-                                  activeThumbColor: Colors.white,
-                                  activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)!.securityTracking,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        
-                        const Spacer(),
-                        
-                        // GPS Status
-                        Container(
-                           width: 40,
-                           height: 40,
-                           decoration: BoxDecoration(
-                             color: Colors.white,
-                             shape: BoxShape.circle,
-                             boxShadow: [
-                               BoxShadow(
-                                 color: Colors.black.withValues(alpha: 0.1),
-                                 blurRadius: 8,
-                               ),
-                             ],
-                           ),
-                           child: Icon(
-                             Icons.gps_fixed,
-                             size: 20,
-                             color: homeVm.isLocationReady ? Colors.green : Colors.orange,
-                           ),
-                        ),
-                        
-                        const SizedBox(width: 12),
-                        
-                        // SOS Button
-                        GestureDetector(
-                          onTap: () => SafetyService().callPolice(),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withValues(alpha: 0.4),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.sos, color: Colors.white, size: 20),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
 
@@ -306,10 +359,10 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                         children: [
                           const Icon(Icons.location_off, color: Colors.white),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              "GPS is turned off! You cannot work.",
-                              style: TextStyle(
+                              AppLocalizations.of(context)!.gpsOffMessage,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -321,13 +374,39 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                               foregroundColor: Colors.red,
                             ),
                             onPressed: () => Geolocator.openLocationSettings(),
-                            child: const Text("TURN ON"),
+                            child: Text(AppLocalizations.of(context)!.turnOn),
                           ),
                         ],
                       ),
                     ),
                   ),
                   
+                  
+                // 🤝 DRIVER ALLIANCE BUTTON (Right Side)
+                if (isOnline)
+                  Positioned(
+                    right: 16,
+                    bottom: 240, // Above Ride Request Sheet area
+                    child: FloatingActionButton(
+                      heroTag: 'alliance_btn',
+                      onPressed: () => _showHelpRequestDialog(context, homeVm),
+                      backgroundColor: Colors.amber[700],
+                      child: const Icon(Icons.handshake, color: Colors.white),
+                    ),
+                  ),
+
+                // 🆘 NEARBY HELP ALERT (Bottom Sheet Overlay)
+                if (homeVm.nearbyHelpRequest != null)
+                   Positioned(
+                     bottom: 0,
+                     left: 0,
+                     right: 0,
+                     child: _NearbyHelpAlertSheet(
+                       request: homeVm.nearbyHelpRequest!,
+                       onDismiss: homeVm.dismissHelpAlert,
+                     ),
+                   ),
+
                 // Ride Request Sheet
                 if (homeVm.newRideRequest != null)
                    Positioned(
@@ -346,6 +425,104 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                    ),
               ],
             ),
+    );
+  }
+
+  void _showHelpRequestDialog(BuildContext context, HomeViewModel vm) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Request Driver Alliance"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Ask nearby drivers for help. Select issue type:"),
+            const SizedBox(height: 20),
+            _buildHelpOption(ctx, vm, "mechanic", "🔧 Mechanical Failure", Colors.orange),
+            _buildHelpOption(ctx, vm, "medical", "🚑 Medical Emergency", Colors.red),
+            _buildHelpOption(ctx, vm, "security", "🛡️ Security Threat", Colors.blueGrey),
+            _buildHelpOption(ctx, vm, "other", "⚠️ Other Help", Colors.grey),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpOption(BuildContext ctx, HomeViewModel vm, String type, String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 45),
+        ),
+        onPressed: () => vm.requestHelp(context, type, "Emergency Assistance Requested"),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+class _NearbyHelpAlertSheet extends StatelessWidget {
+  final dynamic request; 
+  final VoidCallback onDismiss;
+
+  const _NearbyHelpAlertSheet({required this.request, required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.red, width: 2),
+        boxShadow: [
+           BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  "Alliance Alert!",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
+                ),
+              ),
+              IconButton(onPressed: onDismiss, icon: const Icon(Icons.close)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "A nearby driver needs ${request.type.toString().toUpperCase()} help!",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Text("Driver: ${request.driverName} • ${request.driverPhone}"),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () {
+               onDismiss();
+            }, 
+            icon: const Icon(Icons.navigation),
+            label: const Text("Go to Assist"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -525,6 +702,146 @@ class _RideRequestSheet extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GPSInfoSheet extends StatelessWidget {
+  final HomeViewModel homeVm;
+
+  const _GPSInfoSheet({required this.homeVm});
+
+  @override
+  Widget build(BuildContext context) {
+    final speedKmh = (homeVm.currentPosition?.speed ?? 0) * 3.6;
+    final accuracy = homeVm.currentPosition?.accuracy ?? 0;
+    final isGpsFixed = homeVm.isLocationReady;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isGpsFixed ? Icons.gps_fixed : Icons.gps_not_fixed,
+                color: isGpsFixed ? Colors.green : Colors.orange,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isGpsFixed ? AppLocalizations.of(context)!.gpsConnected : AppLocalizations.of(context)!.searchingGpsStatus,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(height: 32),
+          
+          _buildInfoRow(
+            Icons.speed,
+            AppLocalizations.of(context)!.currentSpeed,
+            "${speedKmh.toStringAsFixed(1)} km/h",
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            Icons.my_location,
+            AppLocalizations.of(context)!.gpsAccuracy,
+            "${accuracy.toStringAsFixed(1)} meters",
+          ),
+          const SizedBox(height: 16),
+          
+          Text(
+            AppLocalizations.of(context)!.currentLocation,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<String?>(
+            future: homeVm.getCurrentAddress(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Row(
+                  children: [
+                    const SizedBox(
+                      width: 16, 
+                      height: 16, 
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(AppLocalizations.of(context)!.fetchingAddress),
+                  ],
+                );
+              }
+              return Text(
+                snapshot.data ?? AppLocalizations.of(context)!.addressNotAvailable,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                homeVm.recenterMap();
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.center_focus_strong),
+              label: Text(AppLocalizations.of(context)!.recenterMap),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.grey[600], size: 20),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );

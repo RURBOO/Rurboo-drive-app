@@ -6,17 +6,20 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 
 import '../../../core/utils/safe_parser.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
+import '../../../core/services/notification_service.dart';
 
 import '../../wallet/views/wallet_screen.dart';
 import '../services/location_service.dart';
 import 'driver_voice_viewmodel.dart';
 
 import '../../../core/models/ride_request.dart';
+import '../../../core/models/help_request.dart';
 
 class HomeViewModel extends ChangeNotifier {
 
@@ -29,6 +32,9 @@ class HomeViewModel extends ChangeNotifier {
 
   LatLng? _driverLocation;
   LatLng? get driverLocation => _driverLocation;
+  
+  Position? _currentPosition;
+  Position? get currentPosition => _currentPosition;
 
   StreamSubscription<Position>? _locationSubscription;
   StreamSubscription<List<DocumentSnapshot>>? _rideSubscription;
@@ -54,6 +60,8 @@ class HomeViewModel extends ChangeNotifier {
   DateTime _lastGeoQueryTime = DateTime.now().subtract(
     const Duration(minutes: 1),
   );
+  
+  DateTime _lastLocationUpdate = DateTime.now().subtract(const Duration(seconds: 10));
 
   String? _mapStyle;
   String? get mapStyle => _mapStyle;
@@ -126,7 +134,36 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-
+  void recenterMap() {
+    if (mapController != null && _driverLocation != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(_driverLocation!, 17),
+      );
+    }
+  }
+  
+  Future<String?> getCurrentAddress() async {
+    if (_driverLocation == null) return null;
+    try {
+      List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(
+        _driverLocation!.latitude,
+        _driverLocation!.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        // Construct a readable address
+        String address = "";
+        if (place.name != null && place.name!.isNotEmpty) address += "${place.name}, ";
+        if (place.subLocality != null && place.subLocality!.isNotEmpty) address += "${place.subLocality}, ";
+        if (place.locality != null && place.locality!.isNotEmpty) address += place.locality!;
+        
+        return address.isEmpty ? "Unknown Location" : address;
+      }
+    } catch (e) {
+      debugPrint("Address Fetch Error: $e");
+    }
+    return null;
+  }
 
   void _startListeningToLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -197,9 +234,26 @@ class HomeViewModel extends ChangeNotifier {
           (Position position) {
             if (_isDisposed) return;
 
+            _currentPosition = position;
             _driverLocation = LatLng(position.latitude, position.longitude);
             _isLocationReady = true;
             _updateDriverMarker();
+
+            // --- 🔹 LIVE TRACKING: Update Firestore for Admin/User ---
+            if (DateTime.now().difference(_lastLocationUpdate).inSeconds > 5) {
+               _lastLocationUpdate = DateTime.now();
+               DriverPreferences.getDriverId().then((driverId) {
+                 if (driverId != null) {
+                   FirebaseFirestore.instance.collection('drivers').doc(driverId).update({
+                     'currentLocation': GeoPoint(position.latitude, position.longitude),
+                     'heading': position.heading,
+                     'speed': position.speed,
+                     'lastLocationUpdate': FieldValue.serverTimestamp(),
+                   }).catchError((e) => debugPrint("Location Sync Error: $e"));
+                 }
+               });
+            }
+            // ----------------------------------------------------------
 
             if (_newRideRequest == null && mapController != null) {
               if (!_hasInitialZoom) {
@@ -252,13 +306,13 @@ class HomeViewModel extends ChangeNotifier {
 
     _lastGeoQueryTime = DateTime.now();
 
+    if (_driverVehicleType == null) {
+      _driverVehicleType = await DriverPreferences.getVehicleType();
       if (_driverVehicleType == null) {
-        _driverVehicleType = await DriverPreferences.getVehicleType();
-        if (_driverVehicleType == null) {
-          debugPrint("ERROR: Driver Vehicle Type is NULL. Cannot filter rides.");
-          return;
-        }
+        debugPrint("ERROR: Driver Vehicle Type is NULL. Cannot filter rides.");
+        return;
       }
+    }
 
     // Reverted to CollectionReference and using queryBuilder for filtering
     final CollectionReference<Map<String, dynamic>> collectionRef =
@@ -359,6 +413,13 @@ class HomeViewModel extends ChangeNotifier {
               _voiceVm?.announceNewRide(
                   _newRideRequest!.pickupAddress, 
                   _newRideRequest!.distance
+              );
+              
+              // 🔔 SHOW NOTIFICATION (Background Support)
+              NotificationService().showLocalNotification(
+                title: "🚖 New Ride Request!",
+                body: "Pickup: ${_newRideRequest!.pickupAddress} (${_newRideRequest!.distance})",
+                payload: _newRideRequest!.id,
               );
             }
             notifyListeners();
@@ -678,4 +739,165 @@ class HomeViewModel extends ChangeNotifier {
     _clearRoute();
     _safeNotifyListeners();
   }
+
+  // ===========================================================================
+  // 🛡️ DRIVER ALLIANCE (SOS/HELP) FEATURES
+  // ===========================================================================
+
+  StreamSubscription<List<DocumentSnapshot>>? _helpSubscription;
+  HelpRequest? _nearbyHelpRequest;
+  HelpRequest? get nearbyHelpRequest => _nearbyHelpRequest;
+
+  bool _isHelpActive = false;
+  bool get isHelpActive => _isHelpActive;
+  String? _activeHelpId;
+
+  // 1️⃣ REQUEST HELP (SOS)
+  Future<void> requestHelp(BuildContext context, String type, String description) async {
+    if (_driverLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location not available!")),
+      );
+      return;
+    }
+
+    try {
+      final driverId = await DriverPreferences.getDriverId();
+      if (driverId == null) return;
+
+      final doc = await FirebaseFirestore.instance.collection('drivers').doc(driverId).get();
+      final name = doc.data()?['name'] ?? 'Driver';
+      final phone = doc.data()?['phone'] ?? '';
+
+      final GeoFirePoint myLocation = GeoFirePoint(
+        GeoPoint(_driverLocation!.latitude, _driverLocation!.longitude),
+      );
+
+      final helpData = {
+        'driverId': driverId,
+        'driverName': name,
+        'driverPhone': phone,
+        'type': type,
+        'description': description,
+        'status': 'active',
+        'timestamp': FieldValue.serverTimestamp(),
+        'location': myLocation.data,
+      };
+
+      final ref = await FirebaseFirestore.instance.collection('helpRequests').add(helpData);
+      
+      _activeHelpId = ref.id;
+      _isHelpActive = true;
+      notifyListeners();
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(
+             content: Text("Help Signal Sent to nearby drivers!"),
+             backgroundColor: Colors.redAccent,
+             duration: Duration(seconds: 5),
+           ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Help Request Error: $e");
+    }
+  }
+
+  // 2️⃣ CANCEL/RESOLVE HELP
+  Future<void> resolveHelpRequest() async {
+    if (_activeHelpId == null) return;
+    
+    try {
+      await FirebaseFirestore.instance.collection('helpRequests').doc(_activeHelpId).update({
+        'status': 'resolved',
+      });
+      _isHelpActive = false;
+      _activeHelpId = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Resolve Help Error: $e");
+    }
+  }
+
+  // 3️⃣ LISTEN FOR NEARBY HELP (Background Awareness)
+  // Calling this inside _startListeningToLocation or initialize
+  void startListeningToHelpRequests() {
+    if (_helpSubscription != null) return;
+    if (_driverLocation == null) return;
+
+    final CollectionReference<Map<String, dynamic>> collectionRef =
+        FirebaseFirestore.instance.collection('helpRequests');
+
+    final GeoFirePoint center = GeoFirePoint(
+      GeoPoint(_driverLocation!.latitude, _driverLocation!.longitude),
+    );
+
+    // Radius: 10km for help
+    _helpSubscription = GeoCollectionReference(collectionRef).subscribeWithin(
+      center: center,
+      radiusInKm: 10.0, 
+      field: 'location',
+       geopointFrom: (data) {
+          if (data['location'] != null && data['location']['geopoint'] != null) {
+            return (data['location'] as Map)['geopoint'] as GeoPoint;
+          }
+          return const GeoPoint(0, 0);
+       },
+      queryBuilder: (query) => query.where('status', isEqualTo: 'active'),
+      strictMode: true,
+    ).listen((List<DocumentSnapshot> docs) async {
+       if (_isDisposed) return;
+       
+       HelpRequest? closestHelp;
+       double minDistance = double.infinity;
+       final myId = await DriverPreferences.getDriverId();
+
+       for (var doc in docs) {
+         final data = doc.data() as Map<String, dynamic>;
+         // Don't alert my own request
+         if (data['driverId'] == myId) continue;
+
+         final GeoPoint loc = (data['location'] as Map)['geopoint'];
+         double dist = Geolocator.distanceBetween(
+             _driverLocation!.latitude, _driverLocation!.longitude, 
+             loc.latitude, loc.longitude
+         );
+
+         // Alert only if extremely close (e.g., 5km) or urgent
+         if (dist < minDistance) {
+            minDistance = dist;
+            closestHelp = HelpRequest.fromFirestore(doc);
+         }
+       }
+
+       if (closestHelp != null && _nearbyHelpRequest?.id != closestHelp.id) {
+         _nearbyHelpRequest = closestHelp;
+         notifyListeners();
+         
+         // 🔔 TRIGGER ALERT
+         NotificationService().showLocalNotification(
+           title: "🆘 Driver Needs Help!", 
+           body: "${closestHelp.type.toUpperCase()}: ${closestHelp.distanceText(minDistance)} away.",
+         );
+         
+         // Play Sound via Voice Service (or reuse Notification sound)
+         _voiceVm?.announceGeneral("Alert. A driver needs help nearby.");
+       }
+    });
+  }
+
+  void dismissHelpAlert() {
+    _nearbyHelpRequest = null;
+    notifyListeners();
+  }
 }
+
+extension HelpDistance on HelpRequest {
+  String distanceText(double meters) {
+    if (meters < 1000) return "${meters.toStringAsFixed(0)}m";
+    return "${(meters / 1000).toStringAsFixed(1)}km";
+  }
+}
+

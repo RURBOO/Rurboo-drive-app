@@ -79,31 +79,49 @@ class NotificationService {
     _fcm.onTokenRefresh.listen(_updateTokenInFirestore);
   }
 
+
+  
+  Future<void> showLocalNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'ride_request_channel',
+      'Ride Alerts',
+      channelDescription: 'High priority alerts for new rides',
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('alert_sound'),
+      icon: '@mipmap/ic_launcher',
+      fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.call,
+      timeoutAfter: 30000, // Auto-dismiss after 30s if improved
+    );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await _localNotifications.show(
+      DateTime.now().millisecond, // Unique ID
+      title,
+      body,
+      details,
+      payload: payload,
+    );
+  }
+
   void _showLocalNotification(RemoteMessage message) {
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
     if (notification != null && android != null) {
-      _localNotifications.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'ride_request_channel',
-            'Ride Alerts',
-            channelDescription: 'High priority alerts for new rides',
-            importance: Importance.max,
-            priority: Priority.max,
-            playSound: true,
-            sound: RawResourceAndroidNotificationSound('alert_sound'),
-            icon: '@mipmap/ic_launcher',
-            fullScreenIntent: true,
-            visibility: NotificationVisibility.public,
-            category:
-                AndroidNotificationCategory.call,
-          ),
-        ),
+      showLocalNotification(
+        title: notification.title ?? 'New Notification',
+        body: notification.body ?? '',
       );
     }
   }

@@ -161,4 +161,136 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get retry => 'पुनः प्रयास करें';
+
+  @override
+  String get securityTracking =>
+      'सुरक्षा कारणों से आपकी लोकेशन ट्रेस की जा रही है।';
+
+  @override
+  String get changeLanguage => 'भाषा बदलें';
+
+  @override
+  String get selectLanguage => 'भाषा चुनें';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get hindi => 'हिंदी';
+
+  @override
+  String get rideSafetyWarning => 'राइड सुरक्षा चेतावनी';
+
+  @override
+  String get endRideTooFar =>
+      'आप गंतव्य से दूर हैं। क्या आप राइड समाप्त करने के लिए यात्री से अनुमति मांगना चाहते हैं?';
+
+  @override
+  String get requestApproval => 'अनुमति मांगें';
+
+  @override
+  String get waitingForApproval => 'यात्री की अनुमति का इंतजार है...';
+
+  @override
+  String get rideEndApproved => 'यात्री ने अनुमति दे दी है।';
+
+  @override
+  String get rideEndRejected => 'यात्री ने अनुरोध अस्वीकार कर दिया।';
+
+  @override
+  String get driveEarnGrow => 'चलाएं। कमाएं। बढ़ें।';
+
+  @override
+  String get phoneNumber => 'फ़ोन नंबर';
+
+  @override
+  String get sendOtp => 'OTP भेजें';
+
+  @override
+  String get newDriver => 'नए ड्राइवर?';
+
+  @override
+  String get registerHere => 'यहाँ रजिस्टर करें';
+
+  @override
+  String get termsPrivacyLogin =>
+      'जारी रखकर, आप हमारी\\nसेवा की शर्तों और गोपनीयता नीति से सहमत हैं';
+
+  @override
+  String get driverRegistration => 'ड्राइवर पंजीकरण';
+
+  @override
+  String get personalDetails => 'व्यक्तिगत विवरण';
+
+  @override
+  String get fullName => 'पूरा नाम';
+
+  @override
+  String get nameRequired => 'नाम आवश्यक है';
+
+  @override
+  String get nameLengthError => 'नाम कम से कम 3 अक्षरों का होना चाहिए';
+
+  @override
+  String get nameNumberError => 'नाम में अंक नहीं हो सकते';
+
+  @override
+  String get nextVehicleDetails => 'अगला: वाहन विवरण';
+
+  @override
+  String get validMobileError => 'एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें';
+
+  @override
+  String get phoneRequired => 'फ़ोन नंबर आवश्यक है';
+
+  @override
+  String get gpsOffMessage => 'GPS बंद है! आप काम नहीं कर सकते।';
+
+  @override
+  String get turnOn => 'चालू करें';
+
+  @override
+  String get gpsConnected => 'GPS कनेक्टेड है';
+
+  @override
+  String get searchingGpsStatus => 'GPS खोज रहा है...';
+
+  @override
+  String get currentSpeed => 'वर्तमान गति';
+
+  @override
+  String get gpsAccuracy => 'GPS सटीकता';
+
+  @override
+  String get currentLocation => 'वर्तमान स्थान';
+
+  @override
+  String get addressNotAvailable => 'पता उपलब्ध नहीं है';
+
+  @override
+  String get recenterMap => 'मैप को री-सेंटर करें';
+
+  @override
+  String get fetchingAddress => 'पता लाया जा रहा है...';
+
+  @override
+  String get cannotGoOfflineTrip => 'ट्रिप के दौरान ऑफ़लाइन नहीं हो सकते';
+
+  @override
+  String get turnOnGpsFirst => 'पहले GPS चालू करें!';
+
+  @override
+  String get helpAndSupport => 'सहायता और समर्थन';
+
+  @override
+  String get faqs => 'अक्सर पूछे जाने वाले सवाल';
+
+  @override
+  String get privacyPolicy => 'गोपनीयता नीति';
+
+  @override
+  String get termsAndConditions => 'नियम और शर्तें';
+
+  @override
+  String get feedbackAndSuggestions => 'प्रतिक्रिया और सुझाव';
 }

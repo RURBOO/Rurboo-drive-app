@@ -403,6 +403,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// No description provided for @securityTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location is being tracked for security reasons.'**
+  String get securityTracking;
+
+  /// No description provided for @changeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Language'**
+  String get changeLanguage;
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @hindi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get hindi;
+
+  /// No description provided for @rideSafetyWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride Safety Warning'**
+  String get rideSafetyWarning;
+
+  /// No description provided for @endRideTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'You are far from the destination. Request passenger approval to end ride?'**
+  String get endRideTooFar;
+
+  /// No description provided for @requestApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Approval'**
+  String get requestApproval;
+
+  /// No description provided for @waitingForApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Passenger Approval...'**
+  String get waitingForApproval;
+
+  /// No description provided for @rideEndApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Passenger approved ride end.'**
+  String get rideEndApproved;
+
+  /// No description provided for @rideEndRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Passenger rejected ride end.'**
+  String get rideEndRejected;
+
+  /// No description provided for @driveEarnGrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive. Earn. Grow.'**
+  String get driveEarnGrow;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @sendOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtp;
+
+  /// No description provided for @newDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'New Driver?'**
+  String get newDriver;
+
+  /// No description provided for @registerHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Here'**
+  String get registerHere;
+
+  /// No description provided for @termsPrivacyLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to our\\nTerms of Service & Privacy Policy'**
+  String get termsPrivacyLogin;
+
+  /// No description provided for @driverRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Registration'**
+  String get driverRegistration;
+
+  /// No description provided for @personalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Details'**
+  String get personalDetails;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fullName;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get nameRequired;
+
+  /// No description provided for @nameLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be at least 3 characters'**
+  String get nameLengthError;
+
+  /// No description provided for @nameNumberError.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot contain numbers'**
+  String get nameNumberError;
+
+  /// No description provided for @nextVehicleDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: Vehicle Details'**
+  String get nextVehicleDetails;
+
+  /// No description provided for @validMobileError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 10-digit mobile number'**
+  String get validMobileError;
+
+  /// No description provided for @phoneRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is required'**
+  String get phoneRequired;
+
+  /// No description provided for @gpsOffMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS is turned off! You cannot work.'**
+  String get gpsOffMessage;
+
+  /// No description provided for @turnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'TURN ON'**
+  String get turnOn;
+
+  /// No description provided for @gpsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Connected'**
+  String get gpsConnected;
+
+  /// No description provided for @searchingGpsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for GPS...'**
+  String get searchingGpsStatus;
+
+  /// No description provided for @currentSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Speed'**
+  String get currentSpeed;
+
+  /// No description provided for @gpsAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Accuracy'**
+  String get gpsAccuracy;
+
+  /// No description provided for @currentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Location'**
+  String get currentLocation;
+
+  /// No description provided for @addressNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Address not available'**
+  String get addressNotAvailable;
+
+  /// No description provided for @recenterMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Recenter Map'**
+  String get recenterMap;
+
+  /// No description provided for @fetchingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching address...'**
+  String get fetchingAddress;
+
+  /// No description provided for @cannotGoOfflineTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot go offline during a trip'**
+  String get cannotGoOfflineTrip;
+
+  /// No description provided for @turnOnGpsFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on GPS first!'**
+  String get turnOnGpsFirst;
+
+  /// No description provided for @helpAndSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get helpAndSupport;
+
+  /// No description provided for @faqs.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQs'**
+  String get faqs;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsAndConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get termsAndConditions;
+
+  /// No description provided for @feedbackAndSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback & Suggestions'**
+  String get feedbackAndSuggestions;
 }
 
 class _AppLocalizationsDelegate

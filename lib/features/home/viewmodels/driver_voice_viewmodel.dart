@@ -70,6 +70,10 @@ class DriverVoiceViewModel extends ChangeNotifier {
     speak("Going offline.");
   }
 
+  void announceGeneral(String message) {
+    speak(message);
+  }
+
   void announceNegativeWallet() {
     speak("Insufficient balance. Please recharge.");
   }

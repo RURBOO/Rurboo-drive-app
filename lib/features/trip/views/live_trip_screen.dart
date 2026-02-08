@@ -12,6 +12,7 @@ import '../../../core/widgets/swipe_button.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/live_trip_viewmodel.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
+import 'package:geolocator/geolocator.dart';
 
 class LiveTripScreen extends StatefulWidget {
   const LiveTripScreen({super.key});
@@ -424,43 +425,114 @@ class _LiveTripScreenBody extends StatelessWidget {
                    const SizedBox(height: 30),
                    
                    // Swipe to Act
-                   SwipeButton(
-                     text: isArriving 
-                         ? "Slide to Start Trip" 
-                         : "Slide to End Trip",
-                     color: isArriving ? Colors.black : Colors.red,
-                     icon: isArriving ? Icons.play_arrow : Icons.stop,
-                     onSwipe: () async {
-                        final connectivity = await Connectivity().checkConnectivity();
-                        if (connectivity.contains(ConnectivityResult.none)) {
-                        if (!context.mounted) return;
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
-                           );
-                           throw Exception("No Internet");
-                        }
+                   if (vm.isWaitingForApproval)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.amber),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 20, 
+                              height: 20, 
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              AppLocalizations.of(context)!.waitingForApproval,
+                              style: const TextStyle(
+                                color: Colors.amber, 
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                   else
+                     SwipeButton(
+                       text: isArriving 
+                           ? "Slide to Start Trip" 
+                           : "Slide to End Trip",
+                       color: isArriving ? Colors.black : Colors.red,
+                       icon: isArriving ? Icons.play_arrow : Icons.stop,
+                       onSwipe: () async {
+                          final connectivity = await Connectivity().checkConnectivity();
+                          if (connectivity.contains(ConnectivityResult.none)) {
+                          if (!context.mounted) return;
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
+                             );
+                             throw Exception("No Internet");
+                          }
+  
+                          if (!context.mounted) return;
 
-                        if (!context.mounted) return;
-                        if (isArriving) {
-                          await _handleStartTrip(context, vm);
-                        } else {
-                          await vm.endTrip(context, appState);
-                        }
-                     },
-                   ),
+                          if (isArriving) {
+                            await _handleStartTrip(context, vm);
+                          } else {
+                            // Check distance before ending
+                            if (vm.driverLocation != null && vm.dropLocation != null) {
+                              final double distMeters = Geolocator.distanceBetween(
+                                vm.driverLocation!.latitude,
+                                vm.driverLocation!.longitude,
+                                vm.dropLocation!.latitude,
+                                vm.dropLocation!.longitude,
+                              );
+
+                              // 100m Threshold & Not yet approved
+                              if (distMeters > 100 && !vm.isRideEndApproved) {
+                                // Show Approval Dialog
+                                final bool? request = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(AppLocalizations.of(context)!.rideSafetyWarning),
+                                    content: Text(AppLocalizations.of(context)!.endRideTooFar),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text(AppLocalizations.of(context)!.cancel),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        child: Text(AppLocalizations.of(context)!.requestApproval),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (request == true) {
+                                  await vm.requestEndRideApproval();
+                                }
+                                // Throw exception to reset swipe button
+                                throw Exception("Distance Check Failed"); 
+                              }
+                            }
+
+                            // If distance < 100m OR Approved -> End Trip
+                            await vm.endTrip(context, appState);
+                          }
+                       },
+                     ),
                    
                    const SizedBox(height: 16),
                    
-                   // Cancel Button
-                   Center(
-                     child: TextButton(
-                       onPressed: () => _showCancelConfirmation(context, vm, appState),
-                       child: Text(
-                         AppLocalizations.of(context)!.cancelRide,
-                         style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                   // Cancel Button (Only visible if arriving)
+                   if (isArriving)
+                     Center(
+                       child: TextButton(
+                         onPressed: () => _showCancelConfirmation(context, vm, appState),
+                         child: Text(
+                           AppLocalizations.of(context)!.cancelRide,
+                           style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                         ),
                        ),
                      ),
-                   ),
                 ],
               ),
             ),

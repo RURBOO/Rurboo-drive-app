@@ -161,4 +161,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get securityTracking =>
+      'Your location is being tracked for security reasons.';
+
+  @override
+  String get changeLanguage => 'Change Language';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get hindi => 'Hindi';
+
+  @override
+  String get rideSafetyWarning => 'Ride Safety Warning';
+
+  @override
+  String get endRideTooFar =>
+      'You are far from the destination. Request passenger approval to end ride?';
+
+  @override
+  String get requestApproval => 'Request Approval';
+
+  @override
+  String get waitingForApproval => 'Waiting for Passenger Approval...';
+
+  @override
+  String get rideEndApproved => 'Passenger approved ride end.';
+
+  @override
+  String get rideEndRejected => 'Passenger rejected ride end.';
+
+  @override
+  String get driveEarnGrow => 'Drive. Earn. Grow.';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get sendOtp => 'Send OTP';
+
+  @override
+  String get newDriver => 'New Driver?';
+
+  @override
+  String get registerHere => 'Register Here';
+
+  @override
+  String get termsPrivacyLogin =>
+      'By continuing, you agree to our\\nTerms of Service & Privacy Policy';
+
+  @override
+  String get driverRegistration => 'Driver Registration';
+
+  @override
+  String get personalDetails => 'Personal Details';
+
+  @override
+  String get fullName => 'Full Name';
+
+  @override
+  String get nameRequired => 'Name is required';
+
+  @override
+  String get nameLengthError => 'Name must be at least 3 characters';
+
+  @override
+  String get nameNumberError => 'Name cannot contain numbers';
+
+  @override
+  String get nextVehicleDetails => 'Next: Vehicle Details';
+
+  @override
+  String get validMobileError => 'Enter a valid 10-digit mobile number';
+
+  @override
+  String get phoneRequired => 'Phone number is required';
+
+  @override
+  String get gpsOffMessage => 'GPS is turned off! You cannot work.';
+
+  @override
+  String get turnOn => 'TURN ON';
+
+  @override
+  String get gpsConnected => 'GPS Connected';
+
+  @override
+  String get searchingGpsStatus => 'Searching for GPS...';
+
+  @override
+  String get currentSpeed => 'Current Speed';
+
+  @override
+  String get gpsAccuracy => 'GPS Accuracy';
+
+  @override
+  String get currentLocation => 'Current Location';
+
+  @override
+  String get addressNotAvailable => 'Address not available';
+
+  @override
+  String get recenterMap => 'Recenter Map';
+
+  @override
+  String get fetchingAddress => 'Fetching address...';
+
+  @override
+  String get cannotGoOfflineTrip => 'Cannot go offline during a trip';
+
+  @override
+  String get turnOnGpsFirst => 'Turn on GPS first!';
+
+  @override
+  String get helpAndSupport => 'Help & Support';
+
+  @override
+  String get faqs => 'FAQs';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsAndConditions => 'Terms & Conditions';
+
+  @override
+  String get feedbackAndSuggestions => 'Feedback & Suggestions';
 }

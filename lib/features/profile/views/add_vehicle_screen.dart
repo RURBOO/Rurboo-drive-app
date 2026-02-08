@@ -17,25 +17,31 @@ class AddVehicleScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            DropdownButtonFormField<String>(
-              value: vm.selectedType,
-              items: [
-                'Bike taxi',
-                'E-Rikshaw',
-                'Auto Rikshaw',
-                'Comfort Car',
-                'Big Car',
-                'Carrier Truck'
-              ].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: vm.setVehicleType,
+            InputDecorator(
               decoration: const InputDecoration(
                 labelText: 'Vehicle Type',
                 border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: vm.selectedType,
+                  isExpanded: true,
+                  items: [
+                    'Bike taxi',
+                    'E-Rikshaw',
+                    'Auto Rikshaw',
+                    'Comfort Car',
+                    'Big Car',
+                    'Carrier Truck'
+                  ].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: vm.setVehicleType,
+                ),
               ),
             ),
             const SizedBox(height: 16),

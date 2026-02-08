@@ -1,50 +1,44 @@
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 
-class FAQScreen extends StatelessWidget {
-  const FAQScreen({super.key});
+class FaqScreen extends StatelessWidget {
+  const FaqScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Driver FAQ', style: TextStyle(color: Colors.black)),
+        title: Text(AppLocalizations.of(context)!.faqs),
         backgroundColor: Colors.white,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: const [
-          Text(
-            'Common Questions',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          _FaqItem(
+            question: "How much commission does Rurboo charge?",
+            answer: "Rurboo charges a standard commission of 20% on the total fare for each completed ride. This helps us maintain the platform, market to riders, and provide support to you.",
           ),
-          SizedBox(height: 20),
-          _FAQItem(
-            question: 'Why is my account blocked?',
-            answer:
-                'Your account may be blocked if your wallet balance is below -₹500 or if you have pending dues from yesterday. Please recharge to unblock.',
+          _FaqItem(
+            question: "How do I get paid?",
+            answer: "Your earnings (minus the 20% commission) are accumulated in your driver wallet. Payouts are processed weekly to your registered bank account or UPI ID.",
           ),
-          _FAQItem(
-            question: 'How do I pay the platform fee?',
-            answer:
-                'When you are blocked, a "Pay Now" button will appear. You can pay via UPI or Cash deposit.',
+          _FaqItem(
+            question: "What if a rider cancels?",
+            answer: "If a rider cancels after you have already traveled a significant distance towards the pickup location, you may be eligible for a cancellation fee.",
           ),
-          _FAQItem(
-            question: 'What is the 15-Day Free Trial?',
-            answer:
-                'For the first 15 days after joining, you pay ₹0 commission. You keep 100% of your earnings.',
+          _FaqItem(
+            question: "How can I improve my rating?",
+            answer: "Keep your vehicle clean, be polite to riders, drive safely, and follow the navigation route. Good service leads to higher ratings and potentially more ride requests.",
           ),
-          _FAQItem(
-            question: 'How do I change my vehicle details?',
-            answer:
-                'You cannot change vehicle details in the app. Please contact support to update your RC or License.',
+           _FaqItem(
+            question: "Is there a penalty for declining rides?",
+            answer: "We understand you may not be able to accept every ride. However, maintaining a high acceptance rate helps ensure a reliable service for riders and may unlock special incentives for you.",
           ),
-          _FAQItem(
-            question: 'Does the app work in background?',
-            answer:
-                'Yes, you must allow "Allow all the time" location permission to receive rides while using other apps.',
+           _FaqItem(
+            question: "How do I contact support?",
+            answer: "You can contact support via the 'Help & Support' section in the app. We are available via email at adarshpandey@rurboo.com or by phone at +91 8810220691.",
           ),
         ],
       ),
@@ -52,27 +46,28 @@ class FAQScreen extends StatelessWidget {
   }
 }
 
-class _FAQItem extends StatelessWidget {
+class _FaqItem extends StatelessWidget {
   final String question;
   final String answer;
-  const _FAQItem({required this.question, required this.answer});
+
+  const _FaqItem({required this.question, required this.answer});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ExpansionTile(
         title: Text(
           question,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               answer,
-              style: const TextStyle(color: Colors.black87, height: 1.4),
+              style: TextStyle(color: Colors.grey[700], height: 1.4),
             ),
           ),
         ],

@@ -149,6 +149,9 @@ class LiveTripViewModel extends ChangeNotifier {
     }
   }
 
+  bool isWaitingForApproval = false;
+  bool isRideEndApproved = false;
+
   void _listenToRideStatus() {
     _rideStream = FirebaseFirestore.instance
         .collection('rideRequests')
@@ -164,6 +167,18 @@ class LiveTripViewModel extends ChangeNotifier {
           final status = data?['status'];
           final String? cancelledBy = data?['cancelledBy'];
 
+          // Check approval status
+          if (data?['endRideApproved'] == true) {
+            isRideEndApproved = true;
+            isWaitingForApproval = false;
+            notifyListeners();
+          } else if (data?['endRideRejected'] == true) {
+             isWaitingForApproval = false;
+             isRideEndApproved = false;
+             notifyListeners();
+             // You might want to expose an error message or callback here
+          }
+          
           if (status == 'cancelled') {
             if (cancelledBy == 'user') {
                _voiceService.announceCustomerCancelled();
@@ -186,6 +201,27 @@ class LiveTripViewModel extends ChangeNotifier {
             notifyListeners();
           }
         });
+  }
+
+  Future<void> requestEndRideApproval() async {
+    if (currentRideId == null) return;
+    try {
+      isWaitingForApproval = true;
+      notifyListeners();
+      await FirebaseFirestore.instance
+          .collection('rideRequests')
+          .doc(currentRideId)
+          .update({
+            'endRideRequested': true,
+            'endRideRejected': false, // Reset rejection if trying again
+            'endRideApproved': false,
+          });
+    } catch (e) {
+      isWaitingForApproval = false;
+      notifyListeners();
+      debugPrint("Error requesting approval: $e");
+      rethrow;
+    }
   }
 
   Future<void> _startGpsBroadcast() async {

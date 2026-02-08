@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
-import '../../wallet/views/wallet_screen.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import 'driver_documents_screen.dart';
-import 'support_screen.dart';
-import 'privacy_policy_screen.dart';
-import 'terms_screen.dart';
-import 'faq_screen.dart';
-import 'delete_account_screen.dart';
 import 'my_vehicles_screen.dart';
+import '../../../state/language_provider.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
+import 'package:rubo_driver/features/profile/views/privacy_policy_screen.dart';
+import 'package:rubo_driver/features/profile/views/terms_conditions_screen.dart';
+import 'package:rubo_driver/features/profile/views/help_support_screen.dart';
+import 'package:rubo_driver/features/profile/views/faq_screen.dart';
+import 'package:rubo_driver/features/profile/views/feedback_screen.dart';
+import 'delete_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -64,7 +66,6 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
 
@@ -96,13 +97,13 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                              Text(
-                              "My Profile",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                               "My Profile",
+                               style: TextStyle(
+                                 color: Colors.white,
+                                 fontSize: 18,
+                                 fontWeight: FontWeight.bold,
+                               ),
+                             ),
                           ],
                         ),
                       ),
@@ -230,13 +231,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               ),
                               _buildDivider(),
                               _buildMenuItem(
-                                icon: Icons.account_balance_wallet_outlined,
-                                title: 'Wallet',
-                                subtitle: 'Balance & Recharge',
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const WalletScreen()),
-                                ),
+                                icon: Icons.language,
+                                title: 'App Language / भाषा',
+                                subtitle: 'Change Language / भाषा बदलें',
+                                onTap: () => _showLanguageDialog(context),
                               ),
                             ]),
 
@@ -257,26 +255,35 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             _buildSectionHeader("Support & Legal"),
                             _buildMenuCard([
                               _buildMenuItem(
-                                icon: Icons.help_outline_rounded,
-                                title: 'Help & Support',
+                                icon: Icons.feedback_outlined,
+                                title: AppLocalizations.of(context)!.feedbackAndSuggestions,
                                 onTap: () => Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const SupportScreen()),
+                                  MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.help_outline_rounded,
+                                title: AppLocalizations.of(context)!.helpAndSupport,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
                                 ),
                               ),
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.question_answer_outlined,
-                                title: 'Driver FAQ',
+                                title: AppLocalizations.of(context)!.faqs,
                                 onTap: () => Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const FAQScreen()),
+                                  MaterialPageRoute(builder: (_) => const FaqScreen()),
                                 ),
                               ),
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.privacy_tip_outlined,
-                                title: 'Privacy Policy',
+                                title: AppLocalizations.of(context)!.privacyPolicy,
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
@@ -285,10 +292,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.description_outlined,
-                                title: 'Terms & Conditions',
+                                title: AppLocalizations.of(context)!.termsAndConditions,
                                 onTap: () => Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const TermsScreen()),
+                                  MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
                                 ),
                               ),
                             ]),
@@ -326,6 +333,39 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                 ),
               ],
             ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Select Language / भाषा चुनें"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text("English"),
+                leading: const Text("🇺🇸", style: TextStyle(fontSize: 24)),
+                onTap: () {
+                  context.read<LanguageProvider>().changeLanguage(const Locale('en'));
+                  Navigator.pop(context);
+                },
+              ),
+              const Divider(),
+              ListTile(
+                title: const Text("हिंदी (Hindi)"),
+                leading: const Text("🇮🇳", style: TextStyle(fontSize: 24)),
+                onTap: () {
+                  context.read<LanguageProvider>().changeLanguage(const Locale('hi'));
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

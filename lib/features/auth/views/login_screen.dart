@@ -4,6 +4,7 @@ import '../../../core/services/driver_voice_service.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/login_viewmodel.dart';
 import 'registration_screen.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,10 +87,10 @@ class _LoginScreenBody extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Title
-                  const Text(
-                    "RURBOO Driver",
+                  Text(
+                    AppLocalizations.of(context)!.appName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -100,7 +101,7 @@ class _LoginScreenBody extends StatelessWidget {
                   const SizedBox(height: 8),
                   
                   Text(
-                    "Drive. Earn. Grow.",
+                    AppLocalizations.of(context)!.driveEarnGrow,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -130,7 +131,7 @@ class _LoginScreenBody extends StatelessWidget {
                       ),
                       onTap: () => voiceService.announcePhoneNumberField(),
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
+                        labelText: AppLocalizations.of(context)!.phoneNumber,
                         labelStyle: TextStyle(color: Colors.grey.shade300),
                         prefixText: "+91 ",
                         prefixStyle: const TextStyle(
@@ -169,9 +170,9 @@ class _LoginScreenBody extends StatelessWidget {
                             shadowColor: Colors.white.withValues(alpha: 0.5),
                           ),
                           onPressed: () => vm.login(context, appState),
-                          child: const Text(
-                            "Send OTP",
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.sendOtp,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -186,7 +187,7 @@ class _LoginScreenBody extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "New Driver? ",
+                        "${AppLocalizations.of(context)!.newDriver} ",
                         style: TextStyle(color: Colors.grey.shade400),
                       ),
                       TextButton(
@@ -198,9 +199,9 @@ class _LoginScreenBody extends StatelessWidget {
                             ),
                           );
                         },
-                        child: const Text(
-                          "Register Here",
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.registerHere,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -213,7 +214,7 @@ class _LoginScreenBody extends StatelessWidget {
 
                   // Terms & Privacy
                   Text(
-                    "By continuing, you agree to our\nTerms of Service & Privacy Policy",
+                    AppLocalizations.of(context)!.termsPrivacyLogin,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

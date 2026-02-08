@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/registration_viewmodel.dart';
 import 'vehicle_details_screen.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class RegistrationScreen extends StatelessWidget {
   const RegistrationScreen({super.key});
@@ -10,7 +11,7 @@ class RegistrationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Driver Registration (1/3)")),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.driverRegistration)),
       body: Consumer<RegistrationViewModel>(
         builder: (context, vm, _) {
           return Form(
@@ -18,28 +19,28 @@ class RegistrationScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                const Text(
-                  "Personal Details",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  AppLocalizations.of(context)!.personalDetails,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
 
                 TextFormField(
                   controller: vm.nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.fullName,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return "Name is required";
+                      return AppLocalizations.of(context)!.nameRequired;
                     }
                     if (v.trim().length < 3) {
-                      return "Name must be at least 3 characters";
+                      return AppLocalizations.of(context)!.nameLengthError;
                     }
                     if (RegExp(r'[0-9]').hasMatch(v)) {
-                      return "Name cannot contain numbers";
+                      return AppLocalizations.of(context)!.nameNumberError;
                     }
                     return null;
                   },
@@ -53,18 +54,18 @@ class RegistrationScreen extends StatelessWidget {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(10),
                   ],
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.phoneNumber,
                     prefixText: "+91 ",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.phone),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) {
-                      return "Phone number is required";
+                      return AppLocalizations.of(context)!.phoneRequired;
                     }
                     if (!RegExp(r'^[6-9]\d{9}$').hasMatch(v)) {
-                      return "Enter a valid 10-digit mobile number";
+                      return AppLocalizations.of(context)!.validMobileError;
                     }
                     return null;
                   },
@@ -85,7 +86,7 @@ class RegistrationScreen extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text("Next: Vehicle Details"),
+                  child: Text(AppLocalizations.of(context)!.nextVehicleDetails),
                 ),
               ],
             ),

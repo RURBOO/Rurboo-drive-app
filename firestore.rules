@@ -23,14 +23,26 @@ service cloud.firestore {
       // Cloud Functions use service account authentication
       return request.auth.token.firebase.sign_in_provider == 'custom';
     }
+
+    function isAdmin() {
+      // Check if the user exists in the 'admins' collection
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // ========================================================================
+    // ADMINS COLLECTION
+    // ========================================================================
+    match /admins/{adminId} {
+      allow read: if isAuthenticated(); // Allow check for login
+      allow write: if false; // Only manageable via Console/Backend
+    }
     
     // ========================================================================
     // DRIVERS COLLECTION
     // ========================================================================
     
-    match /drivers/{driverId} {
-      // Drivers can read their own data
-      allow read: if isDriver(driverId);
+      // Drivers can read their own data, Admins can read all
+      allow read: if isDriver(driverId) || isAdmin();
       
       // Allow initial profile creation during registration
       // Enforce zero balance for new drivers
@@ -41,12 +53,13 @@ service cloud.firestore {
       // CRITICAL: Wallet and commission fields are WRITE-PROTECTED
       // Only Cloud Functions (service account) can update these fields
       // EXCEPTION: Allow full overwrite if status is 'pending' (fixes re-registration permission denied)
-      allow update: if isDriver(driverId) && 
+      // Admins can update status (approve/block)
+      allow update: if (isDriver(driverId) && 
         (
           resource.data.status == 'pending' ||
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['walletBalance', 'lastSettlementDate'])
-        );
+        )) || isAdmin();
       
       // Cloud Functions can update wallet fields
       allow write: if isServiceAccount();
@@ -56,17 +69,18 @@ service cloud.firestore {
       // ======================================================================
       
       match /walletHistory/{transactionId} {
-        allow read: if isDriver(driverId);
+        allow read: if isDriver(driverId) || isAdmin();
         allow write: if isServiceAccount();
       }
       
       match /earnings/{earningId} {
-        allow read: if isDriver(driverId);
+        allow read: if isDriver(driverId) || isAdmin();
         allow write: if isServiceAccount();
       }
 
       match /vehicles/{vehicleId} {
-        allow read, write: if isDriver(driverId);
+        allow read: if isDriver(driverId) || isAdmin();
+        allow write: if isDriver(driverId) || isAdmin();
       }
     }
     
@@ -75,12 +89,12 @@ service cloud.firestore {
     // ========================================================================
     
     match /users/{userId} {
-      // Users can read/write their own profile
-      allow read, write: if isUser(userId);
+      // Users can read/write their own profile, Admins can read/write
+      allow read, write: if isUser(userId) || isAdmin();
       
       // Saved Places Subcollection
       match /savedPlaces/{placeId} {
-        allow read, write: if isUser(userId);
+        allow read, write: if isUser(userId) || isAdmin();
       }
     }
     
@@ -90,23 +104,43 @@ service cloud.firestore {
     
     match /rideRequests/{rideId} {
       // Both Driver and User involved in the ride can read it, OR if it's a pending request (for drivers to see)
+      // Admins can always read
       allow read: if isAuthenticated() && 
         (resource.data.status == 'pending' || 
          request.auth.uid == resource.data.driverId || 
-         request.auth.uid == resource.data.userId);
+         request.auth.uid == resource.data.userId ||
+         isAdmin());
       
       // Users create requests
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
       
       // Updates allowed for involved parties OR for accepting a pending ride
-      allow update: if isAuthenticated() && 
+      // Admins can update (e.g. force cancel)
+      allow update: if (isAuthenticated() && 
         (
           resource.data.status == 'pending' || // Allow any auth user (driver) to pick up a pending ride
           request.auth.uid == resource.data.driverId || 
           request.auth.uid == resource.data.userId
-        );
+        )) || isAdmin();
       
       allow write: if isServiceAccount();
+    }
+    
+    // ========================================================================
+    // DRIVER ALLIANCE (HELP REQUESTS)
+    // ========================================================================
+    
+    match /helpRequests/{helpId} {
+      // Drivers can create requests
+      allow create: if isDriver(request.resource.data.driverId);
+      
+      // Drivers can read nearby requests (conceptually, we rely on GeoQueries client-side filtering 
+      // but here we allow authenticated drivers to read active requests)
+      // Ideally, we'd use resource.data.status == 'active'
+      allow read: if isAuthenticated() || isAdmin();
+      
+      // Only the creator can resolve/delete it (or Admin/Service Account)
+      allow update, delete: if isDriver(resource.data.driverId) || isServiceAccount() || isAdmin();
     }
     
     // ========================================================================
@@ -115,7 +149,18 @@ service cloud.firestore {
     
     match /config/{document} {
       allow read: if isAuthenticated();
-      allow write: if false;
+      allow write: if false || isAdmin();
+    }
+    // ========================================================================
+    // FEEDBACK COLLECTION
+    // ========================================================================
+
+    match /feedback/{feedbackId} {
+      // Drivers can create feedback
+      allow create: if isDriver(request.resource.data.driverId);
+      // Only Admin (via dashboard/service account) can read
+      allow read: if isServiceAccount() || isAdmin(); 
+      allow update: if isAdmin();
     }
   }
 }
