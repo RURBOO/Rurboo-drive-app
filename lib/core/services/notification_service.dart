@@ -1,15 +1,16 @@
-import 'dart:io';
+// Notification service - Firebase Cloud Messaging
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'driver_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print("🌙 Background Message: ${message.notification?.title}");
+  debugPrint("🌙 Background Message: ${message.notification?.title}");
 }
 
 class NotificationService {
@@ -30,7 +31,7 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus != AuthorizationStatus.authorized) {
-      print("Notification Permission Denied");
+      debugPrint("Notification Permission Denied");
       return;
     }
 
@@ -70,7 +71,7 @@ class NotificationService {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("☀️ Foreground Message: ${message.notification?.title}");
+      debugPrint("☀️ Foreground Message: ${message.notification?.title}");
       _showLocalNotification(message);
     });
 
@@ -117,7 +118,7 @@ class NotificationService {
   Future<void> _updateTokenInFirestore(String token) async {
     final driverId = await DriverPreferences.getDriverId();
     if (driverId != null) {
-      print("🔥 FCM Token: $token");
+      debugPrint("🔥 FCM Token: $token");
       await FirebaseFirestore.instance
           .collection('drivers')
           .doc(driverId)

@@ -1,0 +1,121 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isDriver(driverId) {
+      return isAuthenticated() && request.auth.uid == driverId;
+    }
+    
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isServiceAccount() {
+      // Cloud Functions use service account authentication
+      return request.auth.token.firebase.sign_in_provider == 'custom';
+    }
+    
+    // ========================================================================
+    // DRIVERS COLLECTION
+    // ========================================================================
+    
+    match /drivers/{driverId} {
+      // Drivers can read their own data
+      allow read: if isDriver(driverId);
+      
+      // Allow initial profile creation during registration
+      // Enforce zero balance for new drivers
+      allow create: if isDriver(driverId) && 
+        (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0 || request.resource.data.walletBalance == 0.0) &&
+        (!('dailyCommissionDue' in request.resource.data) || request.resource.data.dailyCommissionDue == 0 || request.resource.data.dailyCommissionDue == 0.0);
+      
+      // CRITICAL: Wallet and commission fields are WRITE-PROTECTED
+      // Only Cloud Functions (service account) can update these fields
+      // EXCEPTION: Allow full overwrite if status is 'pending' (fixes re-registration permission denied)
+      allow update: if isDriver(driverId) && 
+        (
+          resource.data.status == 'pending' ||
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['walletBalance', 'lastSettlementDate'])
+        );
+      
+      // Cloud Functions can update wallet fields
+      allow write: if isServiceAccount();
+      
+      // ======================================================================
+      // WALLET & EARNINGS SUBCOLLECTIONS
+      // ======================================================================
+      
+      match /walletHistory/{transactionId} {
+        allow read: if isDriver(driverId);
+        allow write: if isServiceAccount();
+      }
+      
+      match /earnings/{earningId} {
+        allow read: if isDriver(driverId);
+        allow write: if isServiceAccount();
+      }
+
+      match /vehicles/{vehicleId} {
+        allow read, write: if isDriver(driverId);
+      }
+    }
+    
+    // ========================================================================
+    // USERS (RIDERS) COLLECTION
+    // ========================================================================
+    
+    match /users/{userId} {
+      // Users can read/write their own profile
+      allow read, write: if isUser(userId);
+      
+      // Saved Places Subcollection
+      match /savedPlaces/{placeId} {
+        allow read, write: if isUser(userId);
+      }
+    }
+    
+    // ========================================================================
+    // RIDE REQUESTS COLLECTION (SHARED)
+    // ========================================================================
+    
+    match /rideRequests/{rideId} {
+      // Both Driver and User involved in the ride can read it, OR if it's a pending request (for drivers to see)
+      allow read: if isAuthenticated() && 
+        (resource.data.status == 'pending' || 
+         request.auth.uid == resource.data.driverId || 
+         request.auth.uid == resource.data.userId);
+      
+      // Users create requests
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Updates allowed for involved parties OR for accepting a pending ride
+      allow update: if isAuthenticated() && 
+        (
+          resource.data.status == 'pending' || // Allow any auth user (driver) to pick up a pending ride
+          request.auth.uid == resource.data.driverId || 
+          request.auth.uid == resource.data.userId
+        );
+      
+      allow write: if isServiceAccount();
+    }
+    
+    // ========================================================================
+    // CONFIG COLLECTION
+    // ========================================================================
+    
+    match /config/{document} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+  }
+}

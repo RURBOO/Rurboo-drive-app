@@ -1,103 +1,131 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/services/driver_preferences.dart';
+import '../repositories/earnings_repository.dart';
 
 class EarningItem {
   final String date;
-  final String pickup;
-  final String drop;
   final double amount;
   final double commission;
+  final String pickup;
+  final String drop;
 
   EarningItem({
     required this.date,
-    required this.pickup,
-    required this.drop,
     required this.amount,
     required this.commission,
+    required this.pickup,
+    required this.drop,
   });
 }
 
 class EarningsViewModel extends ChangeNotifier {
-  double todayGross = 0;
-  double todayCommission = 0;
+  final EarningsRepository _repository = EarningsRepository();
+
+  bool isLoading = false;
+
+  // Today's Stats
+  double todayGross = 0.0;
+  double todayCommission = 0.0;
   double get todayNet => todayGross - todayCommission;
   int todayRides = 0;
 
-  double weeklyGross = 0;
-  double weeklyCommission = 0;
+  // Weekly Stats
+  double weeklyGross = 0.0;
+  double weeklyCommission = 0.0;
   double get weeklyNet => weeklyGross - weeklyCommission;
+  
+  // For Chart
+  List<double> dailyEarnings = [];
+  List<String> dailyLabels = [];
 
   List<EarningItem> rideHistory = [];
-  bool isLoading = true;
 
   Future<void> fetchEarnings() async {
     isLoading = true;
     notifyListeners();
 
-    final driverId = await DriverPreferences.getDriverId();
-    if (driverId == null) {
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-
     try {
-      final query = await FirebaseFirestore.instance
-          .collection('drivers')
-          .doc(driverId)
-          .collection('earnings')
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      rideHistory = [];
+      final now = DateTime.now();
+      
+      // 1. Today's Data
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+      final todayDocs = await _repository.getEarnings(startOfDay, endOfDay);
+      
       todayGross = 0;
       todayCommission = 0;
-      todayRides = 0;
+      todayRides = todayDocs.length;
+      
+      for (var doc in todayDocs) {
+        todayGross += (doc['amount'] as num?)?.toDouble() ?? 0.0;
+        todayCommission += (doc['commission'] as num?)?.toDouble() ?? 0.0;
+      }
+
+      // 2. Weekly Data
+      final startOfWeek = now.subtract(const Duration(days: 7));
+      final weeklyDocs = await _repository.getEarnings(startOfWeek, now);
+      
+      
+      // Initialize daily earnings for the chart (last 7 days)
+      dailyEarnings = List.filled(7, 0.0);
+      dailyLabels = [];
+      
+      // Generate labels (e.g., M, T, W)
+      for (int i = 0; i < 7; i++) {
+        // startOfWeek is now - 7 days. So today is day 7.
+        // Let's align 0 -> 6 days ago, 6 -> Today.
+        // Actually, startOfWeek = now - 7d. 
+        // day 0 = now - 6d.
+        // day 6 = now.
+        final day = now.subtract(Duration(days: 6 - i));
+        dailyLabels.add(DateFormat('E').format(day)[0]); // First letter of Day
+      }
+
       weeklyGross = 0;
       weeklyCommission = 0;
+      
+      for (var doc in weeklyDocs) {
+        final amount = (doc['amount'] as num?)?.toDouble() ?? 0.0;
+        final commission = (doc['commission'] as num?)?.toDouble() ?? 0.0;
+        final timestamp = (doc['completedAt'] as Timestamp).toDate();
+        
+        weeklyGross += amount;
+        weeklyCommission += commission;
 
-      final now = DateTime.now();
-
-      for (var doc in query.docs) {
-        final data = doc.data();
-
-        final double amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
-        final double comm = (data['commission'] as num?)?.toDouble() ?? 0.0;
-        final Timestamp? ts = data['createdAt'];
-
-        if (ts == null) continue;
-        final DateTime date = ts.toDate();
-
-        rideHistory.add(
-          EarningItem(
-            date: DateFormat('MMM d, hh:mm a').format(date),
-            pickup: data['pickup'] ?? 'Unknown',
-            drop: data['drop'] ?? 'Unknown',
-            amount: amount,
-            commission: comm,
-          ),
-        );
-
-        if (date.year == now.year &&
-            date.month == now.month &&
-            date.day == now.day) {
-          todayGross += amount;
-          todayCommission += comm;
-          todayRides++;
-        }
-
-        if (now.difference(date).inDays < 7) {
-          weeklyGross += amount;
-          weeklyCommission += comm;
+        // Find which day bucket this falls into (0..6)
+        // 0 is 6 days ago, 6 is today.
+        final diff = now.difference(timestamp).inDays;
+        // diff = 0 (today) -> index 6
+        // diff = 6 (7 days ago) -> index 0
+        if (diff >= 0 && diff < 7) {
+          int index = 6 - diff;
+          dailyEarnings[index] += amount;
         }
       }
-    } catch (e) {
-      debugPrint("Error fetching earnings: $e");
-    }
 
-    isLoading = false;
-    notifyListeners();
+      // 3. Recent Rides History
+      final historyDocs = await _repository.getRideHistory(limit: 10);
+      rideHistory = historyDocs.map((data) {
+        final ts = data['completedAt'] as Timestamp?;
+        final dateStr = ts != null 
+            ? DateFormat('dd MMM, hh:mm a').format(ts.toDate()) 
+            : 'Unknown Date';
+            
+        return EarningItem(
+          date: dateStr,
+          amount: (data['finalFare'] as num?)?.toDouble() ?? 0.0,
+          commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+          pickup: data['pickupAddress'] ?? 'Unknown Pickup',
+          drop: data['destinationAddress'] ?? 'Unknown Drop',
+        );
+      }).toList();
+      
+    } catch (e) {
+      debugPrint("Error loading earnings: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

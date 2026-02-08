@@ -24,8 +24,15 @@ class VehicleDetailsScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             DropdownButtonFormField<String>(
-              value: vm.vehicleType,
-              items: ['Car', 'Auto', 'Bike'].map((String value) {
+              initialValue: vm.vehicleType,
+              items: [
+                'Bike taxi',
+                'E-Rikshaw',
+                'Auto Rikshaw',
+                'Comfort Car',
+                'Big Car',
+                'Carrier Truck'
+              ].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),

@@ -20,8 +20,6 @@ class AuthGate extends StatelessWidget {
         return const MainNavigator();
       case DriverState.onTrip:
         return const LiveTripScreen();
-      default:
-        return const LoginScreen();
     }
   }
 }

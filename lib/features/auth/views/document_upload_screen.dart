@@ -41,6 +41,12 @@ class DocumentUploadScreen extends StatelessWidget {
                   onTap: () => vm.pickImage('profile'),
                 ),
 
+                _buildUploadTile(
+                  title: 'Vehicle Photo (Front)',
+                  fileName: vm.vehicleImageFile?.path,
+                  onTap: () => vm.pickImage('vehicle'),
+                ),
+
                 const SizedBox(height: 32),
 
                 ElevatedButton(
@@ -50,7 +56,7 @@ class DocumentUploadScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
-                    vm.submitApplication(context);
+                    vm.startRegistration(context);
                   },
                   child: const Text("Submit Application"),
                 ),

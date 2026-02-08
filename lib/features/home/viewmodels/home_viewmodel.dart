@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
@@ -9,32 +10,15 @@ import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
 import '../../../core/utils/safe_parser.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
-import '../../../core/services/polyline_service.dart';
+import '../../../core/services/driver_voice_service.dart';
+
 import '../../wallet/views/wallet_screen.dart';
 import '../services/location_service.dart';
+import 'driver_voice_viewmodel.dart';
 
-class RideRequest {
-  final String id;
-  final String pickupAddress;
-  final String destinationAddress;
-  final double fare;
-  final String distance;
-  final LatLng pickupLatLng;
-  final LatLng destLatLng;
-
-  RideRequest({
-    required this.id,
-    required this.pickupAddress,
-    required this.destinationAddress,
-    required this.fare,
-    required this.distance,
-    required this.pickupLatLng,
-    required this.destLatLng,
-  });
-}
+import '../../../core/models/ride_request.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  final PolylineService _polyService = PolylineService();
 
   bool _isDisposed = false;
   DateTime _lastNotify = DateTime.fromMillisecondsSinceEpoch(0);
@@ -57,16 +41,22 @@ class HomeViewModel extends ChangeNotifier {
 
   String? _driverVehicleType;
 
-  final double _searchRadiusKm = 5.0;
+  // final double _searchRadiusKm = 5.0; // Unused for now
 
   bool _hasInitialZoom = false;
 
   bool _hasLocationError = false;
   bool get hasLocationError => _hasLocationError;
 
+  // Voice VM Injection
+  DriverVoiceViewModel? _voiceVm;
+
   DateTime _lastGeoQueryTime = DateTime.now().subtract(
     const Duration(minutes: 1),
   );
+
+  String? _mapStyle;
+  String? get mapStyle => _mapStyle;
 
   @override
   void dispose() {
@@ -76,7 +66,9 @@ class HomeViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> initialize(AppStateViewModel appState) async {
+  Future<void> initialize(AppStateViewModel appState, {DriverVoiceViewModel? voiceVm}) async {
+    if (voiceVm != null) _voiceVm = voiceVm;
+
     _hasLocationError = false;
     notifyListeners();
 
@@ -119,6 +111,12 @@ class HomeViewModel extends ChangeNotifier {
 
   void onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    
+    // Load dark map style
+    rootBundle.loadString('assets/map_styles/dark_mode.json').then((style) {
+      _mapStyle = style;
+      notifyListeners();
+    });
 
     if (_driverLocation != null && !_hasInitialZoom) {
       mapController?.moveCamera(
@@ -128,37 +126,7 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _getCurrentLocationInstant() async {
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return;
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      _driverLocation = LatLng(position.latitude, position.longitude);
-      _isLocationReady = true;
-      _updateDriverMarker();
-
-      if (mapController != null && !_hasInitialZoom) {
-        mapController!.animateCamera(
-          CameraUpdate.newLatLngZoom(_driverLocation!, 16),
-        );
-        _hasInitialZoom = true;
-      }
-
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Error getting initial location: $e");
-    }
-  }
 
   void _startListeningToLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -284,22 +252,23 @@ class HomeViewModel extends ChangeNotifier {
 
     _lastGeoQueryTime = DateTime.now();
 
-    if (_driverVehicleType == null) {
-      _driverVehicleType = await DriverPreferences.getVehicleType();
       if (_driverVehicleType == null) {
-        print("ERROR: Driver Vehicle Type is NULL. Cannot filter rides.");
-        return;
+        _driverVehicleType = await DriverPreferences.getVehicleType();
+        if (_driverVehicleType == null) {
+          debugPrint("ERROR: Driver Vehicle Type is NULL. Cannot filter rides.");
+          return;
+        }
       }
-    }
 
+    // Reverted to CollectionReference and using queryBuilder for filtering
     final CollectionReference<Map<String, dynamic>> collectionRef =
-        FirebaseFirestore.instance.collection('rideRequests');
+      FirebaseFirestore.instance.collection('rideRequests');
 
     final GeoFirePoint center = GeoFirePoint(
       GeoPoint(_driverLocation!.latitude, _driverLocation!.longitude),
     );
 
-    print("LISTENER STARTED: Type='$_driverVehicleType' | Radius=50km");
+    debugPrint("LISTENER STARTED: Type='$_driverVehicleType' | Radius=50km");
 
     _rideSubscription = GeoCollectionReference(collectionRef)
         .subscribeWithin(
@@ -313,18 +282,21 @@ class HomeViewModel extends ChangeNotifier {
             }
             return const GeoPoint(0, 0);
           },
+          // Adding queryBuilder to filter by status='pending'
+          queryBuilder: (query) => query.where('status', isEqualTo: 'pending'),
           strictMode: true,
         )
-        .listen((List<DocumentSnapshot<Map<String, dynamic>>> docs) {
+        // Fixed type signature for listen to avoid generic mismatch
+        .listen((List<DocumentSnapshot> docs) {
           if (_isDisposed) return;
 
           RideRequest? foundRequest;
           double closestDist = double.infinity;
 
-          print("FIRESTORE EVENT: Found ${docs.length} docs in radius.");
+          debugPrint("FIRESTORE EVENT: Found ${docs.length} docs in radius.");
 
           for (var doc in docs) {
-            final data = doc.data();
+            final data = doc.data() as Map<String, dynamic>?; // Cast data manually
             if (data == null) continue;
 
             final String docId = doc.id;
@@ -333,9 +305,9 @@ class HomeViewModel extends ChangeNotifier {
                 .toString();
             final String driverCategory = _driverVehicleType ?? '';
 
-            print("--- Checking Ride: $docId ---");
-            print("Server Status: '$status'");
-            print(
+            debugPrint("--- Checking Ride: $docId ---");
+            debugPrint("Server Status: '$status'");
+            debugPrint(
               "Server Category: '$rideCategory' vs Driver: '$driverCategory'",
             );
 
@@ -355,7 +327,7 @@ class HomeViewModel extends ChangeNotifier {
                 p.longitude,
               );
 
-              print("MATCH FOUND! Distance: $dist meters");
+              debugPrint("MATCH FOUND! Distance: $dist meters");
 
               if (dist < closestDist) {
                 closestDist = dist;
@@ -372,16 +344,22 @@ class HomeViewModel extends ChangeNotifier {
                 );
               }
             } else {
-              print("SKIPPED: Status or Category mismatch.");
+              debugPrint("SKIPPED: Status or Category mismatch.");
             }
           }
 
           if (_newRideRequest?.id != foundRequest?.id) {
-            print("STATE UPDATE: New Ride = ${foundRequest?.id ?? 'NULL'}");
+            debugPrint("STATE UPDATE: New Ride = ${foundRequest?.id ?? 'NULL'}");
             _newRideRequest = foundRequest;
 
             if (_newRideRequest == null) {
               _clearRoute();
+            } else {
+              // 🔊 VOICE ANNOUNCEMENT
+              _voiceVm?.announceNewRide(
+                  _newRideRequest!.pickupAddress, 
+                  _newRideRequest!.distance
+              );
             }
             notifyListeners();
           }
@@ -398,7 +376,17 @@ class HomeViewModel extends ChangeNotifier {
     AppStateViewModel appState,
     BuildContext context,
   ) async {
+    debugPrint("TOGGLE ONLINE: Requesting status -> $newStatus");
+    final voiceService = DriverVoiceService();
+    
+    if (!context.mounted) {
+      debugPrint("TOGGLE ONLINE: Context not mounted, aborting.");
+      return;
+    }
+
     if (!newStatus) {
+      debugPrint("TOGGLE ONLINE: Going OFFLINE");
+      voiceService.announceGoingOffline();
       appState.goOffline();
       _stopListeningToRides();
       _locationSubscription?.cancel();
@@ -408,31 +396,67 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    // GPS Check before going online
+    debugPrint("TOGGLE ONLINE: Checking GPS Readiness...");
+    if (!_isLocationReady) {
+      debugPrint("TOGGLE ONLINE: GPS not ready, attempting to fetch location...");
+      final locationService = LocationService();
+      final latLng = await locationService.getCurrentLocation();
+      if (latLng != null) {
+        _driverLocation = latLng;
+        _isLocationReady = true;
+        _hasLocationError = false;
+        debugPrint("TOGGLE ONLINE: GPS Fixed: $latLng");
+      } else {
+        debugPrint("TOGGLE ONLINE: GPS Failed!");
+        _hasLocationError = true;
+        notifyListeners();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cannot go online: GPS not ready")),
+          );
+        }
+        return;
+      }
+    }
+
     final driverId = await DriverPreferences.getDriverId();
+    debugPrint("TOGGLE ONLINE: Driver ID: $driverId");
     if (driverId == null) return;
 
     try {
+      debugPrint("TOGGLE ONLINE: Checking and Settling Dues...");
       await _checkAndSettleDues(driverId);
 
+      debugPrint("TOGGLE ONLINE: Fetching Wallet Balance...");
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
           .doc(driverId)
           .get();
       final double walletBalance =
           (doc.data()!['walletBalance'] as num?)?.toDouble() ?? 0.0;
+      debugPrint("TOGGLE ONLINE: Wallet Balance: $walletBalance");
 
-      if (walletBalance < 0) {
-        _showBlockScreen(
-          context,
-          walletBalance,
-          "Daily Settlement Complete.\nYour wallet balance is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start today's shift.",
-        );
-        notifyListeners();
-        return;
+      if (context.mounted) {
+        if (walletBalance < 0) {
+          debugPrint("TOGGLE ONLINE: Blocked due to Negative Balance");
+          voiceService.announceNegativeWallet();
+          _showBlockScreen(
+            context,
+            walletBalance,
+            "Daily Settlement Complete.\nYour wallet balance is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start today's shift.",
+          );
+          notifyListeners();
+          return;
+        }
+
+        debugPrint("TOGGLE ONLINE: Success! Proceeding Online.");
+        voiceService.announceGoingOnline();
+        _proceedOnline(appState);
       }
-
-      _proceedOnline(appState);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("TOGGLE ONLINE ERROR: $e");
+    }
   }
 
   void _showBlockScreen(BuildContext context, double balance, String msg) {
@@ -511,29 +535,7 @@ class HomeViewModel extends ChangeNotifier {
     _safeNotifyListeners();
   }
 
-  Future<void> _simulateRecharge(BuildContext context, double amount) async {
-    Navigator.pop(context);
 
-    final driverId = await DriverPreferences.getDriverId();
-    if (driverId == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('drivers')
-        .doc(driverId)
-        .update({
-          'walletBalance': FieldValue.increment(amount),
-          'lastWalletUpdate': FieldValue.serverTimestamp(),
-        });
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Payment successful. You can go online now."),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
 
   void _stopListeningToRides() {
     _rideSubscription?.cancel();
@@ -606,6 +608,9 @@ class HomeViewModel extends ChangeNotifier {
       if (context.mounted) {
         Navigator.pop(context);
         appState.acceptRide(rideId);
+        
+        // 🔊 VOICE ANNOUNCEMENT
+        _voiceVm?.announceRideAccepted();
       }
     } catch (e) {
       if (context.mounted) {
@@ -638,6 +643,14 @@ class HomeViewModel extends ChangeNotifier {
     final double commissionDue =
         (data['dailyCommissionDue'] as num?)?.toDouble() ?? 0.0;
 
+    // If commission is 0, we don't need to do anything complex.
+    // We can just skip the settlement logic to avoid permission issues
+    // since we can't write to protected fields from the client anyway.
+    if (commissionDue <= 0) {
+      debugPrint("Settlement skipped: Commission Due is $commissionDue");
+      return;
+    }
+
     final Timestamp? lastSettlementTs = data['lastSettlementDate'];
     final DateTime now = DateTime.now();
     bool needsSettlement = true;
@@ -651,34 +664,12 @@ class HomeViewModel extends ChangeNotifier {
       }
     }
 
-    if (needsSettlement && commissionDue > 0) {
-      print("Performing Daily Settlement: -₹$commissionDue");
-
-      final batch = FirebaseFirestore.instance.batch();
-      final driverRef = FirebaseFirestore.instance
-          .collection('drivers')
-          .doc(driverId);
-      final walletRef = driverRef.collection('walletHistory').doc();
-
-      batch.update(driverRef, {
-        'walletBalance': FieldValue.increment(-commissionDue),
-        'dailyCommissionDue': 0,
-        'lastSettlementDate': FieldValue.serverTimestamp(),
-      });
-
-      batch.set(walletRef, {
-        'amount': commissionDue,
-        'type': 'debit',
-        'description': 'Daily Settlement (Yesterday)',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      await batch.commit();
-    } else if (needsSettlement && commissionDue == 0) {
-      await FirebaseFirestore.instance
-          .collection('drivers')
-          .doc(driverId)
-          .update({'lastSettlementDate': FieldValue.serverTimestamp()});
+    // NOTE: Real settlement (deducting balance) should be done by Cloud Functions.
+    // The client only checks if it SHOULD be done to block the user if needed.
+    // For now, we will just log it. The Cloud Function 'dailySettlement' handles the actual deduction.
+    
+    if (needsSettlement) {
+       debugPrint("Daily Settlement Required for ₹$commissionDue. Waiting for Cloud Function.");
     }
   }
 

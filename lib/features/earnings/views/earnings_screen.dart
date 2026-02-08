@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../viewmodels/earnings_viewmodel.dart';
+import 'ride_history_screen.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class EarningsScreen extends StatelessWidget {
   const EarningsScreen({super.key});
@@ -24,9 +27,10 @@ class _EarningsScreenBody extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("My Earnings"),
+        title: Text(AppLocalizations.of(context)!.earnings),
         backgroundColor: Colors.white,
         elevation: 0.5,
+        foregroundColor: Colors.black,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -37,14 +41,13 @@ class _EarningsScreenBody extends StatelessWidget {
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () =>
-                  context.read<EarningsViewModel>().fetchEarnings(),
+              onRefresh: () => context.read<EarningsViewModel>().fetchEarnings(),
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   _buildDetailedCard(
                     context,
-                    title: "Today's Earnings",
+                    title: AppLocalizations.of(context)!.todayEarnings,
                     gross: vm.todayGross,
                     commission: vm.todayCommission,
                     net: vm.todayNet,
@@ -54,35 +57,186 @@ class _EarningsScreenBody extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  _buildDetailedCard(
-                    context,
-                    title: "This Week",
-                    gross: vm.weeklyGross,
-                    commission: vm.weeklyCommission,
-                    net: vm.weeklyNet,
-                    rides: null,
-                    color: Colors.blue,
+                  const SizedBox(height: 16),
+                  
+                  // Weekly Chart Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.thisWeek,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        AspectRatio(
+                          aspectRatio: 1.5,
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              maxY: vm.dailyEarnings.isEmpty 
+                                  ? 100 
+                                  : (vm.dailyEarnings.reduce((a, b) => a > b ? a : b) * 1.2),
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  // tooltipBgColor: Colors.black, // Deprecated in v0.68+
+                                  getTooltipColor: (_) => Colors.black,
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                    return BarTooltipItem(
+                                      '₹${rod.toY.round()}',
+                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    );
+                                  },
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      if (value.toInt() >= 0 && value.toInt() < vm.dailyLabels.length) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            vm.dailyLabels[value.toInt()],
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox();
+                                    },
+                                    reservedSize: 30,
+                                  ),
+                                ),
+                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              ),
+                              gridData: const FlGridData(show: false),
+                              borderData: FlBorderData(show: false),
+                              barGroups: List.generate(vm.dailyEarnings.length, (index) {
+                                return BarChartGroupData(
+                                  x: index,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: vm.dailyEarnings[index],
+                                      color: vm.dailyEarnings[index] > 0 ? Colors.green : Colors.grey.shade300,
+                                      width: 12,
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                                      backDrawRodData: BackgroundBarChartRodData(
+                                        show: true,
+                                        toY: (vm.dailyEarnings.isEmpty 
+                                            ? 100 
+                                            : (vm.dailyEarnings.reduce((a, b) => a > b ? a : b) * 1.2)),
+                                        color: Colors.grey.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Total",
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                                Text(
+                                  "₹${vm.weeklyGross.toStringAsFixed(0)}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                             Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "Net",
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                                Text(
+                                  "₹${vm.weeklyNet.toStringAsFixed(0)}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
 
-                  const Padding(
-                    padding: EdgeInsets.only(top: 24.0, bottom: 8.0),
-                    child: Text(
-                      "Recent History",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.recentHistory,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RideHistoryScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(AppLocalizations.of(context)!.viewAll),
+                        ),
+                      ],
                     ),
                   ),
 
                   if (vm.rideHistory.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: Center(child: Text("No rides yet.")),
+                    Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Center(child: Text(AppLocalizations.of(context)!.noRides)),
                     )
                   else
                     ...vm.rideHistory.map(
-                      (ride) => _buildRideHistoryTile(ride),
+                      (ride) => _buildRideHistoryTile(context, ride),
                     ),
                 ],
               ),
@@ -106,7 +260,7 @@ class _EarningsScreenBody extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -137,7 +291,7 @@ class _EarningsScreenBody extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    "$rides Rides",
+                    "$rides ${AppLocalizations.of(context)!.rides}",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -157,9 +311,9 @@ class _EarningsScreenBody extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Text(
-            "Cash Collected",
-            style: TextStyle(color: Colors.white54, fontSize: 12),
+          Text(
+            AppLocalizations.of(context)!.grossEarnings,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
 
           const Divider(color: Colors.white24, height: 24),
@@ -177,9 +331,9 @@ class _EarningsScreenBody extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
-                    "Platform Fee",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  Text(
+                    AppLocalizations.of(context)!.platformFee,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -194,9 +348,9 @@ class _EarningsScreenBody extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
-                    "Net Profit",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  Text(
+                    AppLocalizations.of(context)!.netProfit,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -207,78 +361,70 @@ class _EarningsScreenBody extends StatelessWidget {
     );
   }
 
-  Widget _buildRideHistoryTile(EarningItem ride) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
+  Widget _buildRideHistoryTile(BuildContext context, EarningItem ride) {
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.currency_rupee, color: Colors.green, size: 20),
+        ),
+        title: Text(
+          ride.pickup,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  ride.date,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '₹${ride.amount.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    if (ride.commission > 0)
-                      Text(
-                        "- ₹${ride.commission.toStringAsFixed(0)} Fee",
-                        style: const TextStyle(fontSize: 10, color: Colors.red),
-                      )
-                    else
-                      const Text(
-                        "Free Trial",
-                        style: TextStyle(fontSize: 10, color: Colors.green),
-                      ),
-                  ],
-                ),
-              ],
+             const SizedBox(height: 4),
+             Text(
+              ride.drop,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+               style: TextStyle(color: Colors.grey[600], fontSize: 12),
+             ),
+             const SizedBox(height: 4),
+             Text(
+               ride.date,
+               style: TextStyle(color: Colors.grey[400], fontSize: 10),
+             ),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '₹${ride.amount.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black87,
+              ),
             ),
-            const Divider(height: 20),
-            Row(
-              children: [
-                const Icon(Icons.circle, color: Colors.green, size: 10),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    ride.pickup,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.square, color: Colors.red, size: 10),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    ride.drop,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
+            if (ride.commission > 0)
+              Text(
+                "- ₹${ride.commission.toStringAsFixed(0)}",
+                style: const TextStyle(fontSize: 10, color: Colors.red),
+              ),
           ],
         ),
       ),

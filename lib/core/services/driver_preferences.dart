@@ -50,4 +50,17 @@ class DriverPreferences {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyVehicleType);
   }
+
+  // Voice Preference
+  static const String _keyVoiceEnabled = 'voice_enabled';
+
+  static Future<void> saveVoiceEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyVoiceEnabled, enabled);
+  }
+
+  static Future<bool> getVoiceEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyVoiceEnabled) ?? true; // Default ON
+  }
 }

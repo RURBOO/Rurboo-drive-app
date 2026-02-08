@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/driver_preferences.dart';
+import '../../../core/services/driver_voice_service.dart';
 import '../../../navigation/views/auth_gate.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../auth/views/location_disclosure_screen.dart';
@@ -22,7 +23,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    _initVoice();
     _checkInternetAndStart();
+  }
+
+  Future<void> _initVoice() async {
+    final voiceService = DriverVoiceService();
+    await voiceService.init();
+    voiceService.announceAppLaunch();
   }
 
   Future<void> _checkInternetAndStart() async {

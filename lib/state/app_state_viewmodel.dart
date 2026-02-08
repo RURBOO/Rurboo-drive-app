@@ -68,7 +68,7 @@ class AppStateViewModel extends ChangeNotifier {
           final String status = snapshot.data()?['status'] ?? 'pending';
 
           if (status != 'verified') {
-            print("SECURITY: Driver no longer verified. Forcing logout.");
+            debugPrint("SECURITY: Driver no longer verified. Forcing logout.");
             signOut();
           }
         });

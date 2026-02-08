@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class ImageUtils {
@@ -17,7 +18,7 @@ class ImageUtils {
 
       return base64Encode(result);
     } catch (e) {
-      print("Image Encoding Error: $e");
+      debugPrint("Image Encoding Error: $e");
       return null;
     }
   }

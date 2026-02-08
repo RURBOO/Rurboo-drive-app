@@ -5,7 +5,6 @@ import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
 import 'location_disclosure_screen.dart';
 import 'login_screen.dart';
-import '../../home/views/home_screen.dart';
 
 class PendingApprovalScreen extends StatefulWidget {
   const PendingApprovalScreen({super.key});
@@ -24,12 +23,18 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) return;
 
+      debugPrint("Checking status for Driver ID: $driverId");
+      
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
           .doc(driverId)
           .get();
 
-      if (doc.exists && doc.data()?['status'] == 'verified') {
+      debugPrint("Firestore Data: ${doc.data()}");
+      final status = doc.data()?['status'];
+      debugPrint("Current Status: '$status'");
+
+      if (doc.exists && status == 'verified') {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
@@ -47,6 +52,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
         }
       }
     } catch (e) {
+      debugPrint("Status check error: $e");
     } finally {
       if (mounted) setState(() => isChecking = false);
     }
@@ -79,7 +85,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

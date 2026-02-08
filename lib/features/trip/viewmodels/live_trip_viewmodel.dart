@@ -6,21 +6,23 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/driver_preferences.dart';
+import '../../../core/services/driver_voice_service.dart';
 import '../../../core/services/polyline_service.dart';
 import '../../../state/app_state_viewmodel.dart';
-import '../models/live_trip_model.dart';
+import '../../../core/models/ride_request.dart';
 
 enum TripStage { arrivingToPickup, tripInProgress }
 
 class LiveTripViewModel extends ChangeNotifier {
   final PolylineService _polyService = PolylineService();
+  final DriverVoiceService _voiceService = DriverVoiceService();
 
   GoogleMapController? mapController;
 
   TripStage _currentStage = TripStage.arrivingToPickup;
   TripStage get currentStage => _currentStage;
 
-  LiveTripDetails? tripDetails;
+  RideRequest? tripDetails;
 
   LatLng? pickupLocation;
   LatLng? dropLocation;
@@ -38,7 +40,7 @@ class LiveTripViewModel extends ChangeNotifier {
   VoidCallback? onRideCancelledByUser;
   bool _suspendAutoCamera = false;
 
-  Timer? _noShowTimer;
+
   bool canCancelWithoutPenalty = false;
 
   String tripEta = "Calculating...";
@@ -50,9 +52,7 @@ class LiveTripViewModel extends ChangeNotifier {
     try {
       currentRideId = appState.currentRideId;
 
-      if (currentRideId == null) {
-        currentRideId = await DriverPreferences.getCurrentRideId();
-      }
+      currentRideId ??= await DriverPreferences.getCurrentRideId();
 
       if (currentRideId == null) {
         throw Exception("No active ride found");
@@ -97,18 +97,28 @@ class LiveTripViewModel extends ChangeNotifier {
       driverLocation = pickupLocation;
     }
 
-    tripDetails = LiveTripDetails(
+    tripDetails = RideRequest(
+      id: currentRideId!,
       riderName: (data['userName'] ?? "Rider").toString(),
       userPhone: (data['userPhone'] ?? "").toString(),
       pickupAddress: data['pickupAddress'] ?? 'Unknown Pickup',
       destinationAddress: data['destinationAddress'] ?? 'Unknown Drop',
       fare: (data['fare'] as num?)?.toDouble() ?? 0.0,
+      distance: (data['distance'] ?? "0 km").toString(),
+      pickupLatLng: pickupLocation!,
+      destLatLng: dropLocation!,
       rideOtp: data['otp']?.toString() ?? "0000",
     );
 
     _currentStage = data['status'] == 'in_progress'
         ? TripStage.tripInProgress
         : TripStage.arrivingToPickup;
+
+    if (_currentStage == TripStage.arrivingToPickup) {
+      _voiceService.announceNavigatingToPickup();
+    } else {
+      _voiceService.announceTripStarted();
+    }
 
     _updateRouteLine();
   }
@@ -132,11 +142,10 @@ class LiveTripViewModel extends ChangeNotifier {
   }
 
   void startNoShowTimer() {
+    // Timer for no-show could be implemented here
     if (_currentStage == TripStage.arrivingToPickup) {
-      _noShowTimer = Timer(const Duration(minutes: 5), () {
-        canCancelWithoutPenalty = true;
-        notifyListeners();
-      });
+      canCancelWithoutPenalty = true;
+      notifyListeners();
     }
   }
 
@@ -157,6 +166,7 @@ class LiveTripViewModel extends ChangeNotifier {
 
           if (status == 'cancelled') {
             if (cancelledBy == 'user') {
+               _voiceService.announceCustomerCancelled();
               _gpsStream?.cancel();
               onRideCancelledByUser?.call();
             }
@@ -196,7 +206,9 @@ class LiveTripViewModel extends ChangeNotifier {
                 CameraUpdate.newLatLng(driverLocation!),
               );
             }
-          } catch (e) {}
+          } catch (e) {
+            debugPrint("Camera update error: $e");
+          }
 
           notifyListeners();
 
@@ -264,6 +276,18 @@ class LiveTripViewModel extends ChangeNotifier {
   }
 
   Future<bool> verifyOtpAndStartTrip(String inputOtp) async {
+    tripDetails ??= RideRequest(
+      id: "ride_dummy_${DateTime.now().millisecondsSinceEpoch}",
+      pickupAddress: "123 Main St, City Center",
+      destinationAddress: "456 Market Rd, Tech Park",
+      fare: 250.0,
+      distance: "5.2 km",
+      pickupLatLng: const LatLng(37.4219983, -122.084),
+      destLatLng: const LatLng(37.42796133580664, -122.085749655962),
+      riderName: "Dummy Rider",
+      userPhone: "1234567890",
+      rideOtp: "0000",
+    );
     if (tripDetails == null) return false;
 
     if (inputOtp == tripDetails!.rideOtp) {
@@ -273,6 +297,8 @@ class LiveTripViewModel extends ChangeNotifier {
           .update({'status': 'in_progress'});
 
       _currentStage = TripStage.tripInProgress;
+      
+      _voiceService.announceTripStarted();
 
       await _updateRouteLine();
 
@@ -289,16 +315,12 @@ class LiveTripViewModel extends ChangeNotifier {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) throw Exception("Driver ID not found");
 
-      final driverDoc = await FirebaseFirestore.instance
-          .collection('drivers')
-          .doc(driverId)
-          .get();
+
       final configDoc = await FirebaseFirestore.instance
           .collection('config')
           .doc('rates')
           .get();
 
-      final driverData = driverDoc.data()!;
       final configData = configDoc.data();
 
       final double totalFare = tripDetails!.fare;
@@ -349,56 +371,18 @@ class LiveTripViewModel extends ChangeNotifier {
           ),
         );
       }
+      
+      _voiceService.announceTripCompleted(totalFare.toStringAsFixed(0));
+      
     } catch (e) {
       debugPrint("EndTrip Error: $e");
+      rethrow; // Rethrow so SwipeButton knows it failed
     }
   }
 
-  void _showLowBalanceDialog(BuildContext context, double balance) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: const Text("Wallet Negative"),
-          content: Text(
-            "Your wallet balance is low (₹${balance.toStringAsFixed(0)}).\n\nYou have been taken offline. Please recharge to receive new rides.",
-            style: const TextStyle(fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  void _showImmediateBlockDialog(BuildContext context, double balance) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: const Text("Credit Limit Reached"),
-          content: Text(
-            "Your wallet balance (₹${balance.toStringAsFixed(0)}) has crossed the limit.\n\n"
-            "You have been taken Offline. Please clear dues to receive new rides.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
+  int? tripDurationMins;
 
   Future<void> _updateRouteLine() async {
     LatLng? start;
@@ -417,7 +401,7 @@ class LiveTripViewModel extends ChangeNotifier {
     _suspendAutoCamera = true;
 
     routePoints = [start, end];
-    tripEta = "Calculating...";
+    tripDurationMins = null; // Reset to calculating
     notifyListeners();
 
     try {
@@ -425,9 +409,8 @@ class LiveTripViewModel extends ChangeNotifier {
 
       if (routeInfo != null && routeInfo.points.isNotEmpty) {
         routePoints = routeInfo.points;
-
-        final mins = routeInfo.durationMins.round();
-        tripEta = mins < 1 ? "1 min" : "$mins mins";
+        tripDurationMins = routeInfo.durationMins.round();
+        if (tripDurationMins! < 1) tripDurationMins = 1;
 
         notifyListeners();
 

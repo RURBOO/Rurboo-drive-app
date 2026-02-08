@@ -7,6 +7,10 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/driver_voice_viewmodel.dart';
+import '../../../core/services/safety_service.dart';
+import '../../../core/models/ride_request.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -21,7 +25,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _HomeScreenBody extends StatefulWidget {
-  const _HomeScreenBody({Key? key}) : super(key: key);
+  const _HomeScreenBody();
 
   @override
   _HomeScreenBodyState createState() => _HomeScreenBodyState();
@@ -30,7 +34,6 @@ class _HomeScreenBody extends StatefulWidget {
 class _HomeScreenBodyState extends State<_HomeScreenBody> {
   late HomeViewModel _vm;
   bool isGpsEnabled = true;
-  bool _isRideSheetVisible = false;
   StreamSubscription<ServiceStatus>? _serviceStatusStream;
 
   @override
@@ -38,62 +41,20 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
     super.initState();
     _vm = context.read<HomeViewModel>();
     final appState = context.read<AppStateViewModel>();
-
+    
     WakelockPlus.enable();
     _checkGps();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _vm.initialize(appState);
-      _vm.addListener(_onRideStateChanged);
-      _onRideStateChanged();
+      final voiceVm = context.read<DriverVoiceViewModel>();
+      _vm.initialize(appState, voiceVm: voiceVm);
     });
 
     _serviceStatusStream = Geolocator.getServiceStatusStream().listen((status) {
-      if (mounted)
+      if (mounted) {
         setState(() => isGpsEnabled = (status == ServiceStatus.enabled));
+      }
     });
-  }
-
-  void _onRideStateChanged() {
-    if (!mounted) return;
-    final homeVm = context.read<HomeViewModel>();
-
-    if (homeVm.newRideRequest != null && !_isRideSheetVisible) {
-      print("UI: Opening Ride Sheet");
-      setState(() => _isRideSheetVisible = true);
-
-      showModalBottomSheet(
-        context: context,
-        isDismissible: false,
-        enableDrag: false,
-        builder: (ctx) => _RideRequestSheet(
-          request: homeVm.newRideRequest!,
-          onAccept: () async {
-            Navigator.pop(ctx);
-            setState(() => _isRideSheetVisible = false);
-            await homeVm.acceptRide(context, context.read<AppStateViewModel>());
-          },
-          onReject: () {
-            Navigator.pop(ctx);
-            setState(() => _isRideSheetVisible = false);
-            homeVm.rejectRide();
-          },
-        ),
-      ).whenComplete(() {
-        if (mounted) setState(() => _isRideSheetVisible = false);
-      });
-    } else if (homeVm.newRideRequest == null && _isRideSheetVisible) {
-      print("UI: Closing Ride Sheet (User Cancelled)");
-      Navigator.pop(context);
-      setState(() => _isRideSheetVisible = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Ride was cancelled by user"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   Future<void> _checkGps() async {
@@ -107,59 +68,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
   void dispose() {
     WakelockPlus.disable();
     _serviceStatusStream?.cancel();
-    _vm.removeListener(_onRideStateChanged);
     super.dispose();
-  }
-
-  void _handleRideRequestChanges() {
-    if (!mounted) return;
-    final homeVm = context.read<HomeViewModel>();
-
-    if (homeVm.newRideRequest != null && !_isRideSheetVisible) {
-      _isRideSheetVisible = true;
-      _showRideRequestSheet();
-    } else if (homeVm.newRideRequest == null) {
-      if (_isRideSheetVisible) {
-        Navigator.pop(context);
-        _isRideSheetVisible = false;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Ride Request Cancelled")));
-      }
-    }
-  }
-
-  void _showRideRequestSheet() {
-    final homeVm = context.read<HomeViewModel>();
-    final appState = context.read<AppStateViewModel>();
-
-    if (!mounted) return;
-    if (_isRideSheetVisible) return;
-
-    if (homeVm.newRideRequest != null) {
-      _isRideSheetVisible = true;
-
-      showModalBottomSheet(
-        context: context,
-        isDismissible: false,
-        enableDrag: false,
-        builder: (sheetContext) => _RideRequestSheet(
-          request: homeVm.newRideRequest!,
-          onAccept: () async {
-            Navigator.pop(sheetContext);
-            _isRideSheetVisible = false;
-            await homeVm.acceptRide(context, appState);
-          },
-          onReject: () {
-            Navigator.pop(sheetContext);
-            _isRideSheetVisible = false;
-            homeVm.rejectRide();
-          },
-        ),
-      ).whenComplete(() {
-        _isRideSheetVisible = false;
-      });
-    }
   }
 
   @override
@@ -167,92 +76,12 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
     final homeVm = context.watch<HomeViewModel>();
     final appState = context.watch<AppStateViewModel>();
 
-    final isOnline =
-        appState.currentState == DriverState.online ||
-        appState.currentState == DriverState.onTrip;
-
+    final isOnline = appState.currentState == DriverState.online || 
+                     appState.currentState == DriverState.onTrip;
+    // Helper to check if GPS permission is granted and service is enabled
+    // homeVm.isLocationReady is updated by the VM based on events
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Driver Home'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Row(
-              children: [
-                if (isOnline)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: homeVm.isLocationReady
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.gps_fixed,
-                          size: 12,
-                          color: homeVm.isLocationReady
-                              ? Colors.green
-                              : Colors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          homeVm.isLocationReady ? "GPS Ready" : "Searching...",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: homeVm.isLocationReady
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                Text(
-                  isOnline ? "You are Online" : "You are Offline",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isOnline ? Colors.green : Colors.red,
-                  ),
-                ),
-                Switch(
-                  value: isOnline,
-                  onChanged: (newStatus) {
-                    if (appState.currentState == DriverState.onTrip) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Cannot go offline during a trip"),
-                        ),
-                      );
-                      return;
-                    }
-                    if (newStatus && !isGpsEnabled) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Turn on GPS first!")),
-                      );
-                      return;
-                    }
-                    homeVm.toggleOnlineStatus(newStatus, appState, context);
-                  },
-                  activeTrackColor: Colors.green.shade200,
-                  activeColor: Colors.green.shade600,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
       body: homeVm.hasLocationError
           ? SizedBox.expand(
               child: Container(
@@ -261,54 +90,16 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.location_disabled,
-                        size: 72,
-                        color: Colors.red,
+                      Icon(Icons.location_off, size: 80, color: Colors.grey[400]),
+                      const SizedBox(height: 20),
+                      Text(
+                        AppLocalizations.of(context)!.locationPermissionNeeded,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        "Location Required",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          "We couldn't detect your location.\n\n"
-                          "Please ensure:\n"
-                          "• GPS is turned ON\n"
-                          "• Internet is connected\n"
-                          "• Location permission is allowed",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          homeVm.initialize(appState);
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text("Retry"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
+                      ElevatedButton(
+                        onPressed: () => homeVm.initialize(appState),
+                        child: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -319,29 +110,173 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
               children: [
                 GoogleMap(
                   onMapCreated: homeVm.onMapCreated,
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(20.59, 78.96),
-                    zoom: 4.0,
+                  initialCameraPosition: CameraPosition(
+                    target: homeVm.driverLocation ?? const LatLng(0, 0),
+                    zoom: 16,
                   ),
+                  myLocationEnabled: false,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  style: homeVm.mapStyle,
                   markers: homeVm.markers,
                   polylines: homeVm.polylines,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: true,
-                  zoomControlsEnabled: false,
-                  padding: const EdgeInsets.only(bottom: 100),
+                  padding: const EdgeInsets.only(top: 100, bottom: 200), // Adjusted padding
+                ),
+
+                // Floating Top Bar (Status)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withValues(alpha: 0.8),
+                          Colors.black.withValues(alpha: 0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Status Card
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: isOnline ? Colors.green : Colors.grey,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                isOnline 
+                                    ? AppLocalizations.of(context)!.youAreOnline 
+                                    : AppLocalizations.of(context)!.youAreOffline,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Transform.scale(
+                                scale: 0.8,
+                                child: Switch(
+                                  value: isOnline,
+                                  onChanged: (newStatus) {
+                                    if (appState.currentState == DriverState.onTrip) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Cannot go offline during a trip"),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    if (newStatus && !isGpsEnabled) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text("Turn on GPS first!")),
+                                      );
+                                      return;
+                                    }
+                                    homeVm.toggleOnlineStatus(newStatus, appState, context);
+                                  },
+                                  activeThumbColor: Colors.white,
+                                  activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const Spacer(),
+                        
+                        // GPS Status
+                        Container(
+                           width: 40,
+                           height: 40,
+                           decoration: BoxDecoration(
+                             color: Colors.white,
+                             shape: BoxShape.circle,
+                             boxShadow: [
+                               BoxShadow(
+                                 color: Colors.black.withValues(alpha: 0.1),
+                                 blurRadius: 8,
+                               ),
+                             ],
+                           ),
+                           child: Icon(
+                             Icons.gps_fixed,
+                             size: 20,
+                             color: homeVm.isLocationReady ? Colors.green : Colors.orange,
+                           ),
+                        ),
+                        
+                        const SizedBox(width: 12),
+                        
+                        // SOS Button
+                        GestureDetector(
+                          onTap: () => SafetyService().callPolice(),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.sos, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
                 if (!isOnline)
-                  Container(
-                    color: Colors.black.withOpacity(0.6),
-                    child: const Center(
-                      child: Text(
-                        "You are Offline.\nGo Online to earn.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  Positioned.fill(
+                    top: 100,
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.offline_bolt, color: Colors.white, size: 60),
+                            const SizedBox(height: 16),
+                            Text(
+                              AppLocalizations.of(context)!.goOnlineToEarn,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -349,11 +284,20 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
 
                 if (!isGpsEnabled)
                   Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
+                    top: 100,
+                    left: 16,
+                    right: 16,
                     child: Container(
-                      color: Colors.red,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 10,
+                          )
+                        ],
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -383,6 +327,23 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                       ),
                     ),
                   ),
+                  
+                // Ride Request Sheet
+                if (homeVm.newRideRequest != null)
+                   Positioned(
+                     bottom: 0,
+                     left: 0,
+                     right: 0,
+                     child: _RideRequestSheet(
+                       request: homeVm.newRideRequest!,
+                       onAccept: () async {
+                         await homeVm.acceptRide(context, appState);
+                       },
+                       onReject: () {
+                         homeVm.rejectRide();
+                       },
+                     ),
+                   ),
               ],
             ),
     );
@@ -403,67 +364,120 @@ class _RideRequestSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "New Ride Request",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Center(
+            child: Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '₹${request.fare.toStringAsFixed(2)}',
+                AppLocalizations.of(context)!.newRideRequest,
                 style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
               ),
-              Text(
-                request.distance,
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "₹${request.fare.toStringAsFixed(0)}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
               ),
             ],
           ),
-          const Divider(height: 24),
-          _buildAddressRow(
-            icon: Icons.my_location,
-            address: request.pickupAddress,
-          ),
-          const SizedBox(height: 16),
-          _buildAddressRow(
-            icon: Icons.location_on,
-            address: request.destinationAddress,
-            color: Colors.red,
-          ),
           const SizedBox(height: 24),
+          _buildLocationRow(
+            context,
+            Icons.my_location, 
+            Colors.green, 
+            AppLocalizations.of(context)!.pickup,
+            request.pickupAddress
+          ),
+          const SizedBox(height: 20), // Spacing between rows
+          _buildLocationRow(
+            context,
+            Icons.location_on, 
+            Colors.red, 
+            AppLocalizations.of(context)!.drop,
+            request.destinationAddress
+          ),
+          const SizedBox(height: 32),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onAccept,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text("Accept", style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: 16),
               Expanded(
                 child: OutlinedButton(
                   onPressed: onReject,
                   style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(color: Colors.red),
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text("Reject", style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    AppLocalizations.of(context)!.reject,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onAccept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.accept,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -473,21 +487,43 @@ class _RideRequestSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildAddressRow({
-    required IconData icon,
-    required String address,
-    Color color = Colors.blue,
-  }) {
+  Widget _buildLocationRow(BuildContext context, IconData icon, Color color, String label, String address) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: color, size: 24),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
         const SizedBox(width: 16),
         Expanded(
-          child: Text(
-            address,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                address,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ],

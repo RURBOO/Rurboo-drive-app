@@ -1,13 +1,17 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/services/driver_preferences.dart';
+import '../../../core/services/navigation_service.dart';
+import '../../../core/services/safety_service.dart';
+import '../../../core/widgets/swipe_button.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/live_trip_viewmodel.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class LiveTripScreen extends StatefulWidget {
   const LiveTripScreen({super.key});
@@ -25,14 +29,15 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
     vm = LiveTripViewModel();
     WakelockPlus.enable();
 
+    // Handle Ride Cancelled by User
     vm.onRideCancelledByUser = () {
       if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text("Ride Cancelled"),
-          content: const Text("The user has cancelled this ride."),
+          title: Text(AppLocalizations.of(context)!.rideCancelled),
+          content: Text(AppLocalizations.of(context)!.rideCancelledByUser),
           actions: [
             TextButton(
               onPressed: () async {
@@ -42,7 +47,7 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
                   context.read<AppStateViewModel>().endTrip();
                 }
               },
-              child: const Text("OK"),
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
           ],
         ),
@@ -72,51 +77,80 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
 class _LiveTripScreenBody extends StatelessWidget {
   const _LiveTripScreenBody();
 
-  void _showOtpDialog(BuildContext context, LiveTripViewModel vm) {
+  Future<void> _handleStartTrip(BuildContext context, LiveTripViewModel vm) async {
     final otpController = TextEditingController();
-    showDialog(
+    
+    // Show Premium OTP Dialog
+    final success = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text("Enter Customer OTP"),
-        content: TextField(
-          controller: otpController,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          decoration: const InputDecoration(hintText: "Ask rider for OTP"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          AppLocalizations.of(context)!.enterOtp,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Ask the customer for the 4-digit OTP to start the ride."),
+            const SizedBox(height: 20),
+            TextField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                counterText: "",
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () async {
-              final success = await vm.verifyOtpAndStartTrip(
-                otpController.text,
-              );
-              if (success && context.mounted) {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Trip Started!"),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Incorrect OTP"),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+              Navigator.pop(ctx, true);
             },
-            child: const Text("Verify"),
+            child: Text(AppLocalizations.of(context)!.verifyOtp),
           ),
         ],
       ),
     );
+
+    if (success == true) {
+      if (!context.mounted) return;
+      final verified = await vm.verifyOtpAndStartTrip(otpController.text);
+      if (!context.mounted) return;
+      if (verified) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Trip Started!"), backgroundColor: Colors.green),
+         );
+      } else {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Incorrect OTP"), backgroundColor: Colors.red),
+         );
+         // Reset swipe button if needed? 
+         // SwipeButton automatically resets on exception, so we might want to throw or handle UI reset.
+         throw Exception("Incorrect OTP");
+      }
+    } else {
+      throw Exception("Cancelled");
+    }
   }
 
   void _showCancelConfirmation(
@@ -127,28 +161,28 @@ class _LiveTripScreenBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Cancel Ride?", style: TextStyle(color: Colors.red)),
-        content: const Text(
-          "Are you sure you want to cancel this ride? Frequent cancellations may affect your rating.",
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          AppLocalizations.of(context)!.confirmCancel, 
+          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
+        content: Text(AppLocalizations.of(context)!.confirmCancelMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              "No, Go Back",
-              style: TextStyle(color: Colors.black),
-            ),
+            child: Text(AppLocalizations.of(context)!.noGoBack, style: const TextStyle(color: Colors.black)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
               vm.cancelRide(context, appState);
             },
-            child: const Text("Yes, Cancel"),
+            child: Text(AppLocalizations.of(context)!.yesCancel),
           ),
         ],
       ),
@@ -170,12 +204,10 @@ class _LiveTripScreenBody extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Error: ${vm.errorMsg}"),
+              Text("Error: ${vm.errorMsg}", style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  context.read<AppStateViewModel>().endTrip();
-                },
+                onPressed: () => context.read<AppStateViewModel>().endTrip(),
                 child: const Text("Go Back"),
               ),
             ],
@@ -184,264 +216,273 @@ class _LiveTripScreenBody extends StatelessWidget {
       );
     }
 
+    final isArriving = vm.currentStage == TripStage.arrivingToPickup;
+    final statusColor = isArriving ? Colors.blue : Colors.green;
+    final statusText = isArriving 
+        ? AppLocalizations.of(context)!.arrivingAtPickup 
+        : "On Trip - ${AppLocalizations.of(context)!.droppingCustomer}";
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              vm.currentHeader,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                const Icon(
-                  Icons.access_time_filled,
-                  size: 14,
-                  color: Colors.green,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  vm.tripEta,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.green,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
       body: Stack(
         children: [
-          Column(
-            children: [
-              Expanded(
-                child: GoogleMap(
-                  onMapCreated: (controller) {
-                    vm.mapController = controller;
-                    if (vm.driverLocation != null) {
-                      controller.animateCamera(
-                        CameraUpdate.newLatLngZoom(vm.driverLocation!, 16),
-                      );
-                    }
-                  },
-                  initialCameraPosition: CameraPosition(
-                    target: vm.driverLocation ?? vm.pickupLocation!,
-                    zoom: 15.0,
-                  ),
-                  polylines: {
-                    if (vm.routePoints.isNotEmpty)
-                      Polyline(
-                        polylineId: const PolylineId("route"),
-                        points: vm.routePoints,
-                        color: Colors.blue,
-                        width: 5,
-                      ),
-                  },
-                  markers: {
-                    if (vm.driverLocation != null)
-                      Marker(
-                        markerId: const MarkerId('driver'),
-                        position: vm.driverLocation!,
-                        icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueBlue,
-                        ),
-                        infoWindow: const InfoWindow(title: "You"),
-                      ),
-                    Marker(
-                      markerId: const MarkerId('target'),
-                      position: vm.currentTarget,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                        vm.currentStage == TripStage.arrivingToPickup
-                            ? BitmapDescriptor.hueGreen
-                            : BitmapDescriptor.hueRed,
-                      ),
-                      infoWindow: InfoWindow(
-                        title: vm.currentStage == TripStage.arrivingToPickup
-                            ? "Pickup"
-                            : "Drop",
-                      ),
-                    ),
-                  },
-                  myLocationEnabled: false,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  padding: const EdgeInsets.only(bottom: 200),
+          // 1. Map
+          GoogleMap(
+            onMapCreated: (controller) {
+              vm.mapController = controller;
+              if (vm.driverLocation != null) {
+                if (!context.mounted) return;
+                controller.animateCamera(
+                  CameraUpdate.newLatLngZoom(vm.driverLocation!, 16),
+                );
+              }
+            },
+            initialCameraPosition: CameraPosition(
+              target: vm.driverLocation ?? vm.pickupLocation!,
+              zoom: 15.0,
+            ),
+            polylines: {
+              if (vm.routePoints.isNotEmpty)
+                Polyline(
+                  polylineId: const PolylineId("route"),
+                  points: vm.routePoints,
+                  color: Colors.black, // Premium black route
+                  width: 5,
+                  jointType: JointType.round,
+                  startCap: Cap.roundCap,
+                  endCap: Cap.roundCap,
+                ),
+            },
+            markers: {
+              if (vm.driverLocation != null)
+                Marker(
+                  markerId: const MarkerId('driver'),
+                  position: vm.driverLocation!,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                  rotation: 0, // Should use bearing if available
+                ),
+              Marker(
+                markerId: const MarkerId('target'),
+                position: vm.currentTarget,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  isArriving ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueRed,
                 ),
               ),
+            },
+            myLocationEnabled: false,
+            zoomControlsEnabled: false,
+            padding: const EdgeInsets.only(top: 100, bottom: 320), // Map padding for overlays
+          ),
 
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+          // 2. Top Status Overlay
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                         BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+                      ],
+                    ),
+                    child: Row(
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                vm.tripDetails?.riderName ?? "Rider",
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                vm.currentAddress,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        Container(
-                          height: 46,
-                          width: 46,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.green,
-                          ),
-                          child: IconButton(
-                            onPressed: () => vm.callUser(),
-                            icon: const Icon(Icons.call, color: Colors.white),
-                            splashRadius: 26,
-                          ),
+                        Icon(Icons.trip_origin, color: statusColor, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          statusText,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              vm.currentStage == TripStage.arrivingToPickup
-                              ? Colors.blue
-                              : Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () async {
-                          final connectivity = await Connectivity()
-                              .checkConnectivity();
-                          if (connectivity.contains(ConnectivityResult.none)) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "No Internet! Cannot update trip.",
-                                ),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                            return;
-                          }
-
-                          if (vm.currentStage == TripStage.arrivingToPickup) {
-                            _showOtpDialog(context, vm);
-                          } else {
-                            vm.endTrip(context, appState);
-                          }
-                        },
-                        child: Text(
-                          vm.currentStage == TripStage.arrivingToPickup
-                              ? "START TRIP (ENTER OTP)"
-                              : "END TRIP",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () =>
-                            _showCancelConfirmation(context, vm, appState),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red),
-                          foregroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.cancel_outlined),
-                        label: const Text(
-                          "Cancel Ride",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-
-          Positioned(
-            right: 16,
-            bottom: 220,
-            child: FloatingActionButton.extended(
-              heroTag: "navigate_btn",
-              onPressed: () async {
-                final lat = vm.currentTarget.latitude;
-                final lng = vm.currentTarget.longitude;
-                final Uri googleMapsUrl = Uri.parse(
-                  "google.navigation:q=$lat,$lng&mode=d",
-                );
-                final Uri webUrl = Uri.parse(
-                  "https://www.google.com/maps/dir/?api=1&destination=$lat,$lng",
-                );
-
-                if (await canLaunchUrl(googleMapsUrl)) {
-                  await launchUrl(googleMapsUrl);
-                } else {
-                  await launchUrl(webUrl);
-                }
-              },
-              label: const Text("Navigate"),
-              icon: const Icon(Icons.navigation),
-              backgroundColor: Colors.green,
             ),
           ),
+
+          // 3. Floating Action Buttons (Right Side)
+          Positioned(
+            right: 16,
+            bottom: 300, // Above bottom sheet
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  heroTag: "sos",
+                  onPressed: () => SafetyService().callPolice(),
+                  backgroundColor: Colors.red,
+                  child: const Icon(Icons.sos, color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: "nav",
+                  onPressed: () => NavigationService().launchMap(vm.currentTarget),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.green,
+                  child: const Icon(Icons.navigation),
+                ),
+              ],
+            ),
+          ),
+
+          // 4. Premium Bottom Sheet
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   // Handle Bar
+                   Center(
+                     child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+                   ),
+                   const SizedBox(height: 20),
+                   
+                   // Rider Info
+                   Row(
+                     children: [
+                       CircleAvatar(
+                         backgroundColor: Colors.grey[200],
+                         radius: 24,
+                         child: const Icon(Icons.person, color: Colors.grey),
+                       ),
+                       const SizedBox(width: 16),
+                       Expanded(
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             Text(
+                               vm.tripDetails?.riderName ?? "Rider",
+                               style: const TextStyle(
+                                 fontSize: 18,
+                                 fontWeight: FontWeight.bold,
+                               ),
+                             ),
+                             const SizedBox(height: 4),
+                             Text(
+                               vm.currentAddress,
+                               maxLines: 1,
+                               overflow: TextOverflow.ellipsis,
+                               style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                             ),
+                           ],
+                         ),
+                       ),
+                       // Call Button
+                       IconButton(
+                         onPressed: () => vm.callUser(),
+                         icon: Container(
+                           padding: const EdgeInsets.all(10),
+                           decoration: BoxDecoration(
+                             color: Colors.green.withValues(alpha: 0.1),
+                             shape: BoxShape.circle,
+                           ),
+                           child: const Icon(Icons.call, color: Colors.green, size: 24),
+                         ),
+                       ),
+                   ]),
+                   
+                   const SizedBox(height: 24),
+                   
+                   // Trip Details (Fare, Distance)
+                   Row(
+                     children: [
+                       _buildInfoChip(Icons.attach_money, "₹${vm.tripDetails?.fare.toStringAsFixed(0) ?? '0'}"),
+                       const SizedBox(width: 12),
+                       _buildInfoChip(Icons.access_time, vm.tripDurationMins == null ? "Calculating..." : "${vm.tripDurationMins} min"),
+                     ],
+                   ),
+                   
+                   const SizedBox(height: 30),
+                   
+                   // Swipe to Act
+                   SwipeButton(
+                     text: isArriving 
+                         ? "Slide to Start Trip" 
+                         : "Slide to End Trip",
+                     color: isArriving ? Colors.black : Colors.red,
+                     icon: isArriving ? Icons.play_arrow : Icons.stop,
+                     onSwipe: () async {
+                        final connectivity = await Connectivity().checkConnectivity();
+                        if (connectivity.contains(ConnectivityResult.none)) {
+                        if (!context.mounted) return;
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
+                           );
+                           throw Exception("No Internet");
+                        }
+
+                        if (!context.mounted) return;
+                        if (isArriving) {
+                          await _handleStartTrip(context, vm);
+                        } else {
+                          await vm.endTrip(context, appState);
+                        }
+                     },
+                   ),
+                   
+                   const SizedBox(height: 16),
+                   
+                   // Cancel Button
+                   Center(
+                     child: TextButton(
+                       onPressed: () => _showCancelConfirmation(context, vm, appState),
+                       child: Text(
+                         AppLocalizations.of(context)!.cancelRide,
+                         style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                       ),
+                     ),
+                   ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.black87),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ],
       ),
     );

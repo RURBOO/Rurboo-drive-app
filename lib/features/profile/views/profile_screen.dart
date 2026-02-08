@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/driver_voice_service.dart';
 import '../../wallet/views/wallet_screen.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import 'driver_documents_screen.dart';
@@ -9,6 +11,7 @@ import 'privacy_policy_screen.dart';
 import 'terms_screen.dart';
 import 'faq_screen.dart';
 import 'delete_account_screen.dart';
+import 'my_vehicles_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -22,107 +25,130 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _ProfileScreenBody extends StatelessWidget {
+class _ProfileScreenBody extends StatefulWidget {
   const _ProfileScreenBody();
 
+  @override
+  State<_ProfileScreenBody> createState() => _ProfileScreenBodyState();
+}
+
+class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
+  bool _voiceEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVoicePreference();
+  }
+
+  Future<void> _loadVoicePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _voiceEnabled = prefs.getBool('voice_announcements_enabled') ?? true;
+    });
+  }
+
+  Future<void> _toggleVoice(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('voice_announcements_enabled', value);
+    setState(() {
+      _voiceEnabled = value;
+    });
+    
+    final voiceService = DriverVoiceService();
+    if (value) {
+      voiceService.announceSuccess("Voice announcements enabled");
+    } else {
+      voiceService.announceSuccess("Voice announcements disabled");
+    }
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text(
-          "My Profile",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.grey[50],
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          : Stack(
               children: [
+                // Header Background
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                      ),
-                    ],
+                  height: 280,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF1a1a1a), Color(0xFF000000)],
+                    ),
                   ),
+                ),
+                
+                SafeArea(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 45,
-                        backgroundColor: Colors.black,
-                        backgroundImage:
-                            (vm.profileImageBase64 != null &&
-                                vm.profileImageBase64!.isNotEmpty)
-                            ? MemoryImage(base64Decode(vm.profileImageBase64!))
-                            : null,
-                        child: (vm.profileImageBase64 == null)
-                            ? const Icon(
-                                Icons.person,
-                                size: 50,
+                      // App Bar Content
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                             Text(
+                              "My Profile",
+                              style: TextStyle(
                                 color: Colors.white,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        vm.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        "Joined ${vm.joinDate}",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                      ),
-
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Divider(height: 1),
-                      ),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Profile Info
+                      Column(
                         children: [
-                          _buildStat(
-                            "Rating",
-                            vm.rating,
-                            Icons.star,
-                            Colors.amber,
-                          ),
                           Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey[200],
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey[800],
+                              backgroundImage:
+                                  (vm.profileImageBase64 != null &&
+                                      vm.profileImageBase64!.isNotEmpty)
+                                  ? MemoryImage(base64Decode(vm.profileImageBase64!))
+                                  : null,
+                              child: (vm.profileImageBase64 == null)
+                                  ? const Icon(Icons.person, size: 50, color: Colors.white)
+                                  : null,
+                            ),
                           ),
-                          _buildStat(
-                            "Rides",
-                            vm.totalRides,
-                            Icons.local_taxi,
-                            Colors.blue,
+                          const SizedBox(height: 12),
+                          Text(
+                            vm.name,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey[200],
-                          ),
-                          _buildStat(
-                            "Wallet",
-                            vm.earnings,
-                            Icons.account_balance_wallet,
-                            Colors.green,
+                          Text(
+                            "Joined ${vm.joinDate}",
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                           ),
                         ],
                       ),
@@ -130,127 +156,215 @@ class _ProfileScreenBody extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildMenuItem(
-                        icon: Icons.document_scanner_rounded,
-                        title: 'My Documents',
-                        subtitle: 'License, RC & Profile',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DriverDocumentsScreen(
-                              licenseBase64: vm.licenseImageBase64,
-                              rcBase64: vm.rcImageBase64,
+                // Main Content (DraggableScrollableSheet or just positioned list)
+                // We'll use a Positioned/Expanded approach for simplicity
+                Positioned.fill(
+                  top: 260,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.grey, // Placeholder, usually white
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50], // Background for list
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      ),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 40),
+                        child: Column(
+                          children: [
+                            // Stats Row
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildStat("Rating", vm.rating, Icons.star, Colors.amber),
+                                  Container(width: 1, height: 40, color: Colors.grey[200]),
+                                  _buildStat("Rides", vm.totalRides, Icons.local_taxi, Colors.blue),
+                                  Container(width: 1, height: 40, color: Colors.grey[200]),
+                                  _buildStat("Wallet", vm.earnings, Icons.account_balance_wallet, Colors.green),
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const Divider(indent: 60),
+                            
+                            const SizedBox(height: 24),
 
-                      _buildMenuItem(
-                        icon: Icons.account_balance_wallet_outlined,
-                        title: 'Wallet',
-                        subtitle: 'Balance & Recharge',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const WalletScreen(),
+                            // Menu Groups
+                            _buildSectionHeader("Account"),
+                            _buildMenuCard([
+                              _buildMenuItem(
+                                icon: Icons.document_scanner_rounded,
+                                title: 'My Documents',
+                                subtitle: 'License, RC & Profile',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DriverDocumentsScreen(
+                                      licenseBase64: vm.licenseImageBase64,
+                                      rcBase64: vm.rcImageBase64,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.directions_car_filled_outlined,
+                                title: 'My Vehicles',
+                                subtitle: 'Manage Vehicles',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const MyVehiclesScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.account_balance_wallet_outlined,
+                                title: 'Wallet',
+                                subtitle: 'Balance & Recharge',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const WalletScreen()),
+                                ),
+                              ),
+                            ]),
+
+                            const SizedBox(height: 24),
+                            _buildSectionHeader("Preferences"),
+                            _buildMenuCard([
+                              _buildSwitchMenuItem(
+                                icon: Icons.record_voice_over_rounded,
+                                title: 'Voice Announcements',
+                                subtitle: 'Turn on/off app voice',
+                                value: _voiceEnabled,
+                                onChanged: _toggleVoice,
+                                color: Colors.deepPurple,
+                              ),
+                            ]),
+
+                            const SizedBox(height: 24),
+                            _buildSectionHeader("Support & Legal"),
+                            _buildMenuCard([
+                              _buildMenuItem(
+                                icon: Icons.help_outline_rounded,
+                                title: 'Help & Support',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const SupportScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.question_answer_outlined,
+                                title: 'Driver FAQ',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const FAQScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.privacy_tip_outlined,
+                                title: 'Privacy Policy',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.description_outlined,
+                                title: 'Terms & Conditions',
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const TermsScreen()),
+                                ),
+                              ),
+                            ]),
+
+                            const SizedBox(height: 24),
+                            _buildMenuCard([
+                              _buildMenuItem(
+                                icon: Icons.delete_forever,
+                                title: 'Delete Account',
+                                color: Colors.red,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const DeleteAccountScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.logout,
+                                title: 'Logout',
+                                color: Colors.red,
+                                onTap: () => vm.logout(context),
+                              ),
+                            ]),
+                            
+                            const SizedBox(height: 30),
+                            Text(
+                              "Rubo Driver v1.0.0",
+                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
                             ),
-                          );
-                        },
-                      ),
-
-                      const Divider(indent: 60),
-
-                      _buildMenuItem(
-                        icon: Icons.help_outline_rounded,
-                        title: 'Help & Support',
-                        subtitle: 'Call or Email us',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SupportScreen(),
-                          ),
+                          ],
                         ),
                       ),
-                      const Divider(indent: 60),
-
-                      _buildMenuItem(
-                        icon: Icons.question_answer_outlined,
-                        title: 'Driver FAQ',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const FAQScreen()),
-                        ),
-                      ),
-                      const Divider(indent: 60),
-
-                      _buildMenuItem(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'Privacy Policy',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PrivacyPolicyScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(indent: 60),
-                      _buildMenuItem(
-                        icon: Icons.description_outlined,
-                        title: 'Terms & Conditions',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const TermsScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(indent: 60),
-
-                      _buildMenuItem(
-                        icon: Icons.delete_forever,
-                        title: 'Delete Account',
-                        color: Colors.red,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const DeleteAccountScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(indent: 60),
-
-                      _buildMenuItem(
-                        icon: Icons.logout,
-                        title: 'Logout',
-                        color: Colors.red,
-                        onTap: () => vm.logout(context),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 30),
-                Center(
-                  child: Text(
-                    "Rubo Driver v1.0.0",
-                    style: TextStyle(color: Colors.grey[400]),
-                  ),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
     );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+  
+  Widget _buildDivider() {
+    return const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFEEEEEE));
   }
 
   Widget _buildStat(String label, String value, IconData icon, Color color) {
@@ -273,6 +387,45 @@ class _ProfileScreenBody extends StatelessWidget {
     );
   }
 
+  Widget _buildSwitchMenuItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    Color color = Colors.black87,
+  }) {
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      secondary: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            )
+          : null,
+      activeThumbColor: Colors.green, // Replaced activeColor
+      activeTrackColor: Colors.green.withValues(alpha: 0.4),
+    );
+  }
+
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -284,7 +437,7 @@ class _ProfileScreenBody extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 20),
