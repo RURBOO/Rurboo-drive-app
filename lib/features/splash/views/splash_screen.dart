@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
 import '../../../navigation/views/auth_gate.dart';
@@ -70,7 +71,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final driverId = await DriverPreferences.getDriverId();
 
+    // 1. Check Local Preference
     if (driverId == null) {
+      if (mounted) _nav(const LoginScreen());
+      return;
+    }
+
+    // 2. Check Firebase Auth (CRITICAL FIX)
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.uid != driverId) {
+      debugPrint("❌ Auth Session Invalid or Mismatch. Forcing Login.");
+      await DriverPreferences.clearDriverId(); // Clear stale data
       if (mounted) _nav(const LoginScreen());
       return;
     }
@@ -117,6 +128,7 @@ class _SplashScreenState extends State<SplashScreen> {
         if (mounted) _nav(const AuthGate());
       }
     } catch (e) {
+      debugPrint("Session check failed: $e");
       if (mounted) _nav(const LoginScreen());
     }
   }

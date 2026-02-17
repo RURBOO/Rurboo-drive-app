@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
@@ -82,7 +83,12 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> logout(BuildContext context) async {
+    // 1. Clear Local Data
     await DriverPreferences.clearDriver();
+    
+    // 2. Sign out from Firebase (CRITICAL)
+    await FirebaseAuth.instance.signOut();
+
     if (context.mounted) {
       context.read<AppStateViewModel>().signOut();
       Navigator.pushAndRemoveUntil(

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart';
@@ -481,9 +482,28 @@ class HomeViewModel extends ChangeNotifier {
       }
     }
 
+    // AUTH CHECK
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+       if (context.mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Session Invalid. Please logout and login again.")),
+         );
+       }
+       return;
+    }
+
     final driverId = await DriverPreferences.getDriverId();
     debugPrint("TOGGLE ONLINE: Driver ID: $driverId");
-    if (driverId == null) return;
+    
+    if (driverId == null || user.uid != driverId) {
+      if (context.mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Account Mismatch. Please relogin to sync.")),
+         );
+      }
+      return; 
+    }
 
     try {
       debugPrint("TOGGLE ONLINE: Checking and Settling Dues...");
@@ -629,6 +649,12 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) throw Exception("Driver ID missing");
+
+      // AUTH CHECK
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.uid != driverId) {
+        throw Exception("Auth Mistmatch. Please relogin.");
+      }
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final rideRef = FirebaseFirestore.instance

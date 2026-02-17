@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -350,6 +351,12 @@ class LiveTripViewModel extends ChangeNotifier {
     try {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) throw Exception("Driver ID not found");
+
+      // AUTH CHECK
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.uid != driverId) {
+        throw Exception("Auth Session Invalid");
+      }
 
 
       final configDoc = await FirebaseFirestore.instance

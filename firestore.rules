@@ -1,166 +1,180 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ========================================================================
+
+    // =========================================================
     // HELPER FUNCTIONS
-    // ========================================================================
-    
+    // =========================================================
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isDriver(driverId) {
-      return isAuthenticated() && request.auth.uid == driverId;
+
+    function uid() {
+      return request.auth.uid;
     }
-    
-    function isUser(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    function isServiceAccount() {
-      // Cloud Functions use service account authentication
-      return request.auth.token.firebase.sign_in_provider == 'custom';
+
+    function isOwner(userId) {
+      return isAuthenticated() && uid() == userId;
     }
 
     function isAdmin() {
-      // Check if the user exists in the 'admins' collection
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(uid()));
     }
-    
-    // ========================================================================
-    // ADMINS COLLECTION
-    // ========================================================================
-    match /admins/{adminId} {
-      allow read: if isAuthenticated(); // Allow check for login
-      allow write: if false; // Only manageable via Console/Backend
-    }
-    
-    // ========================================================================
-    // DRIVERS COLLECTION
-    // ========================================================================
-    
-      // Drivers can read their own data, Admins can read all
-      allow read: if isDriver(driverId) || isAdmin();
-      
-      // Allow initial profile creation during registration
-      // Enforce zero balance for new drivers
-      allow create: if isDriver(driverId) && 
-        (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0 || request.resource.data.walletBalance == 0.0) &&
-        (!('dailyCommissionDue' in request.resource.data) || request.resource.data.dailyCommissionDue == 0 || request.resource.data.dailyCommissionDue == 0.0);
-      
-      // CRITICAL: Wallet and commission fields are WRITE-PROTECTED
-      // Only Cloud Functions (service account) can update these fields
-      // EXCEPTION: Allow full overwrite if status is 'pending' (fixes re-registration permission denied)
-      // Admins can update status (approve/block)
-      allow update: if (isDriver(driverId) && 
-        (
-          resource.data.status == 'pending' ||
-          !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['walletBalance', 'lastSettlementDate'])
-        )) || isAdmin();
-      
-      // Cloud Functions can update wallet fields
-      allow write: if isServiceAccount();
-      
-      // ======================================================================
-      // WALLET & EARNINGS SUBCOLLECTIONS
-      // ======================================================================
-      
-      match /walletHistory/{transactionId} {
-        allow read: if isDriver(driverId) || isAdmin();
-        allow write: if isServiceAccount();
-      }
-      
-      match /earnings/{earningId} {
-        allow read: if isDriver(driverId) || isAdmin();
-        allow write: if isServiceAccount();
-      }
 
-      match /vehicles/{vehicleId} {
-        allow read: if isDriver(driverId) || isAdmin();
-        allow write: if isDriver(driverId) || isAdmin();
-      }
+    function isDriver() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/drivers/$(uid()));
     }
-    
-    // ========================================================================
-    // USERS (RIDERS) COLLECTION
-    // ========================================================================
-    
+
+    // =========================================================
+    // ADMINS (Read-only reference)
+    // =========================================================
+    match /admins/{adminId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // =========================================================
+    // USERS
+    // =========================================================
     match /users/{userId} {
-      // Users can read/write their own profile, Admins can read/write
-      allow read, write: if isUser(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
       
-      // Saved Places Subcollection
-      match /savedPlaces/{placeId} {
-        allow read, write: if isUser(userId) || isAdmin();
-      }
+      // Prevent privilege escalation
+      allow update: if isOwner(userId)
+        && !("role" in request.resource.data)
+        && !("isAdmin" in request.resource.data)
+        && !("walletBalance" in request.resource.data); // Wallet protected
     }
-    
-    // ========================================================================
-    // RIDE REQUESTS COLLECTION (SHARED)
-    // ========================================================================
-    
+
+    // =========================================================
+    // DRIVERS
+    // =========================================================
+    match /drivers/{driverId} {
+      allow read: if isAuthenticated(); // Public read for booking
+
+      // Driver can update specific fields (status, location)
+      allow update: if isDriver()
+        && uid() == driverId
+        && (
+           // Allow updating location/status
+           request.resource.data.diff(resource.data).changedKeys()
+            .hasOnly(["location", "isOnline", "lastActive", "heading"]) ||
+           // Allow initial setup
+           resource.data.status == 'pending'
+        );
+
+      allow create, delete: if isAdmin();
+    }
+
+    // =========================================================
+    // RIDE REQUESTS (CORE LOGIC)
+    // =========================================================
     match /rideRequests/{rideId} {
-      // Both Driver and User involved in the ride can read it, OR if it's a pending request (for drivers to see)
-      // Admins can always read
-      allow read: if isAuthenticated() && 
-        (resource.data.status == 'pending' || 
-         request.auth.uid == resource.data.driverId || 
-         request.auth.uid == resource.data.userId ||
-         isAdmin());
-      
-      // Users create requests
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      
-      // Updates allowed for involved parties OR for accepting a pending ride
-      // Admins can update (e.g. force cancel)
-      allow update: if (isAuthenticated() && 
-        (
-          resource.data.status == 'pending' || // Allow any auth user (driver) to pick up a pending ride
-          request.auth.uid == resource.data.driverId || 
-          request.auth.uid == resource.data.userId
-        )) || isAdmin();
-      
-      allow write: if isServiceAccount();
+
+      // USER CREATES RIDE
+      allow create: if isAuthenticated()
+        // App sends 'pending' or 'scheduled'
+        && (request.resource.data.status == "pending" || request.resource.data.status == "scheduled")
+        && request.resource.data.userId == uid();
+
+      // READ: User, Driver, Admin
+      allow read: if isAuthenticated() && (
+        resource.data.userId == uid() ||
+        resource.data.driverId == uid() ||
+        // Drivers need to see pending rides to accept them
+        (resource.data.status == "pending" && isDriver()) || 
+        isAdmin()
+      );
+
+      // UPDATE: STATE MACHINE & Logic
+      allow update: if isAuthenticated() && (
+
+        // USER CAN CANCEL
+        (uid() == resource.data.userId &&
+         resource.data.status in ["pending", "scheduled", "driver_accepted"] &&
+         request.resource.data.status == "cancelled") ||
+
+        // DRIVER ACCEPTS
+        // Any driver can accept a pending ride
+        (resource.data.status == "pending" &&
+         request.resource.data.status == "driver_accepted" && 
+         request.resource.data.driverId == uid()) ||
+
+        // DRIVER UPDATES STATUS
+        (uid() == resource.data.driverId &&
+         request.resource.data.status in ["arrived", "started", "completed"]) ||
+
+        // ADMIN OVERRIDE
+        isAdmin()
+      );
     }
-    
-    // ========================================================================
-    // DRIVER ALLIANCE (HELP REQUESTS)
-    // ========================================================================
-    
-    match /helpRequests/{helpId} {
-      // Drivers can create requests
-      allow create: if isDriver(request.resource.data.driverId);
-      
-      // Drivers can read nearby requests (conceptually, we rely on GeoQueries client-side filtering 
-      // but here we allow authenticated drivers to read active requests)
-      // Ideally, we'd use resource.data.status == 'active'
-      allow read: if isAuthenticated() || isAdmin();
-      
-      // Only the creator can resolve/delete it (or Admin/Service Account)
-      allow update, delete: if isDriver(resource.data.driverId) || isServiceAccount() || isAdmin();
+
+    // =========================================================
+    // RIDE HISTORY (Read Only for Users)
+    // =========================================================
+    match /history/{historyId} {
+      allow create: if isAdmin(); // Populated by Backend/Admin
+      allow read: if isAuthenticated() && (
+        resource.data.userId == uid() ||
+        resource.data.driverId == uid() ||
+        isAdmin()
+      );
+      allow update, delete: if false;
     }
-    
-    // ========================================================================
-    // CONFIG COLLECTION
-    // ========================================================================
-    
+
+    // =========================================================
+    // SUPPORT TICKETS (User App)
+    // =========================================================
+    match /support_tickets/{ticketId} {
+      // App sends 'Open' (Capitalized)
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == uid()
+        && request.resource.data.status == "Open";
+
+      allow read: if isAuthenticated() && (
+        resource.data.userId == uid() ||
+        isAdmin()
+      );
+
+      // User adds messages, Admin resolves
+      allow update: if isAuthenticated() && (
+        resource.data.userId == uid() ||
+        isAdmin()
+      );
+    }
+
+    // =========================================================
+    // SUGGESTIONS (User App)
+    // =========================================================
+    match /suggestions/{suggestionId} {
+      allow create: if isAuthenticated();
+      allow read: if isAdmin();
+    }
+
+    // =========================================================
+    // FEEDBACK (Driver App - REQUIRED)
+    // =========================================================
+    match /feedback/{feedbackId} {
+      allow create: if isAuthenticated() && request.resource.data.driverId == uid();
+      allow read: if isAdmin();
+    }
+
+    // =========================================================
+    // CONFIG / RATES (Shared)
+    // =========================================================
     match /config/{document} {
       allow read: if isAuthenticated();
-      allow write: if false || isAdmin();
+      allow write: if false;
     }
-    // ========================================================================
-    // FEEDBACK COLLECTION
-    // ========================================================================
 
-    match /feedback/{feedbackId} {
-      // Drivers can create feedback
-      allow create: if isDriver(request.resource.data.driverId);
-      // Only Admin (via dashboard/service account) can read
-      allow read: if isServiceAccount() || isAdmin(); 
-      allow update: if isAdmin();
+    // =========================================================
+    // DEFAULT DENY
+    // =========================================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

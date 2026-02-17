@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/utils/image_utils.dart';
 
@@ -129,12 +130,23 @@ class VehiclesViewModel extends ChangeNotifier {
       return;
     }
 
+    // AUTH CHECK
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Session Expired. Please login again.")),
+      );
+      return;
+    }
+
     isLoading = true;
     notifyListeners();
 
     try {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) throw Exception("Driver ID not found");
+
+      if (user.uid != driverId) throw Exception("User mismatch. Please relogin.");
 
       final rcBase64 = await ImageUtils.convertFileToBase64(rcFile!);
       final vehicleBase64 = await ImageUtils.convertFileToBase64(vehicleImageFile!);
