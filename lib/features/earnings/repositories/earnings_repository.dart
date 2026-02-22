@@ -32,8 +32,7 @@ class EarningsRepository {
     final query = await _firestore
         .collection('rideRequests')
         .where('driverId', isEqualTo: driverId)
-        .where('status', isEqualTo: 'completed')
-        .orderBy('completedAt', descending: true)
+        .orderBy('createdAt', descending: true)
         .limit(limit)
         .get();
 

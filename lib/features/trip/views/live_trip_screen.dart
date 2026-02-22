@@ -55,6 +55,12 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
       );
     };
 
+    // Auto-End Trip on Passenger Approval
+    vm.onEndRideApproved = () {
+      if (!mounted) return;
+      vm.endTrip(context, context.read<AppStateViewModel>());
+    };
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       vm.init(context.read<AppStateViewModel>());
     });
@@ -456,6 +462,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                       )
                    else
                      SwipeButton(
+                       key: ValueKey('swipe_${vm.currentStage}'), // Forces reset when stage changes
                        text: isArriving 
                            ? "Slide to Start Trip" 
                            : "Slide to End Trip",

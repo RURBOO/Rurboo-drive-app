@@ -11,6 +11,7 @@ class RideRequest {
   final String riderName;
   final String userPhone;
   final String rideOtp;
+  final String userId;
 
   RideRequest({
     required this.id,
@@ -20,6 +21,7 @@ class RideRequest {
     required this.distance,
     required this.pickupLatLng,
     required this.destLatLng,
+    required this.userId,
     this.riderName = "Rider",
     this.userPhone = "",
     this.rideOtp = "0000",

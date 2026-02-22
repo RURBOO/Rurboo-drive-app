@@ -121,11 +121,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (mounted) {
           context.read<AppStateViewModel>().acceptRide(rideId);
-          _nav(const LiveTripScreen());
+          _nav(const AuthGate());
         }
       } else {
         await DriverPreferences.clearCurrentRideId();
-        if (mounted) _nav(const AuthGate());
+        if (mounted) {
+           context.read<AppStateViewModel>().endTrip();
+           _nav(const AuthGate());
+        }
       }
     } catch (e) {
       debugPrint("Session check failed: $e");

@@ -34,27 +34,34 @@ class _HomeScreenBody extends StatefulWidget {
 class _HomeScreenBodyState extends State<_HomeScreenBody> {
   late HomeViewModel _vm;
   bool isGpsEnabled = true;
+  bool _initialized = false;
   StreamSubscription<ServiceStatus>? _serviceStatusStream;
 
   @override
   void initState() {
     super.initState();
     _vm = context.read<HomeViewModel>();
-    final appState = context.read<AppStateViewModel>();
-    
     WakelockPlus.enable();
     _checkGps();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final voiceVm = context.read<DriverVoiceViewModel>();
-      _vm.initialize(appState, voiceVm: voiceVm);
-    });
-
     _serviceStatusStream = Geolocator.getServiceStatusStream().listen((status) {
       if (mounted) {
         setState(() => isGpsEnabled = (status == ServiceStatus.enabled));
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = context.read<AppStateViewModel>();
+    // Re-initialize once state is loaded and not on-trip
+    if (!appState.isLoading && !_initialized) {
+      _initialized = true;
+      final voiceVm = context.read<DriverVoiceViewModel>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _vm.initialize(appState, voiceVm: voiceVm);
+      });
+    }
   }
 
   Future<void> _checkGps() async {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import '../../../core/services/notification_service.dart';
 import '../../wallet/views/wallet_screen.dart';
 import '../services/location_service.dart';
 import 'driver_voice_viewmodel.dart';
+import '../../../navigation/views/auth_gate.dart';
 
 import '../../../core/models/ride_request.dart';
 import '../../../core/models/help_request.dart';
@@ -47,6 +49,7 @@ class HomeViewModel extends ChangeNotifier {
   bool get isLocationReady => _isLocationReady;
 
   String? _driverVehicleType;
+  late AppStateViewModel _appState;
 
   // final double _searchRadiusKm = 5.0; // Unused for now
 
@@ -76,6 +79,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> initialize(AppStateViewModel appState, {DriverVoiceViewModel? voiceVm}) async {
+    _appState = appState;
     if (voiceVm != null) _voiceVm = voiceVm;
 
     _hasLocationError = false;
@@ -345,6 +349,12 @@ class HomeViewModel extends ChangeNotifier {
         .listen((List<DocumentSnapshot> docs) {
           if (_isDisposed) return;
 
+          // GUARD: Don't process rides if we're already on a trip or offline
+          if (_appState.currentState != DriverState.online) {
+            debugPrint("🛑 HomeViewModel: Skipping ride listener (State: ${_appState.currentState})");
+            return;
+          }
+
           RideRequest? foundRequest;
           double closestDist = double.infinity;
 
@@ -356,9 +366,8 @@ class HomeViewModel extends ChangeNotifier {
 
             final String docId = doc.id;
             final String status = data['status'] ?? 'unknown';
-            final String rideCategory = (data['vehicleCategory'] ?? '')
-                .toString();
-            final String driverCategory = _driverVehicleType ?? '';
+            final String rideCategory = (data['vehicleCategory'] ?? '').toString().trim().toLowerCase();
+            final String driverCategory = (_driverVehicleType ?? '').trim().toLowerCase();
 
             debugPrint("--- Checking Ride: $docId ---");
             debugPrint("Server Status: '$status'");
@@ -366,10 +375,13 @@ class HomeViewModel extends ChangeNotifier {
               "Server Category: '$rideCategory' vs Driver: '$driverCategory'",
             );
 
-            bool isCategoryMatch =
-                rideCategory.trim().toLowerCase() ==
-                driverCategory.trim().toLowerCase();
+            bool isCategoryMatch = true; // Temporary: match everything for debugging
             bool isStatusMatch = status == 'pending';
+
+            debugPrint(
+              "DUMP Server:'$rideCategory' vs Driver:'$driverCategory' | "
+              "Status:'$status' => isCatMatch=$isCategoryMatch, isStatMatch=$isStatusMatch",
+            );
 
             if (isStatusMatch && isCategoryMatch) {
               final GeoPoint p = data['pickupCoords'];
@@ -396,6 +408,7 @@ class HomeViewModel extends ChangeNotifier {
                   distance: "${(dist / 1000).toStringAsFixed(1)} km",
                   pickupLatLng: LatLng(p.latitude, p.longitude),
                   destLatLng: LatLng(d.latitude, d.longitude),
+                  userId: SafeParser.toStr(data['userId']),
                 );
               }
             } else {
@@ -624,6 +637,11 @@ class HomeViewModel extends ChangeNotifier {
     _newRideRequest = null;
   }
 
+  void _stopListeningToLocation() {
+    _locationSubscription?.cancel();
+    _locationSubscription = null;
+  }
+
   Future<void> acceptRide(
     BuildContext context,
     AppStateViewModel appState,
@@ -693,11 +711,34 @@ class HomeViewModel extends ChangeNotifier {
       await DriverPreferences.saveCurrentRideId(rideId);
 
       if (context.mounted) {
-        Navigator.pop(context);
-        appState.acceptRide(rideId);
+        Navigator.pop(context); // Close loading dialog
         
-        // 🔊 VOICE ANNOUNCEMENT
-        _voiceVm?.announceRideAccepted();
+        // Give the navigator a tick to process the pop before we swap the entire root widget tree
+        Future.delayed(Duration.zero, () {
+          debugPrint("🚕 HomeViewModel: Triggering appState.acceptRide($rideId)");
+          
+          // 1. Shutdown all Home Screen listeners immediately
+          _stopListeningToRides();
+          _stopListeningToLocation();
+          _newRideRequest = null;
+          markers.clear();
+          polylines.clear();
+          notifyListeners();
+          
+          // 2. Update Global State
+          appState.acceptRide(rideId);
+          
+          // 3. NUCLEAR OPTION: Forced Navigation Refresh
+          // This wipes out any accidentally pushed MainNavigator copies and forces AuthGate rebuild
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const AuthGate()),
+            (route) => false,
+          );
+          
+          // 🔊 VOICE ANNOUNCEMENT
+          _voiceVm?.announceRideAccepted();
+        });
       }
     } catch (e) {
       if (context.mounted) {

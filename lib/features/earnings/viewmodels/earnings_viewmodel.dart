@@ -88,7 +88,8 @@ class EarningsViewModel extends ChangeNotifier {
       for (var doc in weeklyDocs) {
         final amount = (doc['amount'] as num?)?.toDouble() ?? 0.0;
         final commission = (doc['commission'] as num?)?.toDouble() ?? 0.0;
-        final timestamp = (doc['completedAt'] as Timestamp).toDate();
+        final ts = doc['completedAt'] as Timestamp?;
+        final timestamp = ts != null ? ts.toDate() : DateTime.now();
         
         weeklyGross += amount;
         weeklyCommission += commission;

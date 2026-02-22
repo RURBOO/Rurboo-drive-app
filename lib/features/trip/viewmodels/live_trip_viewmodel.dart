@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../views/driver_ride_summary_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -39,6 +40,7 @@ class LiveTripViewModel extends ChangeNotifier {
   StreamSubscription<Position>? _gpsStream;
 
   VoidCallback? onRideCancelledByUser;
+  VoidCallback? onEndRideApproved;
   bool _suspendAutoCamera = false;
 
 
@@ -48,15 +50,18 @@ class LiveTripViewModel extends ChangeNotifier {
 
   Future<void> init(AppStateViewModel appState) async {
     isLoading = true;
+    errorMsg = null;
     notifyListeners();
 
     try {
       currentRideId = appState.currentRideId;
+      debugPrint("🚀 LiveTripViewModel: Initializing for RideID: $currentRideId");
 
       currentRideId ??= await DriverPreferences.getCurrentRideId();
+      debugPrint("🚀 LiveTripViewModel: Resolved RideID from Prefs: $currentRideId");
 
       if (currentRideId == null) {
-        throw Exception("No active ride found");
+        throw Exception("No active ride found in state or preferences.");
       }
 
       final rideDoc = await FirebaseFirestore.instance
@@ -65,63 +70,84 @@ class LiveTripViewModel extends ChangeNotifier {
           .get();
 
       if (!rideDoc.exists) {
-        throw Exception("Ride does not exist");
+        throw Exception("Ride document ($currentRideId) does not exist in Firestore.");
       }
 
-      _parseRideData(rideDoc.data()!);
+      final data = rideDoc.data();
+      if (data == null) {
+        throw Exception("Ride document ($currentRideId) contains no data.");
+      }
 
+      debugPrint("🚀 LiveTripViewModel: Ride data fetched successfully. Parsing...");
+      _parseRideData(data);
+
+      debugPrint("🚀 LiveTripViewModel: Starting listeners...");
       _listenToRideStatus();
-
       _startGpsBroadcast();
 
       isLoading = false;
       notifyListeners();
-    } catch (e) {
+      debugPrint("🚀 LiveTripViewModel: Initialization complete.");
+    } catch (e, stack) {
       errorMsg = e.toString();
       isLoading = false;
       notifyListeners();
-      debugPrint("LiveTrip init error: $e");
+      debugPrint("❌ LiveTripViewModel: Initialization error: $e");
+      debugPrint("❌ LiveTripViewModel: Stack: $stack");
     }
   }
 
   void _parseRideData(Map<String, dynamic> data) {
-    final pGeo = data['pickupCoords'] as GeoPoint;
-    final dGeo = data['destinationCoords'] as GeoPoint;
+    try {
+      final pGeo = data['pickupCoords'] as GeoPoint?;
+      final dGeo = data['destinationCoords'] as GeoPoint?;
 
-    pickupLocation = LatLng(pGeo.latitude, pGeo.longitude);
-    dropLocation = LatLng(dGeo.latitude, dGeo.longitude);
+      if (pGeo == null || dGeo == null) {
+        throw Exception("Missing critical coordinates (pickup/destination) in ride data.");
+      }
 
-    if (data['driverLocation'] != null) {
-      final dGeo = data['driverLocation'] as GeoPoint;
-      driverLocation = LatLng(dGeo.latitude, dGeo.longitude);
-    } else {
-      driverLocation = pickupLocation;
+      pickupLocation = LatLng(pGeo.latitude, pGeo.longitude);
+      dropLocation = LatLng(dGeo.latitude, dGeo.longitude);
+
+      if (data['driverLocation'] != null) {
+        final drGeo = data['driverLocation'] as GeoPoint;
+        driverLocation = LatLng(drGeo.latitude, drGeo.longitude);
+      } else {
+        driverLocation = pickupLocation;
+      }
+
+      tripDetails = RideRequest(
+        id: currentRideId!,
+        riderName: (data['userName'] ?? "Rider").toString(),
+        userPhone: (data['userPhone'] ?? "").toString(),
+        pickupAddress: data['pickupAddress'] ?? 'Unknown Pickup',
+        destinationAddress: data['destinationAddress'] ?? 'Unknown Drop',
+        fare: (data['fare'] as num?)?.toDouble() ?? 0.0,
+        distance: (data['distance'] ?? "0 km").toString(),
+        pickupLatLng: pickupLocation!,
+        destLatLng: dropLocation!,
+        rideOtp: data['otp']?.toString() ?? "0000",
+        userId: data['userId']?.toString() ?? "",
+      );
+
+      debugPrint("🚀 LiveTripViewModel: Status from DB is ${data['status']}");
+      _currentStage = (data['status'] == 'in_progress')
+          ? TripStage.tripInProgress
+          : TripStage.arrivingToPickup;
+
+      debugPrint("🚀 LiveTripViewModel: Final Stage resolved to $_currentStage");
+
+      if (_currentStage == TripStage.arrivingToPickup) {
+        _voiceService.announceNavigatingToPickup();
+      } else {
+        _voiceService.announceTripStarted();
+      }
+
+      _updateRouteLine();
+    } catch (e) {
+      debugPrint("❌ LiveTripViewModel: Parsing error: $e");
+      rethrow;
     }
-
-    tripDetails = RideRequest(
-      id: currentRideId!,
-      riderName: (data['userName'] ?? "Rider").toString(),
-      userPhone: (data['userPhone'] ?? "").toString(),
-      pickupAddress: data['pickupAddress'] ?? 'Unknown Pickup',
-      destinationAddress: data['destinationAddress'] ?? 'Unknown Drop',
-      fare: (data['fare'] as num?)?.toDouble() ?? 0.0,
-      distance: (data['distance'] ?? "0 km").toString(),
-      pickupLatLng: pickupLocation!,
-      destLatLng: dropLocation!,
-      rideOtp: data['otp']?.toString() ?? "0000",
-    );
-
-    _currentStage = data['status'] == 'in_progress'
-        ? TripStage.tripInProgress
-        : TripStage.arrivingToPickup;
-
-    if (_currentStage == TripStage.arrivingToPickup) {
-      _voiceService.announceNavigatingToPickup();
-    } else {
-      _voiceService.announceTripStarted();
-    }
-
-    _updateRouteLine();
   }
 
   Future<void> callUser() async {
@@ -170,9 +196,13 @@ class LiveTripViewModel extends ChangeNotifier {
 
           // Check approval status
           if (data?['endRideApproved'] == true) {
+            bool wasNotApproved = !isRideEndApproved;
             isRideEndApproved = true;
             isWaitingForApproval = false;
             notifyListeners();
+            if (wasNotApproved) {
+              onEndRideApproved?.call();
+            }
           } else if (data?['endRideRejected'] == true) {
              isWaitingForApproval = false;
              isRideEndApproved = false;
@@ -184,6 +214,8 @@ class LiveTripViewModel extends ChangeNotifier {
             if (cancelledBy == 'user') {
                _voiceService.announceCustomerCancelled();
               _gpsStream?.cancel();
+              isWaitingForApproval = false;
+              notifyListeners();
               onRideCancelledByUser?.call();
             }
             return;
@@ -293,6 +325,10 @@ class LiveTripViewModel extends ChangeNotifier {
 
       await DriverPreferences.clearCurrentRideId();
 
+      isWaitingForApproval = false;
+      isRideEndApproved = false;
+      notifyListeners();
+
       appState.endTrip();
 
       if (context.mounted) {
@@ -324,6 +360,7 @@ class LiveTripViewModel extends ChangeNotifier {
       riderName: "Dummy Rider",
       userPhone: "1234567890",
       rideOtp: "0000",
+      userId: "dummy_user_id",
     );
     if (tripDetails == null) return false;
 
@@ -346,7 +383,9 @@ class LiveTripViewModel extends ChangeNotifier {
   }
 
   Future<void> endTrip(BuildContext context, AppStateViewModel appState) async {
-    if (currentRideId == null || tripDetails == null) return;
+    if (currentRideId == null || tripDetails == null) {
+      throw Exception("Invalid Trip State: Missing Ride ID or Details");
+    }
 
     try {
       final driverId = await DriverPreferences.getDriverId();
@@ -405,12 +444,15 @@ class LiveTripViewModel extends ChangeNotifier {
 
       appState.endTrip();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Trip Ended. ₹${commission.toStringAsFixed(0)} added to Today's Dues.",
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DriverRideSummaryScreen(
+              rideId: currentRideId!,
+              fare: totalFare,
+              passengerName: tripDetails!.riderName,
+              passengerId: tripDetails!.userId,
             ),
-            backgroundColor: Colors.green,
           ),
         );
       }
