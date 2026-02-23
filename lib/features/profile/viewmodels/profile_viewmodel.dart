@@ -15,29 +15,37 @@ class ProfileViewModel extends ChangeNotifier {
   String? rcImageBase64;
 
   String name = "";
+  String phone = "";
   String vehicle = "";
+  String vehicleModel = "";
+  String vehicleNumber = "";
   String rating = "5.0";
   String totalRides = "0";
   String earnings = "0";
   String joinDate = "";
+  String driverId = "";
 
   Future<void> fetchProfile() async {
     isLoading = true;
     notifyListeners();
 
     try {
-      final driverId = await DriverPreferences.getDriverId();
-      if (driverId == null) return;
+      final did = await DriverPreferences.getDriverId();
+      if (did == null) return;
+      driverId = did;
 
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
-          .doc(driverId)
+          .doc(did)
           .get();
 
       if (doc.exists) {
         final data = doc.data()!;
         name = data['name'] ?? "Driver";
-        vehicle = "${data['vehicleModel']} • ${data['vehicleNumber']}";
+        phone = data['phone'] ?? data['phoneNumber'] ?? '';
+        vehicleModel = data['vehicleModel'] ?? '';
+        vehicleNumber = data['vehicleNumber'] ?? '';
+        vehicle = "$vehicleModel • $vehicleNumber".trim().replaceAll(RegExp(r'^•\s*|\s*•$'), '');
 
         final double r = (data['rating'] as num?)?.toDouble() ?? 5.0;
         rating = r.toStringAsFixed(1);

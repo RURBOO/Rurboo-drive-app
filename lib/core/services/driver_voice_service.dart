@@ -78,7 +78,10 @@ class DriverVoiceService {
     if (!_isInitialized) await init();
     if (!_isEnabled) return;
 
-    _announcementQueue.add(text);
+    // Phonetic correction for "RURBOO" so TTS pronounces it as a word
+    final processedText = text.replaceAll("RURBOO", "Roor booo");
+
+    _announcementQueue.add(processedText);
     _processQueue();
   }
 
@@ -104,7 +107,7 @@ class DriverVoiceService {
   // =========================================================================
 
   void announceAppLaunch() {
-    speak("Welcome to RURBOO Driver. Ready to drive and earn!");
+    speak("Welcome to Roor booo Driver. Ready to drive and earn!");
   }
 
   // =========================================================================

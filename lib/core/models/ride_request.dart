@@ -8,6 +8,9 @@ class RideRequest {
   final String distance;
   final LatLng pickupLatLng;
   final LatLng destLatLng;
+  final String receiverName;
+  final String receiverPhone;
+  final bool isBookForOthers;
   final String riderName;
   final String userPhone;
   final String rideOtp;
@@ -25,5 +28,8 @@ class RideRequest {
     this.riderName = "Rider",
     this.userPhone = "",
     this.rideOtp = "0000",
+    this.receiverName = "",
+    this.receiverPhone = "",
+    this.isBookForOthers = false,
   });
 }

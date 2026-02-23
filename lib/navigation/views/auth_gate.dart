@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../state/app_state_viewmodel.dart';
 import '../../features/auth/views/login_screen.dart';
 import '../../features/trip/views/live_trip_screen.dart';
+import '../../features/auth/views/pending_approval_screen.dart';
 import 'main_navigator.dart';
 
 class AuthGate extends StatelessWidget {
@@ -28,6 +29,9 @@ class AuthGate extends StatelessWidget {
       case DriverState.signedOut:
         debugPrint("🔐 AuthGate: Mode = SIGNED_OUT");
         return const LoginScreen(key: ValueKey('login_screen'));
+      case DriverState.pending:
+        debugPrint("⏳ AuthGate: Mode = PENDING (Showing PendingApprovalScreen)");
+        return const PendingApprovalScreen(key: ValueKey('pending_approval_screen'));
       case DriverState.offline:
       case DriverState.online:
         debugPrint("🏠 AuthGate: Mode = ${appState.currentState.name.toUpperCase()} (Showing MainNavigator)");

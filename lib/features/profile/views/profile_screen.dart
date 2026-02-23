@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import 'driver_documents_screen.dart';
+import 'edit_profile_screen.dart';
 import 'my_vehicles_screen.dart';
 import '../../../state/language_provider.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
@@ -14,6 +15,8 @@ import 'package:rubo_driver/features/profile/views/help_support_screen.dart';
 import 'package:rubo_driver/features/profile/views/faq_screen.dart';
 import 'package:rubo_driver/features/profile/views/feedback_screen.dart';
 import 'delete_account_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:rubo_driver/features/wallet/views/wallet_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -57,16 +60,19 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       _voiceEnabled = value;
     });
     
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final voiceService = DriverVoiceService();
     if (value) {
-      voiceService.announceSuccess("Voice announcements enabled");
+      voiceService.announceSuccess(l10n.voiceAnnouncementsEnabled);
     } else {
-      voiceService.announceSuccess("Voice announcements disabled");
+      voiceService.announceSuccess(l10n.voiceAnnouncementsDisabled);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final vm = context.watch<ProfileViewModel>();
 
     return Scaffold(
@@ -95,18 +101,17 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                              Text(
-                               "My Profile",
-                               style: TextStyle(
+                               l10n.myProfile,
+                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                  color: Colors.white,
-                                 fontSize: 18,
                                  fontWeight: FontWeight.bold,
                                ),
                              ),
                           ],
                         ),
-                      ),
+                      ).animate().fade().slideY(begin: -0.2),
                       
                       const SizedBox(height: 20),
                       
@@ -137,7 +142,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                   ? const Icon(Icons.person, size: 50, color: Colors.white)
                                   : null,
                             ),
-                          ),
+                          ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
                           const SizedBox(height: 12),
                           Text(
                             vm.name,
@@ -146,11 +151,13 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
-                          ),
+                          ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
                           Text(
-                            "Joined ${vm.joinDate}",
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
-                          ),
+                            "${l10n.joined} ${vm.joinDate}",
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ).animate().fade(delay: 300.ms).slideY(begin: 0.2),
                         ],
                       ),
                     ],
@@ -191,39 +198,77 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  _buildStat("Rating", vm.rating, Icons.star, Colors.amber),
+                                   _buildStat(l10n.rating, vm.rating, Icons.star, Colors.amber),
                                   Container(width: 1, height: 40, color: Colors.grey[200]),
-                                  _buildStat("Rides", vm.totalRides, Icons.local_taxi, Colors.blue),
+                                  _buildStat(l10n.rides, vm.totalRides, Icons.local_taxi, Colors.blue),
                                   Container(width: 1, height: 40, color: Colors.grey[200]),
-                                  _buildStat("Wallet", vm.earnings, Icons.account_balance_wallet, Colors.green),
+                                  _buildStat(
+                                    l10n.wallet, 
+                                    vm.earnings, 
+                                    Icons.account_balance_wallet, 
+                                    Colors.green,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const WalletScreen()),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
+                            ).animate().fade(delay: 400.ms).slideY(begin: 0.2),
                             
                             const SizedBox(height: 24),
 
                             // Menu Groups
-                            _buildSectionHeader("Account"),
+                            _buildSectionHeader(l10n.account),
                             _buildMenuCard([
                               _buildMenuItem(
+                                icon: Icons.edit_outlined,
+                                title: '${l10n.editProfile} / प्रोफाइल संपादित करें',
+                                subtitle: l10n.personalDetailsTitle,
+                                onTap: () async {
+                                  final refreshed = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EditProfileScreen(
+                                        currentName: vm.name,
+                                        currentPhone: vm.phone,
+                                        currentVehicleModel: vm.vehicleModel,
+                                        currentVehicleNumber: vm.vehicleNumber,
+                                      ),
+                                    ),
+                                  );
+                                  if (refreshed == true) {
+                                    vm.fetchProfile();
+                                  }
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.account_balance_wallet_outlined,
+                                title: l10n.wallet,
+                                subtitle: "Recharge & Transaction History",
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const WalletScreen()),
+                                ),
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
                                 icon: Icons.document_scanner_rounded,
-                                title: 'My Documents',
-                                subtitle: 'License, RC & Profile',
+                                title: l10n.myDocuments,
+                                subtitle: '${l10n.rc}, ${l10n.drivingLicense}, ${l10n.insurance}',
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => DriverDocumentsScreen(
-                                      licenseBase64: vm.licenseImageBase64,
-                                      rcBase64: vm.rcImageBase64,
-                                    ),
+                                    builder: (_) => const DriverDocumentsScreen(),
                                   ),
                                 ),
                               ),
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.directions_car_filled_outlined,
-                                title: 'My Vehicles',
-                                subtitle: 'Manage Vehicles',
+                                title: l10n.myVehicles,
+                                subtitle: l10n.manageVehicles,
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (_) => const MyVehiclesScreen()),
@@ -232,27 +277,27 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.language,
-                                title: 'App Language / भाषा',
-                                subtitle: 'Change Language / भाषा बदलें',
+                                title: '${l10n.changeLanguage} / भाषा',
+                                subtitle: '${l10n.selectLanguage} / भाषा बदलें',
                                 onTap: () => _showLanguageDialog(context),
                               ),
-                            ]),
+                            ]).animate().fade(delay: 500.ms).slideY(begin: 0.2),
 
                             const SizedBox(height: 24),
-                            _buildSectionHeader("Preferences"),
+                            _buildSectionHeader(l10n.preferences),
                             _buildMenuCard([
                               _buildSwitchMenuItem(
                                 icon: Icons.record_voice_over_rounded,
-                                title: 'Voice Announcements',
-                                subtitle: 'Turn on/off app voice',
+                                title: l10n.voiceAnnouncements,
+                                subtitle: l10n.turnOnOffVoice,
                                 value: _voiceEnabled,
                                 onChanged: _toggleVoice,
                                 color: Colors.deepPurple,
                               ),
-                            ]),
+                            ]).animate().fade(delay: 550.ms).slideY(begin: 0.2),
 
                             const SizedBox(height: 24),
-                            _buildSectionHeader("Support & Legal"),
+                            _buildSectionHeader("${l10n.helpAndSupport} & Legal"),
                             _buildMenuCard([
                               _buildMenuItem(
                                 icon: Icons.feedback_outlined,
@@ -298,13 +343,13 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                   MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
                                 ),
                               ),
-                            ]),
+                            ]).animate().fade(delay: 600.ms).slideY(begin: 0.2),
 
                             const SizedBox(height: 24),
                             _buildMenuCard([
                               _buildMenuItem(
                                 icon: Icons.delete_forever,
-                                title: 'Delete Account',
+                                title: l10n.deleteAccount,
                                 color: Colors.red,
                                 onTap: () => Navigator.push(
                                   context,
@@ -314,17 +359,17 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.logout,
-                                title: 'Logout',
+                                title: l10n.logout,
                                 color: Colors.red,
                                 onTap: () => vm.logout(context),
                               ),
-                            ]),
+                            ]).animate().fade(delay: 650.ms).slideY(begin: 0.2),
                             
                             const SizedBox(height: 30),
                             Text(
                               "Rubo Driver v1.0.0",
-                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                            ),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
+                            ).animate().fade(delay: 700.ms),
                           ],
                         ),
                       ),
@@ -337,11 +382,12 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
   }
 
   void _showLanguageDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Select Language / भाषा चुनें"),
+          title: Text(l10n.selectLanguageTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -407,23 +453,30 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
     return const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFEEEEEE));
   }
 
-  Widget _buildStat(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildStat(String label, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
           children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: color),
+                const SizedBox(width: 4),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-      ],
+      ),
     );
   }
 

@@ -661,6 +661,474 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Feedback & Suggestions'**
   String get feedbackAndSuggestions;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @myDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'My Documents'**
+  String get myDocuments;
+
+  /// No description provided for @drivingLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Driving License'**
+  String get drivingLicense;
+
+  /// No description provided for @rc.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Registration (RC)'**
+  String get rc;
+
+  /// No description provided for @insurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Insurance'**
+  String get insurance;
+
+  /// No description provided for @vehicleFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Front Photo'**
+  String get vehicleFront;
+
+  /// No description provided for @numberPlateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure number plate is visible'**
+  String get numberPlateHint;
+
+  /// No description provided for @uploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded successfully ✓'**
+  String get uploadSuccess;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get uploadFailed;
+
+  /// No description provided for @tapToUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Upload'**
+  String get tapToUpload;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @personalDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Details'**
+  String get personalDetailsTitle;
+
+  /// No description provided for @vehicleDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Details'**
+  String get vehicleDetailsTitle;
+
+  /// No description provided for @vehicleMakeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Make & Model'**
+  String get vehicleMakeModel;
+
+  /// No description provided for @vehicleNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Number'**
+  String get vehicleNumberLabel;
+
+  /// No description provided for @phoneCannotBeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number cannot be changed'**
+  String get phoneCannotBeChanged;
+
+  /// No description provided for @newRideNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'🚖 New Ride Request!'**
+  String get newRideNotificationTitle;
+
+  /// No description provided for @newRideNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup: {address}'**
+  String newRideNotificationBody(Object address);
+
+  /// No description provided for @myProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My Profile'**
+  String get myProfile;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get wallet;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @voiceAnnouncements.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Announcements'**
+  String get voiceAnnouncements;
+
+  /// No description provided for @turnOnOffVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on/off app voice'**
+  String get turnOnOffVoice;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
+
+  /// No description provided for @myVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'My Vehicles'**
+  String get myVehicles;
+
+  /// No description provided for @manageVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Vehicles'**
+  String get manageVehicles;
+
+  /// No description provided for @voiceAnnouncementsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements enabled'**
+  String get voiceAnnouncementsEnabled;
+
+  /// No description provided for @voiceAnnouncementsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice announcements disabled'**
+  String get voiceAnnouncementsDisabled;
+
+  /// No description provided for @selectLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language / भाषा चुनें'**
+  String get selectLanguageTitle;
+
+  /// No description provided for @securityCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Check'**
+  String get securityCheck;
+
+  /// No description provided for @reauthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'For security, please logout and login again to delete your account.'**
+  String get reauthRequired;
+
+  /// No description provided for @logoutNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout Now'**
+  String get logoutNow;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account?'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent. You will lose your ride history, earnings data, and profile details immediately.'**
+  String get deleteAccountDesc;
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for leaving (Optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @permanentlyDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently Delete Account'**
+  String get permanentlyDelete;
+
+  /// No description provided for @accountDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully.'**
+  String get accountDeletedSuccess;
+
+  /// No description provided for @pendingDuesError.
+  ///
+  /// In en, this message translates to:
+  /// **'You have pending dues of ₹{amount}. Please clear them before deleting your account.'**
+  String pendingDuesError(Object amount);
+
+  /// No description provided for @bookingForPassenger.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking for Passenger'**
+  String get bookingForPassenger;
+
+  /// No description provided for @rechargeWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Recharge Wallet'**
+  String get rechargeWallet;
+
+  /// No description provided for @enterRechargeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter amount to add to your wallet'**
+  String get enterRechargeAmount;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
+
+  /// No description provided for @amountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 500'**
+  String get amountHint;
+
+  /// No description provided for @minimumRechargeInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'💡 Minimum: ₹100'**
+  String get minimumRechargeInfo;
+
+  /// No description provided for @payNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Now'**
+  String get payNow;
+
+  /// No description provided for @minRechargeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum recharge amount is ₹100'**
+  String get minRechargeError;
+
+  /// No description provided for @paymentGatewayError.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Payment gateway not configured. Please contact support.'**
+  String get paymentGatewayError;
+
+  /// No description provided for @paymentSuccessVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful! Your wallet has been recharged.'**
+  String get paymentSuccessVoice;
+
+  /// No description provided for @paymentSuccessMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful! Wallet updated.'**
+  String get paymentSuccessMsg;
+
+  /// No description provided for @paymentFailedVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed. Please try again.'**
+  String get paymentFailedVoice;
+
+  /// No description provided for @paymentFailedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed: {error}'**
+  String paymentFailedMsg(Object error);
+
+  /// No description provided for @myWalletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Wallet'**
+  String get myWalletTitle;
+
+  /// No description provided for @negativeBalanceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet is negative. Recharge to go online!'**
+  String get negativeBalanceWarning;
+
+  /// No description provided for @walletBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Balance'**
+  String get walletBalanceLabel;
+
+  /// No description provided for @todaysDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Due'**
+  String get todaysDueLabel;
+
+  /// No description provided for @addMoneyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Money via Razorpay'**
+  String get addMoneyBtn;
+
+  /// No description provided for @commissionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'💡 Commission is deducted daily at 11:59 PM'**
+  String get commissionInfo;
+
+  /// No description provided for @transactionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get transactionHistory;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactions;
+
+  /// No description provided for @walletRechargeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Recharge (Razorpay)'**
+  String get walletRechargeDescription;
+
+  /// No description provided for @gpsNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot go online: GPS not ready'**
+  String get gpsNotReady;
+
+  /// No description provided for @sessionInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Invalid. Please logout and login again.'**
+  String get sessionInvalid;
+
+  /// No description provided for @accountMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Mismatch. Please relogin to sync.'**
+  String get accountMismatch;
+
+  /// No description provided for @walletRechargeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Recharge Required'**
+  String get walletRechargeRequired;
+
+  /// No description provided for @goToWalletAndRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Wallet & Recharge'**
+  String get goToWalletAndRecharge;
+
+  /// No description provided for @requestAlliance.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Driver Alliance'**
+  String get requestAlliance;
+
+  /// No description provided for @allianceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask nearby drivers for help. Select issue type:'**
+  String get allianceDescription;
+
+  /// No description provided for @mechanicalFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'🔧 Mechanical Failure'**
+  String get mechanicalFailure;
+
+  /// No description provided for @medicalEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'🚑 Medical Emergency'**
+  String get medicalEmergency;
+
+  /// No description provided for @securityThreat.
+  ///
+  /// In en, this message translates to:
+  /// **'🛡️ Security Threat'**
+  String get securityThreat;
+
+  /// No description provided for @otherHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Other Help'**
+  String get otherHelp;
+
+  /// No description provided for @allianceAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Alliance Alert!'**
+  String get allianceAlert;
+
+  /// No description provided for @nearbyDriverNeedsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A nearby driver needs {type} help!'**
+  String nearbyDriverNeedsHelp(Object type);
+
+  /// No description provided for @goToAssist.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Assist'**
+  String get goToAssist;
 }
 
 class _AppLocalizationsDelegate

@@ -110,7 +110,7 @@ service cloud.firestore {
           && uid() == driverId
           && (
              request.resource.data.diff(resource.data).changedKeys()
-              .hasOnly(["location", "currentLocation", "isOnline", "lastActive", "heading", "speed", "lastLocationUpdate", "fcmToken", "lastTokenUpdate", "totalRides"]) 
+              .hasOnly(["location", "currentLocation", "isOnline", "lastActive", "heading", "speed", "lastLocationUpdate", "fcmToken", "lastTokenUpdate", "totalRides", "dailyCommissionDue", "status", "phone", "deletedAt", "deletionReason", "documents", "vehicleDetails", "name", "age", "vehicleNumber", "vehicleMake"]) 
           )
         ) 
         || 

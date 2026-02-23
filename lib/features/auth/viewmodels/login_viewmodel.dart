@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../views/otp_screen.dart';
-import '../views/pending_approval_screen.dart';
+import '../../../navigation/views/auth_gate.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final phoneController = TextEditingController();
@@ -134,12 +134,21 @@ class LoginViewModel extends ChangeNotifier {
       await DriverPreferences.saveVehicleType(data['vehicleType']);
     }
 
-    appState.signIn();
+    final String status = data['status'] ?? 'pending';
+    
+    // Start reactive listener
+    appState.startSecurityCheck(uid);
+
+    if (status == 'verified') {
+      appState.signIn();
+    } else {
+      appState.setPending();
+    }
 
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const PendingApprovalScreen()),
+        MaterialPageRoute(builder: (_) => const AuthGate()),
         (route) => false,
       );
     }

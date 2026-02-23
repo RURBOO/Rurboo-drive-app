@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../l10n/app_localizations.dart';
 import '../../../navigation/views/main_navigator.dart';
 
 class DriverRideSummaryScreen extends StatefulWidget {

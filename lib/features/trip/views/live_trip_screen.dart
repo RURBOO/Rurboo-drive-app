@@ -13,6 +13,7 @@ import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/live_trip_viewmodel.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class LiveTripScreen extends StatefulWidget {
   const LiveTripScreen({super.key});
@@ -107,19 +108,20 @@ class _LiveTripScreenBody extends StatelessWidget {
               keyboardType: TextInputType.number,
               maxLength: 4,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(letterSpacing: 16, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 counterText: "",
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 24),
               ),
             ),
           ],
-        ),
+        ).animate().fade().scale(begin: const Offset(0.9, 0.9)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -318,7 +320,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            ).animate().slideY(begin: -0.5, duration: 400.ms, curve: Curves.easeOutCubic).fade(),
           ),
 
           // 3. Floating Action Buttons (Right Side)
@@ -340,7 +342,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.green,
                   child: const Icon(Icons.navigation),
-                ),
+                ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
               ],
             ),
           ),
@@ -388,9 +390,8 @@ class _LiveTripScreenBody extends StatelessWidget {
                            children: [
                              Text(
                                vm.tripDetails?.riderName ?? "Rider",
-                               style: const TextStyle(
-                                 fontSize: 18,
-                                 fontWeight: FontWeight.bold,
+                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                 fontWeight: FontWeight.w900,
                                ),
                              ),
                              const SizedBox(height: 4),
@@ -542,7 +543,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                      ),
                 ],
               ),
-            ),
+            ).animate().slideY(begin: 1.0, duration: 400.ms, curve: Curves.easeOutCubic),
           ),
         ],
       ),

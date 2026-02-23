@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +18,7 @@ import '../../../core/services/notification_service.dart';
 import '../../wallet/views/wallet_screen.dart';
 import '../services/location_service.dart';
 import 'driver_voice_viewmodel.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 import '../../../navigation/views/auth_gate.dart';
 
 import '../../../core/models/ride_request.dart';
@@ -40,7 +40,7 @@ class HomeViewModel extends ChangeNotifier {
   Position? get currentPosition => _currentPosition;
 
   StreamSubscription<Position>? _locationSubscription;
-  StreamSubscription<List<DocumentSnapshot>>? _rideSubscription;
+  StreamSubscription<QuerySnapshot>? _rideSubscription;
 
   RideRequest? _newRideRequest;
   RideRequest? get newRideRequest => _newRideRequest;
@@ -311,134 +311,108 @@ class HomeViewModel extends ChangeNotifier {
 
     _lastGeoQueryTime = DateTime.now();
 
-    if (_driverVehicleType == null) {
-      _driverVehicleType = await DriverPreferences.getVehicleType();
-      if (_driverVehicleType == null) {
-        debugPrint("ERROR: Driver Vehicle Type is NULL. Cannot filter rides.");
+    _driverVehicleType ??= await DriverPreferences.getVehicleType();
+    debugPrint("LISTENER: Monitoring 'pending' rides. Driver Vehicle Type: $_driverVehicleType");
+
+    // Listen to all pending rides and filter by distance client-side for maximum reliability
+    _rideSubscription = FirebaseFirestore.instance
+        .collection('rideRequests')
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      if (_isDisposed) return;
+      debugPrint("LISTENER: Received snapshot with ${snapshot.docs.length} pending rides");
+
+      if (_appState.currentState != DriverState.online) {
         return;
       }
-    }
 
-    // Reverted to CollectionReference and using queryBuilder for filtering
-    final CollectionReference<Map<String, dynamic>> collectionRef =
-      FirebaseFirestore.instance.collection('rideRequests');
+      RideRequest? foundRequest;
+      double closestDist = double.infinity;
+      const double maxRadiusMeters = 20000; // 20km
+      
+      if (_driverLocation == null) {
+        debugPrint("LISTENER: Driver location is null, skipping proximity check");
+        return;
+      }
 
-    final GeoFirePoint center = GeoFirePoint(
-      GeoPoint(_driverLocation!.latitude, _driverLocation!.longitude),
-    );
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data == null) continue;
 
-    debugPrint("LISTENER STARTED: Type='$_driverVehicleType' | Radius=50km");
+        final pickupCoords = data['pickupCoords'];
+        if (pickupCoords == null) continue;
 
-    _rideSubscription = GeoCollectionReference(collectionRef)
-        .subscribeWithin(
-          center: center,
-          radiusInKm: 5.0,
-          field: 'pickupGeo',
-          geopointFrom: (data) {
-            if (data['pickupGeo'] != null &&
-                data['pickupGeo']['geopoint'] != null) {
-              return (data['pickupGeo'] as Map)['geopoint'] as GeoPoint;
-            }
-            return const GeoPoint(0, 0);
-          },
-          // Adding queryBuilder to filter by status='pending'
-          queryBuilder: (query) => query.where('status', isEqualTo: 'pending'),
-          strictMode: true,
-        )
-        // Fixed type signature for listen to avoid generic mismatch
-        .listen((List<DocumentSnapshot> docs) {
-          if (_isDisposed) return;
+        final GeoPoint p = pickupCoords as GeoPoint;
+        double dist = Geolocator.distanceBetween(
+          _driverLocation!.latitude,
+          _driverLocation!.longitude,
+          p.latitude,
+          p.longitude,
+        );
 
-          // GUARD: Don't process rides if we're already on a trip or offline
-          if (_appState.currentState != DriverState.online) {
-            debugPrint("🛑 HomeViewModel: Skipping ride listener (State: ${_appState.currentState})");
-            return;
-          }
+        // Optional: Filter by category if driver has one
+        final String rideCategory = (data['vehicleCategory'] ?? '').toString().toLowerCase();
+        final String driverCategory = (_driverVehicleType ?? '').toLowerCase();
+        bool categoryMatch = rideCategory == 'all' || rideCategory == driverCategory || rideCategory.isEmpty;
 
-          RideRequest? foundRequest;
-          double closestDist = double.infinity;
+        debugPrint("LISTENER: Checking Ride[${doc.id}] - Dist: ${dist.toStringAsFixed(0)}m, Cat: $rideCategory (Driver: $driverCategory), Match: $categoryMatch");
 
-          debugPrint("FIRESTORE EVENT: Found ${docs.length} docs in radius.");
-
-          for (var doc in docs) {
-            final data = doc.data() as Map<String, dynamic>?; // Cast data manually
-            if (data == null) continue;
-
-            final String docId = doc.id;
-            final String status = data['status'] ?? 'unknown';
-            final String rideCategory = (data['vehicleCategory'] ?? '').toString().trim().toLowerCase();
-            final String driverCategory = (_driverVehicleType ?? '').trim().toLowerCase();
-
-            debugPrint("--- Checking Ride: $docId ---");
-            debugPrint("Server Status: '$status'");
-            debugPrint(
-              "Server Category: '$rideCategory' vs Driver: '$driverCategory'",
+        if (dist <= maxRadiusMeters && categoryMatch) {
+          if (dist < closestDist) {
+            closestDist = dist;
+            final destCoords = data['destinationCoords'] as GeoPoint?;
+            
+            foundRequest = RideRequest(
+              id: doc.id,
+              pickupAddress: SafeParser.toStr(data['pickupAddress']),
+              destinationAddress: SafeParser.toStr(data['destinationAddress']),
+              fare: SafeParser.toDouble(data['fare']),
+              distance: "${(dist / 1000).toStringAsFixed(1)} km",
+              pickupLatLng: LatLng(p.latitude, p.longitude),
+              destLatLng: destCoords != null 
+                  ? LatLng(destCoords.latitude, destCoords.longitude)
+                  : LatLng(p.latitude, p.longitude),
+              userId: SafeParser.toStr(data['userId']),
+              receiverName: SafeParser.toStr(data['receiverName']),
+              receiverPhone: SafeParser.toStr(data['receiverPhone']),
+              isBookForOthers: data['isBookForOthers'] == true,
             );
-
-            bool isCategoryMatch = true; // Temporary: match everything for debugging
-            bool isStatusMatch = status == 'pending';
-
-            debugPrint(
-              "DUMP Server:'$rideCategory' vs Driver:'$driverCategory' | "
-              "Status:'$status' => isCatMatch=$isCategoryMatch, isStatMatch=$isStatusMatch",
-            );
-
-            if (isStatusMatch && isCategoryMatch) {
-              final GeoPoint p = data['pickupCoords'];
-              final GeoPoint d = data['destinationCoords'];
-
-              double dist = Geolocator.distanceBetween(
-                _driverLocation!.latitude,
-                _driverLocation!.longitude,
-                p.latitude,
-                p.longitude,
-              );
-
-              debugPrint("MATCH FOUND! Distance: $dist meters");
-
-              if (dist < closestDist) {
-                closestDist = dist;
-                foundRequest = RideRequest(
-                  id: docId,
-                  pickupAddress: SafeParser.toStr(data['pickupAddress']),
-                  destinationAddress: SafeParser.toStr(
-                    data['destinationAddress'],
-                  ),
-                  fare: SafeParser.toDouble(data['fare']),
-                  distance: "${(dist / 1000).toStringAsFixed(1)} km",
-                  pickupLatLng: LatLng(p.latitude, p.longitude),
-                  destLatLng: LatLng(d.latitude, d.longitude),
-                  userId: SafeParser.toStr(data['userId']),
-                );
-              }
-            } else {
-              debugPrint("SKIPPED: Status or Category mismatch.");
-            }
           }
+        }
+      }
 
-          if (_newRideRequest?.id != foundRequest?.id) {
-            debugPrint("STATE UPDATE: New Ride = ${foundRequest?.id ?? 'NULL'}");
-            _newRideRequest = foundRequest;
+      if (_newRideRequest?.id != foundRequest?.id) {
+        _newRideRequest = foundRequest;
+        if (_newRideRequest == null) {
+          debugPrint("LISTENER: No suitable ride found in this snapshot.");
+          _clearRoute();
+        } else {
+          _voiceVm?.announceNewRide(
+            _newRideRequest!.pickupAddress,
+            _newRideRequest!.distance
+          );
 
-            if (_newRideRequest == null) {
-              _clearRoute();
-            } else {
-              // 🔊 VOICE ANNOUNCEMENT
-              _voiceVm?.announceNewRide(
-                  _newRideRequest!.pickupAddress, 
-                  _newRideRequest!.distance
-              );
-              
-              // 🔔 SHOW NOTIFICATION (Background Support)
-              NotificationService().showLocalNotification(
-                title: "🚖 New Ride Request!",
-                body: "Pickup: ${_newRideRequest!.pickupAddress} (${_newRideRequest!.distance})",
-                payload: _newRideRequest!.id,
-              );
-            }
-            notifyListeners();
-          }
-        });
+          // Show notification with localizations if context available
+          String title = "🚖 New Ride Request!";
+          String body = "Pickup: ${_newRideRequest!.pickupAddress}";
+
+          try {
+            // If we had a global context or static l10n, we could use it here.
+            // For now, these are the primary ones.
+            // I'll use a simple bilingual string as a backup.
+            title = "🚖 New Ride Request! / नई राइड!";
+          } catch (_) {}
+
+          NotificationService().showLocalNotification(
+            title: title,
+            body: body,
+            payload: _newRideRequest!.id,
+          );
+        }
+        _safeNotifyListeners();
+      }
+    });
   }
 
   void _clearRoute() {
@@ -488,7 +462,7 @@ class HomeViewModel extends ChangeNotifier {
         notifyListeners();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Cannot go online: GPS not ready")),
+            SnackBar(content: Text(AppLocalizations.of(context)!.gpsNotReady)),
           );
         }
         return;
@@ -499,9 +473,9 @@ class HomeViewModel extends ChangeNotifier {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
        if (context.mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text("Session Invalid. Please logout and login again.")),
-         );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.sessionInvalid)),
+          );
        }
        return;
     }
@@ -511,9 +485,9 @@ class HomeViewModel extends ChangeNotifier {
     
     if (driverId == null || user.uid != driverId) {
       if (context.mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text("Account Mismatch. Please relogin to sync.")),
-         );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.accountMismatch)),
+          );
       }
       return; 
     }
@@ -538,7 +512,7 @@ class HomeViewModel extends ChangeNotifier {
           _showBlockScreen(
             context,
             walletBalance,
-            "Daily Settlement Complete.\nYour wallet balance is negative (₹${walletBalance.toStringAsFixed(0)}).\n\nPlease recharge to start today's shift.",
+            AppLocalizations.of(context)!.negativeBalanceWarning,
           );
           notifyListeners();
           return;
@@ -573,9 +547,9 @@ class HomeViewModel extends ChangeNotifier {
               color: Colors.redAccent,
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Wallet Recharge Required",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context)!.walletRechargeRequired,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
@@ -604,9 +578,9 @@ class HomeViewModel extends ChangeNotifier {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text(
-                  "Go to Wallet & Recharge",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  AppLocalizations.of(context)!.goToWalletAndRecharge,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -614,7 +588,7 @@ class HomeViewModel extends ChangeNotifier {
 
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
             ),
           ],
         ),
@@ -715,6 +689,7 @@ class HomeViewModel extends ChangeNotifier {
         
         // Give the navigator a tick to process the pop before we swap the entire root widget tree
         Future.delayed(Duration.zero, () {
+          if (!context.mounted) return;
           debugPrint("🚕 HomeViewModel: Triggering appState.acceptRide($rideId)");
           
           // 1. Shutdown all Home Screen listeners immediately

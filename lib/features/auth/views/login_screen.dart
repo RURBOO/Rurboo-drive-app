@@ -4,6 +4,7 @@ import '../../../core/services/driver_voice_service.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/login_viewmodel.dart';
 import 'registration_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -42,47 +43,38 @@ class _LoginScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<LoginViewModel>();
     final appState = context.read<AppStateViewModel>();
+    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.black,
-              Colors.grey.shade900,
-            ],
+            colors: [Color(0xFF0F0F0F), Color(0xFF1A1A1A)],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ],
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      child: const Icon(Icons.local_taxi_rounded, size: 48, color: Colors.white),
                     ),
-                    child: const Icon(
-                      Icons.local_taxi,
-                      size: 60,
-                      color: Colors.black,
-                    ),
-                  ),
+                  ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
                   
                   const SizedBox(height: 32),
 
@@ -90,95 +82,86 @@ class _LoginScreenBody extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context)!.appName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.displayMedium?.copyWith(
                       color: Colors.white,
-                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
                     ),
-                  ),
+                  ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
                   
                   const SizedBox(height: 8),
                   
                   Text(
                     AppLocalizations.of(context)!.driveEarnGrow,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.grey.shade400,
                       letterSpacing: 0.5,
                     ),
-                  ),
+                  ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 48),
 
                   // Phone Number Field
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                     ),
                     child: TextField(
                       controller: vm.phoneController,
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                      cursorColor: Colors.white,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white, 
+                        letterSpacing: 2,
                       ),
                       onTap: () => voiceService.announcePhoneNumberField(),
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.phoneNumber,
-                        labelStyle: TextStyle(color: Colors.grey.shade300),
+                        labelStyle: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
                         prefixText: "+91 ",
-                        prefixStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
+                        prefixStyle: theme.textTheme.titleLarge?.copyWith(color: Colors.white, letterSpacing: 2),
                         counterText: "",
+                        filled: false,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(20),
-                        prefixIcon: const Icon(
-                          Icons.phone_android,
-                          color: Colors.white,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                         ),
+                        contentPadding: const EdgeInsets.all(20),
+                        prefixIcon: const Icon(Icons.phone_android_rounded, color: Colors.white70),
                       ),
                     ),
-                  ),
+                  ).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 32),
 
                   // Login Button
                   vm.isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        )
+                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            backgroundColor: theme.colorScheme.primary, // Electric Blue
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             elevation: 8,
-                            shadowColor: Colors.white.withValues(alpha: 0.5),
+                            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                           ),
                           onPressed: () => vm.login(context, appState),
                           child: Text(
                             AppLocalizations.of(context)!.sendOtp,
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                              letterSpacing: 1,
                             ),
                           ),
-                        ),
+                        ).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 32),
 
@@ -188,27 +171,22 @@ class _LoginScreenBody extends StatelessWidget {
                     children: [
                       Text(
                         "${AppLocalizations.of(context)!.newDriver} ",
-                        style: TextStyle(color: Colors.grey.shade400),
+                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegistrationScreen(),
-                            ),
-                          );
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistrationScreen()));
                         },
                         child: Text(
                           AppLocalizations.of(context)!.registerHere,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
-                  ),
+                  ).animate().fade(delay: 600.ms),
 
                   const SizedBox(height: 24),
 
@@ -216,11 +194,8 @@ class _LoginScreenBody extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context)!.termsPrivacyLogin,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
+                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                  ).animate().fade(delay: 700.ms),
                 ],
               ),
             ),

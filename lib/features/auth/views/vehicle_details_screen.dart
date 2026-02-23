@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/registration_viewmodel.dart';
 import 'document_upload_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class VehicleDetailsScreen extends StatelessWidget {
   const VehicleDetailsScreen({super.key});
@@ -9,6 +10,7 @@ class VehicleDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<RegistrationViewModel>();
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Vehicle Details (2/3)")),
@@ -17,10 +19,10 @@ class VehicleDetailsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            const Text(
+            Text(
               "Vehicle Information",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+              style: theme.textTheme.headlineLarge,
+            ).animate().fade().slideY(begin: 0.2),
             const SizedBox(height: 20),
 
             DropdownButtonFormField<String>(
@@ -43,7 +45,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 labelText: 'Vehicle Type',
                 border: OutlineInputBorder(),
               ),
-            ),
+            ).animate().fade(delay: 100.ms).slideY(begin: 0.2),
             const SizedBox(height: 16),
 
             TextFormField(
@@ -56,7 +58,7 @@ class VehicleDetailsScreen extends StatelessWidget {
               validator: (v) => (v == null || v.length < 3)
                   ? "Enter valid vehicle model"
                   : null,
-            ),
+            ).animate().fade(delay: 150.ms).slideY(begin: 0.2),
             const SizedBox(height: 16),
 
             TextFormField(
@@ -72,7 +74,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 if (v.length < 6) return "Invalid Vehicle Number";
                 return null;
               },
-            ),
+            ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
             const SizedBox(height: 32),
 
             ElevatedButton(
@@ -93,7 +95,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 }
               },
               child: const Text("Next: Upload Documents"),
-            ),
+            ).animate().fade(delay: 250.ms).slideY(begin: 0.2),
           ],
         ),
       ),

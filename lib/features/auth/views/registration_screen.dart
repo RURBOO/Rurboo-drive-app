@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/registration_viewmodel.dart';
 import 'vehicle_details_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class RegistrationScreen extends StatelessWidget {
@@ -10,6 +11,8 @@ class RegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context)!.driverRegistration)),
       body: Consumer<RegistrationViewModel>(
@@ -21,8 +24,8 @@ class RegistrationScreen extends StatelessWidget {
               children: [
                 Text(
                   AppLocalizations.of(context)!.personalDetails,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                  style: theme.textTheme.headlineLarge,
+                ).animate().fade().slideY(begin: 0.2),
                 const SizedBox(height: 20),
 
                 TextFormField(
@@ -44,7 +47,7 @@ class RegistrationScreen extends StatelessWidget {
                     }
                     return null;
                   },
-                ),
+                ).animate().fade(delay: 100.ms).slideY(begin: 0.2),
                 const SizedBox(height: 16),
 
                 TextFormField(
@@ -69,7 +72,7 @@ class RegistrationScreen extends StatelessWidget {
                     }
                     return null;
                   },
-                ),
+                ).animate().fade(delay: 150.ms).slideY(begin: 0.2),
                 const SizedBox(height: 32),
 
                 ElevatedButton(
@@ -87,7 +90,7 @@ class RegistrationScreen extends StatelessWidget {
                     }
                   },
                   child: Text(AppLocalizations.of(context)!.nextVehicleDetails),
-                ),
+                ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
               ],
             ),
           );

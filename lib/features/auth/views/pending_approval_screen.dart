@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
-import 'location_disclosure_screen.dart';
 import 'login_screen.dart';
 
 class PendingApprovalScreen extends StatefulWidget {
@@ -35,13 +34,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
       debugPrint("Current Status: '$status'");
 
       if (doc.exists && status == 'verified') {
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LocationDisclosureScreen()),
-            (route) => false,
-          );
-        }
+        debugPrint("PendingApproval: Manual check found 'verified'. State will update reactively.");
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

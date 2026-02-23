@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../viewmodels/earnings_viewmodel.dart';
 import 'ride_history_screen.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:rubo_driver/features/wallet/views/wallet_screen.dart';
 
 class EarningsScreen extends StatelessWidget {
   const EarningsScreen({super.key});
@@ -25,11 +27,12 @@ class _EarningsScreenBody extends StatelessWidget {
     final vm = context.watch<EarningsViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.earnings),
         backgroundColor: Colors.white,
-        elevation: 0.5,
+        elevation: 0,
+        centerTitle: true,
         foregroundColor: Colors.black,
         actions: [
           IconButton(
@@ -52,8 +55,28 @@ class _EarningsScreenBody extends StatelessWidget {
                     commission: vm.todayCommission,
                     net: vm.todayNet,
                     rides: vm.todayRides,
-                    color: Colors.green,
-                  ),
+                    color: Theme.of(context).colorScheme.primary, // Premium Blue
+                  ).animate().fade().slideY(begin: 0.2),
+
+                  const SizedBox(height: 16),
+
+                  // Recharge Wallet Button
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const WalletScreen()),
+                    ),
+                    icon: const Icon(Icons.account_balance_wallet_outlined),
+                    label: const Text("Recharge Wallet / वॉलेट रिचार्ज"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ).animate().fade(delay: 100.ms).slideY(begin: 0.2),
 
                   const SizedBox(height: 16),
 
@@ -78,8 +101,7 @@ class _EarningsScreenBody extends StatelessWidget {
                       children: [
                         Text(
                           AppLocalizations.of(context)!.thisWeek,
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -200,7 +222,7 @@ class _EarningsScreenBody extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+                  ).animate().fade(delay: 100.ms).slideY(begin: 0.2),
 
                   Padding(
                     padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
@@ -227,7 +249,7 @@ class _EarningsScreenBody extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+                  ).animate().fade(delay: 200.ms),
 
                   if (vm.rideHistory.isEmpty)
                     Padding(
@@ -236,7 +258,7 @@ class _EarningsScreenBody extends StatelessWidget {
                     )
                   else
                     ...vm.rideHistory.map(
-                      (ride) => _buildRideHistoryTile(context, ride),
+                      (ride) => _buildRideHistoryTile(context, ride).animate().fade(delay: 300.ms).slideY(begin: 0.2),
                     ),
                 ],
               ),

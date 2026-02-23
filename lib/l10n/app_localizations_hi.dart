@@ -293,4 +293,255 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get feedbackAndSuggestions => 'प्रतिक्रिया और सुझाव';
+
+  @override
+  String get editProfile => 'प्रोफ़ाइल संपादित करें';
+
+  @override
+  String get myDocuments => 'मेरे दस्तावेज़';
+
+  @override
+  String get drivingLicense => 'ड्राइविंग लाइसेंस';
+
+  @override
+  String get rc => 'वाहन पंजीकरण (RC)';
+
+  @override
+  String get insurance => 'वाहन बीमा';
+
+  @override
+  String get vehicleFront => 'वाहन की फ्रंट फोटो';
+
+  @override
+  String get numberPlateHint => 'सुनिश्चित करें कि नंबर प्लेट दिखाई दे रही है';
+
+  @override
+  String get uploadSuccess => 'सफलतापूर्वक अपलोड किया गया ✓';
+
+  @override
+  String get uploadFailed => 'अपलोड विफल रहा';
+
+  @override
+  String get tapToUpload => 'अपलोड करने के लिए दबाएं';
+
+  @override
+  String get saveChanges => 'बदलाव सहेजें';
+
+  @override
+  String get personalDetailsTitle => 'व्यक्तिगत विवरण';
+
+  @override
+  String get vehicleDetailsTitle => 'वाहन विवरण';
+
+  @override
+  String get vehicleMakeModel => 'वाहन का मॉडल';
+
+  @override
+  String get vehicleNumberLabel => 'वाहन का नंबर';
+
+  @override
+  String get phoneCannotBeChanged => 'फोन नंबर बदला नहीं जा सकता';
+
+  @override
+  String get newRideNotificationTitle => '🚖 नई राइड रिक्वेस्ट!';
+
+  @override
+  String newRideNotificationBody(Object address) {
+    return 'पिकअप: $address';
+  }
+
+  @override
+  String get myProfile => 'मेरी प्रोफाइल';
+
+  @override
+  String get joined => 'जुड़े';
+
+  @override
+  String get rating => 'रेटिंग';
+
+  @override
+  String get wallet => 'वॉलेट';
+
+  @override
+  String get account => 'खाता';
+
+  @override
+  String get preferences => 'प्राथमिकताएं';
+
+  @override
+  String get voiceAnnouncements => 'वॉयस घोषणाएं';
+
+  @override
+  String get turnOnOffVoice => 'ऐप वॉयस चालू/बंद करें';
+
+  @override
+  String get deleteAccount => 'खाता हटाएं';
+
+  @override
+  String get logout => 'लॉगआउट';
+
+  @override
+  String get myVehicles => 'मेरे वाहन';
+
+  @override
+  String get manageVehicles => 'वाहन प्रबंधित करें';
+
+  @override
+  String get voiceAnnouncementsEnabled => 'वॉयस घोषणाएं सक्षम';
+
+  @override
+  String get voiceAnnouncementsDisabled => 'वॉयस घोषणाएं अक्षम';
+
+  @override
+  String get selectLanguageTitle => 'Select Language / भाषा चुनें';
+
+  @override
+  String get securityCheck => 'सुरक्षा जाँच';
+
+  @override
+  String get reauthRequired =>
+      'सुरक्षा के लिए, कृपया अपना खाता हटाने के लिए लॉग आउट करें और फिर से लॉग इन करें।';
+
+  @override
+  String get logoutNow => 'अभी लॉगआउट करें';
+
+  @override
+  String get deleteAccountConfirm => 'क्या आप वाकई अपना खाता हटाना चाहते हैं?';
+
+  @override
+  String get deleteAccountDesc =>
+      'यह कार्रवाई स्थायी है। आप अपना राइड इतिहास, कमाई का डेटा और प्रोफाइल विवरण तुरंत खो देंगे।';
+
+  @override
+  String get reasonOptional => 'छोड़ने का कारण (वैकल्पिक)';
+
+  @override
+  String get permanentlyDelete => 'स्थायी रूप से खाता हटाएं';
+
+  @override
+  String get accountDeletedSuccess => 'खाता सफलतापूर्वक हटा दिया गया है।';
+
+  @override
+  String pendingDuesError(Object amount) {
+    return 'आपका ₹$amount बकाया है। कृपया अपना खाता हटाने से पहले इसे चुकाएं।';
+  }
+
+  @override
+  String get bookingForPassenger => 'यात्री के लिए बुकिंग';
+
+  @override
+  String get rechargeWallet => 'वॉलेट रिचार्ज करें';
+
+  @override
+  String get enterRechargeAmount =>
+      'अपने वॉलेट में जोड़ने के लिए राशि दर्ज करें';
+
+  @override
+  String get amountLabel => 'राशि';
+
+  @override
+  String get amountHint => 'जैसे 500';
+
+  @override
+  String get minimumRechargeInfo => '💡 न्यूनतम: ₹100';
+
+  @override
+  String get payNow => 'अभी भुगतान करें';
+
+  @override
+  String get minRechargeError => 'न्यूनतम रिचार्ज राशि ₹100 है';
+
+  @override
+  String get paymentGatewayError =>
+      '⚠️ पेमेंट गेटवे कॉन्फ़िगर नहीं है। कृपया सहायता से संपर्क करें।';
+
+  @override
+  String get paymentSuccessVoice =>
+      'भुगतान सफल रहा! आपका वॉलेट रिचार्ज कर दिया गया है।';
+
+  @override
+  String get paymentSuccessMsg => 'भुगतान सफल! वॉलेट अपडेट हो गया।';
+
+  @override
+  String get paymentFailedVoice => 'भुगतान विफल रहा। कृपया पुनः प्रयास करें।';
+
+  @override
+  String paymentFailedMsg(Object error) {
+    return 'भुगतान विफल: $error';
+  }
+
+  @override
+  String get myWalletTitle => 'मेरा वॉलेट';
+
+  @override
+  String get negativeBalanceWarning =>
+      'आपका वॉलेट बैलेंस नेगेटिव है। ऑनलाइन जाने के लिए रिचार्ज करें!';
+
+  @override
+  String get walletBalanceLabel => 'वॉलेट बैलेंस';
+
+  @override
+  String get todaysDueLabel => 'आज का बकाया';
+
+  @override
+  String get addMoneyBtn => 'रेज़रपे के माध्यम से पैसे जोड़ें';
+
+  @override
+  String get commissionInfo => '💡 कमीशन रोजाना रात 11:59 बजे काटा जाता है';
+
+  @override
+  String get transactionHistory => 'लेनदेन इतिहास';
+
+  @override
+  String get noTransactions => 'अभी तक कोई लेनदेन नहीं';
+
+  @override
+  String get walletRechargeDescription => 'वॉलेट रिचार्ज (रेज़रपे)';
+
+  @override
+  String get gpsNotReady => 'ऑनलाइन नहीं जा सकते: GPS तैयार नहीं है';
+
+  @override
+  String get sessionInvalid =>
+      'सत्र अमान्य है। कृपया लॉगआउट करें और फिर से लॉगिन करें।';
+
+  @override
+  String get accountMismatch =>
+      'खाता बेमेल है। सिंक करने के लिए कृपया फिर से लॉगिन करें।';
+
+  @override
+  String get walletRechargeRequired => 'वॉलेट रिचार्ज आवश्यक है';
+
+  @override
+  String get goToWalletAndRecharge => 'वॉलेट पर जाएं और रिचार्ज करें';
+
+  @override
+  String get requestAlliance => 'ड्राइवर गठबंधन का अनुरोध करें';
+
+  @override
+  String get allianceDescription =>
+      'आस-पास के ड्राइवरों से मदद मांगें। समस्या का प्रकार चुनें:';
+
+  @override
+  String get mechanicalFailure => '🔧 यांत्रिक विफलता';
+
+  @override
+  String get medicalEmergency => '🚑 चिकित्सा आपातकाल';
+
+  @override
+  String get securityThreat => '🛡️ सुरक्षा खतरा';
+
+  @override
+  String get otherHelp => '⚠️ अन्य सहायता';
+
+  @override
+  String get allianceAlert => 'गठबंधन अलर्ट!';
+
+  @override
+  String nearbyDriverNeedsHelp(Object type) {
+    return 'आस-पास के ड्राइवर को $type सहायता चाहिए!';
+  }
+
+  @override
+  String get goToAssist => 'सहायता के लिए जाएं';
 }

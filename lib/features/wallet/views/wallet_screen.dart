@@ -4,6 +4,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
 import '../../../core/constants/payment_keys.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 import '../models/wallet_transaction.dart';
 import 'package:intl/intl.dart';
 
@@ -33,6 +34,7 @@ class _WalletScreenState extends State<WalletScreen> {
   late Razorpay _razorpay;
   String? _currentDriverId;
   final _voiceService = DriverVoiceService();
+  double? _lastAttemptedAmount;
 
   @override
   void initState() {
@@ -128,38 +130,38 @@ class _WalletScreenState extends State<WalletScreen> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Recharge Wallet"),
+        title: Text(AppLocalizations.of(context)!.rechargeWallet),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Enter amount to add to your wallet",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              AppLocalizations.of(context)!.enterRechargeAmount,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 prefixText: "₹ ",
-                labelText: "Amount",
-                border: OutlineInputBorder(),
-                hintText: "e.g. 500",
+                labelText: AppLocalizations.of(context)!.amountLabel,
+                border: const OutlineInputBorder(),
+                hintText: AppLocalizations.of(context)!.amountHint,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              "💡 Minimum: ₹100",
-              style: TextStyle(fontSize: 12, color: Colors.orange),
+            Text(
+              AppLocalizations.of(context)!.minimumRechargeInfo,
+              style: const TextStyle(fontSize: 12, color: Colors.orange),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -168,8 +170,8 @@ class _WalletScreenState extends State<WalletScreen> {
               
               if (amount < 100) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Minimum recharge amount is ₹100"),
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.minRechargeError),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -182,7 +184,7 @@ class _WalletScreenState extends State<WalletScreen> {
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
             ),
-            child: const Text("Pay Now"),
+            child: Text(AppLocalizations.of(context)!.payNow),
           ),
         ],
       ),
@@ -198,6 +200,8 @@ class _WalletScreenState extends State<WalletScreen> {
       return;
     }
 
+    _lastAttemptedAmount = amount;
+    
     // Show loading indicator
     showDialog(
       context: context,
@@ -212,12 +216,12 @@ class _WalletScreenState extends State<WalletScreen> {
       if (PaymentKeys.razorpayKeyId.contains("PLACEHOLDER")) {
         if (mounted) Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "⚠️ Payment gateway not configured. Please contact support.",
+              AppLocalizations.of(context)!.paymentGatewayError,
             ),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 5),
+            duration: const Duration(seconds: 5),
           ),
         );
         debugPrint("❌ RAZORPAY KEY NOT CONFIGURED - Update PaymentKeys.razorpayKeyId");
@@ -256,26 +260,55 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   /// Handle Razorpay payment success
-  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     debugPrint('✅ Payment successful: ${response.paymentId}');
     
+    final driverId = await DriverPreferences.getDriverId();
+    if (driverId != null) {
+      try {
+        // Direct increment for immediate feedback (Fallback if webhook is slow)
+        final amount = _lastAttemptedAmount ?? 0; 
+        
+        // Use Batch for atomic update
+        WriteBatch batch = FirebaseFirestore.instance.batch();
+        DocumentReference driverRef = FirebaseFirestore.instance.collection('drivers').doc(driverId);
+        
+        batch.update(driverRef, {
+          'walletBalance': FieldValue.increment(amount),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        // Add to history
+        DocumentReference historyRef = driverRef.collection('walletHistory').doc();
+        batch.set(historyRef, {
+          'amount': amount,
+          'type': 'credit',
+          'description': 'Wallet Recharge (Razorpay)',
+          'createdAt': FieldValue.serverTimestamp(),
+          'paymentId': response.paymentId,
+        });
+
+        await batch.commit();
+        debugPrint("🚀 Local wallet update committed");
+      } catch (e) {
+        debugPrint("❌ Error updating wallet locally: $e");
+      }
+    }
+
     // Voice announcement
-    _voiceService.announceSuccess("Payment successful! Wallet will be updated shortly.");
+    _voiceService.announceSuccess("Payment successful! Your wallet has been recharged.");
     
-    // Webhook will automatically credit wallet
-    // Just show success message and refresh
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Payment successful! Wallet will be updated shortly."),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.paymentSuccessMsg),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 5),
+        duration: const Duration(seconds: 5),
       ),
     );
 
-    // Refresh wallet data after 2 seconds (give webhook time to process)
-    Future.delayed(const Duration(seconds: 2), () {
-      _fetchWalletData();
-    });
+    _fetchWalletData();
   }
 
   /// Handle Razorpay payment error
@@ -285,9 +318,11 @@ class _WalletScreenState extends State<WalletScreen> {
     // Voice announcement
     _voiceService.announceError("Payment failed. Please try again.");
     
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Payment failed: ${response.message}"),
+        content: Text(AppLocalizations.of(context)!.paymentFailedMsg(response.message ?? "Unknown error")),
         backgroundColor: Colors.red,
       ),
     );
@@ -341,7 +376,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Wallet"),
+        title: Text(AppLocalizations.of(context)!.myWalletTitle),
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -404,7 +439,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _addMoney,
                     icon: const Icon(Icons.add),
-                    label: const Text("Add Money via Razorpay"),
+                    label: Text(AppLocalizations.of(context)!.addMoneyBtn),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -419,7 +454,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    "💡 Commission is deducted daily at 11:59 PM",
+                    AppLocalizations.of(context)!.commissionInfo,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -431,12 +466,12 @@ class _WalletScreenState extends State<WalletScreen> {
                 const Divider(),
 
                 // Transaction History Header
-                const Padding(
-                  padding: EdgeInsets.only(left: 16, top: 8, bottom: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "Transaction History",
+                      AppLocalizations.of(context)!.transactionHistory,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -448,10 +483,10 @@ class _WalletScreenState extends State<WalletScreen> {
                 // Transaction List
                 Expanded(
                   child: transactions.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            "No transactions yet",
-                            style: TextStyle(color: Colors.grey),
+                            AppLocalizations.of(context)!.noTransactions,
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.builder(

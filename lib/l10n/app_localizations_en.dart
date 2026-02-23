@@ -293,4 +293,254 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedbackAndSuggestions => 'Feedback & Suggestions';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get myDocuments => 'My Documents';
+
+  @override
+  String get drivingLicense => 'Driving License';
+
+  @override
+  String get rc => 'Vehicle Registration (RC)';
+
+  @override
+  String get insurance => 'Vehicle Insurance';
+
+  @override
+  String get vehicleFront => 'Vehicle Front Photo';
+
+  @override
+  String get numberPlateHint => 'Ensure number plate is visible';
+
+  @override
+  String get uploadSuccess => 'Uploaded successfully ✓';
+
+  @override
+  String get uploadFailed => 'Upload failed';
+
+  @override
+  String get tapToUpload => 'Tap to Upload';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get personalDetailsTitle => 'Personal Details';
+
+  @override
+  String get vehicleDetailsTitle => 'Vehicle Details';
+
+  @override
+  String get vehicleMakeModel => 'Vehicle Make & Model';
+
+  @override
+  String get vehicleNumberLabel => 'Vehicle Number';
+
+  @override
+  String get phoneCannotBeChanged => 'Phone number cannot be changed';
+
+  @override
+  String get newRideNotificationTitle => '🚖 New Ride Request!';
+
+  @override
+  String newRideNotificationBody(Object address) {
+    return 'Pickup: $address';
+  }
+
+  @override
+  String get myProfile => 'My Profile';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get rating => 'Rating';
+
+  @override
+  String get wallet => 'Wallet';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get voiceAnnouncements => 'Voice Announcements';
+
+  @override
+  String get turnOnOffVoice => 'Turn on/off app voice';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get myVehicles => 'My Vehicles';
+
+  @override
+  String get manageVehicles => 'Manage Vehicles';
+
+  @override
+  String get voiceAnnouncementsEnabled => 'Voice announcements enabled';
+
+  @override
+  String get voiceAnnouncementsDisabled => 'Voice announcements disabled';
+
+  @override
+  String get selectLanguageTitle => 'Select Language / भाषा चुनें';
+
+  @override
+  String get securityCheck => 'Security Check';
+
+  @override
+  String get reauthRequired =>
+      'For security, please logout and login again to delete your account.';
+
+  @override
+  String get logoutNow => 'Logout Now';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Are you sure you want to delete your account?';
+
+  @override
+  String get deleteAccountDesc =>
+      'This action is permanent. You will lose your ride history, earnings data, and profile details immediately.';
+
+  @override
+  String get reasonOptional => 'Reason for leaving (Optional)';
+
+  @override
+  String get permanentlyDelete => 'Permanently Delete Account';
+
+  @override
+  String get accountDeletedSuccess => 'Account deleted successfully.';
+
+  @override
+  String pendingDuesError(Object amount) {
+    return 'You have pending dues of ₹$amount. Please clear them before deleting your account.';
+  }
+
+  @override
+  String get bookingForPassenger => 'Booking for Passenger';
+
+  @override
+  String get rechargeWallet => 'Recharge Wallet';
+
+  @override
+  String get enterRechargeAmount => 'Enter amount to add to your wallet';
+
+  @override
+  String get amountLabel => 'Amount';
+
+  @override
+  String get amountHint => 'e.g. 500';
+
+  @override
+  String get minimumRechargeInfo => '💡 Minimum: ₹100';
+
+  @override
+  String get payNow => 'Pay Now';
+
+  @override
+  String get minRechargeError => 'Minimum recharge amount is ₹100';
+
+  @override
+  String get paymentGatewayError =>
+      '⚠️ Payment gateway not configured. Please contact support.';
+
+  @override
+  String get paymentSuccessVoice =>
+      'Payment successful! Your wallet has been recharged.';
+
+  @override
+  String get paymentSuccessMsg => 'Payment successful! Wallet updated.';
+
+  @override
+  String get paymentFailedVoice => 'Payment failed. Please try again.';
+
+  @override
+  String paymentFailedMsg(Object error) {
+    return 'Payment failed: $error';
+  }
+
+  @override
+  String get myWalletTitle => 'My Wallet';
+
+  @override
+  String get negativeBalanceWarning =>
+      'Your wallet is negative. Recharge to go online!';
+
+  @override
+  String get walletBalanceLabel => 'Wallet Balance';
+
+  @override
+  String get todaysDueLabel => 'Today\'s Due';
+
+  @override
+  String get addMoneyBtn => 'Add Money via Razorpay';
+
+  @override
+  String get commissionInfo => '💡 Commission is deducted daily at 11:59 PM';
+
+  @override
+  String get transactionHistory => 'Transaction History';
+
+  @override
+  String get noTransactions => 'No transactions yet';
+
+  @override
+  String get walletRechargeDescription => 'Wallet Recharge (Razorpay)';
+
+  @override
+  String get gpsNotReady => 'Cannot go online: GPS not ready';
+
+  @override
+  String get sessionInvalid =>
+      'Session Invalid. Please logout and login again.';
+
+  @override
+  String get accountMismatch => 'Account Mismatch. Please relogin to sync.';
+
+  @override
+  String get walletRechargeRequired => 'Wallet Recharge Required';
+
+  @override
+  String get goToWalletAndRecharge => 'Go to Wallet & Recharge';
+
+  @override
+  String get requestAlliance => 'Request Driver Alliance';
+
+  @override
+  String get allianceDescription =>
+      'Ask nearby drivers for help. Select issue type:';
+
+  @override
+  String get mechanicalFailure => '🔧 Mechanical Failure';
+
+  @override
+  String get medicalEmergency => '🚑 Medical Emergency';
+
+  @override
+  String get securityThreat => '🛡️ Security Threat';
+
+  @override
+  String get otherHelp => '⚠️ Other Help';
+
+  @override
+  String get allianceAlert => 'Alliance Alert!';
+
+  @override
+  String nearbyDriverNeedsHelp(Object type) {
+    return 'A nearby driver needs $type help!';
+  }
+
+  @override
+  String get goToAssist => 'Go to Assist';
 }

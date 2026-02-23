@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_voice_service.dart';
 import '../viewmodels/login_viewmodel.dart';
 import '../viewmodels/registration_viewmodel.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -151,22 +152,22 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.black,
-              Colors.grey.shade900,
-            ],
+            colors: [Color(0xFF0F0F0F), Color(0xFF1A1A1A)],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -176,42 +177,36 @@ class _OtpScreenState extends State<OtpScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
                     ),
                   ),
 
                   const SizedBox(height: 32),
 
                   // Icon
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 2,
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                       ),
+                      child: const Icon(Icons.lock_outline_rounded, size: 48, color: Colors.white),
                     ),
-                    child: const Icon(
-                      Icons.lock_outline,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
+                  ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
 
                   const SizedBox(height: 32),
 
                   // Title
-                  const Text(
+                  Text(
                     "Verify Phone",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.displayMedium?.copyWith(
                       color: Colors.white,
+                      fontWeight: FontWeight.w900,
                     ),
-                  ),
+                  ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 16),
 
@@ -219,23 +214,20 @@ class _OtpScreenState extends State<OtpScreen> {
                   Text(
                     "Enter the 6-digit code sent to\n+91 ${widget.phoneNumber}",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade300,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.grey.shade400,
                       height: 1.5,
                     ),
-                  ),
+                  ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 48),
 
                   // OTP Input Field
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                     ),
                     child: TextField(
                       controller: otpController,
@@ -243,7 +235,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       maxLength: 6,
                       textAlign: TextAlign.center,
                       autofocus: true,
-                      style: const TextStyle(
+                      style: theme.textTheme.headlineLarge?.copyWith(
                         fontSize: 32,
                         letterSpacing: 16,
                         color: Colors.white,
@@ -252,77 +244,63 @@ class _OtpScreenState extends State<OtpScreen> {
                       onTap: () => _voiceService.announceOTPField(),
                       decoration: InputDecoration(
                         hintText: "_ _ _ _ _ _",
-                        hintStyle: TextStyle(
+                        hintStyle: theme.textTheme.headlineLarge?.copyWith(
                           color: Colors.grey.shade600,
                           letterSpacing: 16,
                         ),
                         counterText: "",
+                        filled: false,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 16,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                       ),
+                      cursorColor: Colors.white,
                     ),
-                  ),
+                  ).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 32),
 
                   // Verify Button
                   _isVerifying
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
+                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            backgroundColor: Colors.blue, 
+                            backgroundColor: theme.colorScheme.primary, 
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 8,
+                            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
                           ),
                           onPressed: _handleVerify,
                           child: Text(
-                            widget.isRegistration
-                                ? "Verify & Register"
-                                : "Verify & Login",
-                            style: const TextStyle(
-                              fontSize: 18,
+                            widget.isRegistration ? "Verify & Register" : "Verify & Login",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                              letterSpacing: 1,
                             ),
                           ),
-                        ),
+                        ).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 24),
 
                   // Resend Code Button
                   _isResending
-                      ? const Center(
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
+                      ? const Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)))
                       : TextButton(
                           onPressed: _resendCooldown > 0 ? null : _resendOTP,
                           child: Text(
-                            _resendCooldown > 0
-                                ? "Resend OTP in ${_resendCooldown}s"
-                                : "Didn't receive code? Resend",
-                            style: TextStyle(
-                              color: _resendCooldown > 0
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade300,
-                              fontSize: 14,
+                            _resendCooldown > 0 ? "Resend OTP in ${_resendCooldown}s" : "Didn't receive code? Resend",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: _resendCooldown > 0 ? Colors.grey.shade600 : Colors.grey.shade300,
                             ),
                           ),
-                        ),
+                        ).animate().fade(delay: 600.ms),
                 ],
               ),
             ),

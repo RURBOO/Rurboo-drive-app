@@ -9,6 +9,8 @@ import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/driver_voice_viewmodel.dart';
 import '../../../core/services/safety_service.dart';
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/ride_request.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 
@@ -143,7 +145,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black.withValues(alpha: 0.9),
                               Colors.black.withValues(alpha: 0.0),
                             ],
                             begin: Alignment.topCenter,
@@ -313,30 +315,43 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                           ),
                         ),
                     ],
-                  ),
+                  ).animate().slideY(begin: -0.5, duration: 400.ms, curve: Curves.easeOutCubic).fade(),
                 ),
 
                 if (!isOnline)
                   Positioned.fill(
                     top: 100,
-                    child: Container(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.offline_bolt, color: Colors.white, size: 60),
-                            const SizedBox(height: 16),
-                            Text(
-                              AppLocalizations.of(context)!.goOnlineToEarn,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                  ),
+                                  child: const Icon(Icons.offline_bolt_rounded, color: Colors.white, size: 48),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  AppLocalizations.of(context)!.goOnlineToEarn,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ).animate().fade(duration: 300.ms).scale(begin: const Offset(0.9, 0.9)),
+                          ),
                         ),
                       ),
                     ),
@@ -428,7 +443,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                        onReject: () {
                          homeVm.rejectRide();
                        },
-                     ),
+                     ).animate().slideY(begin: 1.0, duration: 400.ms, curve: Curves.easeOutCubic),
                    ),
               ],
             ),
@@ -439,22 +454,22 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Request Driver Alliance"),
+        title: Text(AppLocalizations.of(context)!.requestAlliance),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Ask nearby drivers for help. Select issue type:"),
+            Text(AppLocalizations.of(context)!.allianceDescription),
             const SizedBox(height: 20),
-            _buildHelpOption(ctx, vm, "mechanic", "🔧 Mechanical Failure", Colors.orange),
-            _buildHelpOption(ctx, vm, "medical", "🚑 Medical Emergency", Colors.red),
-            _buildHelpOption(ctx, vm, "security", "🛡️ Security Threat", Colors.blueGrey),
-            _buildHelpOption(ctx, vm, "other", "⚠️ Other Help", Colors.grey),
+            _buildHelpOption(ctx, vm, "mechanic", AppLocalizations.of(context)!.mechanicalFailure, Colors.orange),
+            _buildHelpOption(ctx, vm, "medical", AppLocalizations.of(context)!.medicalEmergency, Colors.red),
+            _buildHelpOption(ctx, vm, "security", AppLocalizations.of(context)!.securityThreat, Colors.blueGrey),
+            _buildHelpOption(ctx, vm, "other", AppLocalizations.of(context)!.otherHelp, Colors.grey),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
         ],
       ),
@@ -503,10 +518,10 @@ class _NearbyHelpAlertSheet extends StatelessWidget {
             children: [
               const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "Alliance Alert!",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
+                  AppLocalizations.of(context)!.allianceAlert,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
                 ),
               ),
               IconButton(onPressed: onDismiss, icon: const Icon(Icons.close)),
@@ -514,7 +529,12 @@ class _NearbyHelpAlertSheet extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            "A nearby driver needs ${request.type.toString().toUpperCase()} help!",
+            AppLocalizations.of(context)!.nearbyDriverNeedsHelp(
+              request.type == 'mechanic' ? AppLocalizations.of(context)!.mechanicalFailure :
+              request.type == 'medical' ? AppLocalizations.of(context)!.medicalEmergency :
+              request.type == 'security' ? AppLocalizations.of(context)!.securityThreat :
+              AppLocalizations.of(context)!.otherHelp
+            ),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
@@ -525,7 +545,7 @@ class _NearbyHelpAlertSheet extends StatelessWidget {
                onDismiss();
             }, 
             icon: const Icon(Icons.navigation),
-            label: const Text("Go to Assist"),
+            label: Text(AppLocalizations.of(context)!.goToAssist),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
           ),
         ],
@@ -580,9 +600,8 @@ class _RideRequestSheet extends StatelessWidget {
             children: [
               Text(
                 AppLocalizations.of(context)!.newRideRequest,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
                   color: Colors.black87,
                 ),
               ),
@@ -594,15 +613,45 @@ class _RideRequestSheet extends StatelessWidget {
                 ),
                 child: Text(
                   "₹${request.fare.toStringAsFixed(0)}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.green.shade700,
                   ),
                 ),
               ),
             ],
           ),
+          if (request.isBookForOthers)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.person_pin_circle, color: Colors.amber, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.bookingForPassenger,
+                          style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          request.receiverName,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 24),
           _buildLocationRow(
             context,
@@ -698,7 +747,9 @@ class _RideRequestSheet extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                address,
+                (address == 'current_location' || address == 'Current Location')
+                    ? AppLocalizations.of(context)!.currentLocation
+                    : address,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

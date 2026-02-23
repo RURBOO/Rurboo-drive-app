@@ -15,6 +15,7 @@ import 'features/auth/viewmodels/registration_viewmodel.dart';
 import 'features/profile/viewmodels/vehicles_viewmodel.dart';
 import 'state/language_provider.dart';
 import 'core/services/driver_voice_service.dart';
+import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,10 +95,7 @@ class DriverApp extends StatelessWidget {
                 ],
                 locale: languageProvider.currentLocale,
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-                  useMaterial3: true,
-                ),
+                theme: AppTheme.lightTheme,
                 builder: (context, child) {
                   return ConnectivityWrapper(child: child!);
                 },

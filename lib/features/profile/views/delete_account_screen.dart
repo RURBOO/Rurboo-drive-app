@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../auth/views/login_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class DeleteAccountScreen extends StatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -16,6 +17,8 @@ class DeleteAccountScreen extends StatefulWidget {
 class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   bool _isLoading = false;
   final _reasonController = TextEditingController();
+
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
 
   Future<void> _deleteAccount() async {
     setState(() => _isLoading = true);
@@ -33,7 +36,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
       if (balance < 0) {
         throw Exception(
-          "You have pending dues of ₹${balance.abs()}. Please clear them before deleting your account.",
+          l10n.pendingDuesError(balance.abs().toStringAsFixed(0)),
         );
       }
 
@@ -59,7 +62,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
           (r) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account deleted successfully.")),
+          SnackBar(content: Text(l10n.accountDeletedSuccess)),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -86,10 +89,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Security Check"),
-        content: const Text(
-          "For security, please logout and login again to delete your account.",
-        ),
+        title: Text(l10n.securityCheck),
+        content: Text(l10n.reauthRequired),
         actions: [
           TextButton(
             onPressed: () {
@@ -101,7 +102,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 (r) => false,
               );
             },
-            child: const Text("Logout Now"),
+            child: Text(l10n.logoutNow),
           ),
         ],
       ),
@@ -112,7 +113,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Delete Account"),
+        title: Text(l10n.deleteAccount),
         backgroundColor: Colors.white,
         foregroundColor: Colors.red,
       ),
@@ -126,23 +127,23 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               color: Colors.red,
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Are you sure you want to delete your account?",
+            Text(
+              l10n.deleteAccountConfirm,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            const Text(
-              "This action is permanent. You will lose your ride history, earnings data, and profile details immediately.",
+            Text(
+              l10n.deleteAccountDesc,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 30),
             TextField(
               controller: _reasonController,
-              decoration: const InputDecoration(
-                labelText: "Reason for leaving (Optional)",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.reasonOptional,
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               maxLines: 3,
@@ -169,7 +170,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text("Permanently Delete Account"),
+                    : Text(l10n.permanentlyDelete),
               ),
             ),
           ],

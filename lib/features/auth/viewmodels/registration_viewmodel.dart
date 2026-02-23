@@ -9,7 +9,7 @@ import '../../../core/services/driver_voice_service.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../views/otp_screen.dart';
-import '../views/pending_approval_screen.dart';
+import '../../../navigation/views/auth_gate.dart';
 
 class RegistrationViewModel extends ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
@@ -200,7 +200,8 @@ class RegistrationViewModel extends ChangeNotifier {
 
       if (context.mounted) {
         final appState = Provider.of<AppStateViewModel>(context, listen: false);
-        appState.signIn();
+        appState.startSecurityCheck(uid);
+        appState.setPending();
       }
 
       isLoading = false;
@@ -212,7 +213,7 @@ class RegistrationViewModel extends ChangeNotifier {
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const PendingApprovalScreen()),
+          MaterialPageRoute(builder: (_) => const AuthGate()),
           (route) => false,
         );
       }
