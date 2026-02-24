@@ -1,4 +1,4 @@
-package com.example.rubo_driver
+package com.rurboo.driver
 
 import io.flutter.embedding.android.FlutterActivity
 

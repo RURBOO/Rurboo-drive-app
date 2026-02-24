@@ -40,10 +40,10 @@
     </queries>
 
     <application
-        android:label="RURBOO Driver"
+        android:label="RURBOO - HERO"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

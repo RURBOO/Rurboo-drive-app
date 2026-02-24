@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.rubo_driver"
+    namespace = "com.rurboo.driver"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
