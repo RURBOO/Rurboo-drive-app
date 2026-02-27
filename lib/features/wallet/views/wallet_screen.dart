@@ -71,34 +71,46 @@ class _WalletScreenState extends State<WalletScreen> {
 
     _currentDriverId = driverId;
 
-    final driverDoc = await FirebaseFirestore.instance
-        .collection('drivers')
-        .doc(driverId)
-        .get();
+    try {
+      final driverDoc = await FirebaseFirestore.instance
+          .collection('drivers')
+          .doc(driverId)
+          .get();
 
-    final historyQuery = await FirebaseFirestore.instance
-        .collection('drivers')
-        .doc(driverId)
-        .collection('walletHistory')
-        .orderBy('createdAt', descending: true)
-        .limit(50)
-        .get();
+      final historyQuery = await FirebaseFirestore.instance
+          .collection('drivers')
+          .doc(driverId)
+          .collection('walletHistory')
+          .orderBy('createdAt', descending: true)
+          .limit(50)
+          .get();
 
-    if (mounted) {
-      setState(() {
-        walletBalance =
-            (driverDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+      if (mounted) {
+        setState(() {
+          walletBalance =
+              (driverDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
 
-        todaysDue =
-            (driverDoc.data()?['dailyCommissionDue'] as num?)?.toDouble() ??
-            0.0;
+          todaysDue =
+              (driverDoc.data()?['dailyCommissionDue'] as num?)?.toDouble() ??
+              0.0;
 
-        transactions = historyQuery.docs
-            .map((d) => WalletTransaction.fromFirestore(d))
-            .toList();
+          transactions = historyQuery.docs
+              .map((d) => WalletTransaction.fromFirestore(d))
+              .toList();
 
-        isLoading = false;
-      });
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching wallet data: $e");
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load wallet data: $e")),
+        );
+      }
     }
   }
 

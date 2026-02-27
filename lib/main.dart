@@ -30,11 +30,8 @@ Future<void> main() async {
   // 🔐 FIREBASE APP CHECK
   try {
     await FirebaseAppCheck.instance.activate(
-      // providerWeb: RecaptchaV3Provider('6Ld...'),
-      // ignore: deprecated_member_use
-      androidProvider: AndroidProvider.debug,
-      // ignore: deprecated_member_use
-      appleProvider: AppleProvider.debug,
+      androidProvider: AndroidProvider.playIntegrity,
+      appleProvider: AppleProvider.appAttest,
     );
      // ✅ PROPER TOKEN REFRESH
     await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
