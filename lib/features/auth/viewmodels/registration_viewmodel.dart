@@ -166,6 +166,9 @@ class RegistrationViewModel extends ChangeNotifier {
       final String? licenseBase64 = await ImageUtils.convertFileToBase64(licenseFile!);
       final String? rcBase64 = await ImageUtils.convertFileToBase64(registrationFile!);
       final String? profileBase64 = await ImageUtils.convertFileToBase64(profileFile!);
+      final String? vehicleBase64 = vehicleImageFile != null 
+          ? await ImageUtils.convertFileToBase64(vehicleImageFile!) 
+          : null;
 
       if (licenseBase64 == null || rcBase64 == null || profileBase64 == null) {
         throw Exception("Failed to process images. Please try again.");
@@ -181,6 +184,7 @@ class RegistrationViewModel extends ChangeNotifier {
         'licenseImage': licenseBase64,
         'rcImage': rcBase64,
         'profileImage': profileBase64,
+        'vehicleImage': vehicleBase64,
         'isOnline': false,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
