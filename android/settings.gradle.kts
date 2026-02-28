@@ -23,3 +23,5 @@ plugins {
 }
 
 include(":app")
+
+rootProject.name = "rurboo_driver_app_android"

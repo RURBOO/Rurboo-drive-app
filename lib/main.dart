@@ -30,7 +30,9 @@ Future<void> main() async {
   // 🔐 FIREBASE APP CHECK
   try {
     await FirebaseAppCheck.instance.activate(
+      // ignore: deprecated_member_use
       androidProvider: AndroidProvider.playIntegrity,
+      // ignore: deprecated_member_use
       appleProvider: AppleProvider.appAttest,
     );
      // ✅ PROPER TOKEN REFRESH

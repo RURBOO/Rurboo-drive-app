@@ -99,35 +99,31 @@ service cloud.firestore {
     // DRIVERS (Enhanced for live location tracking)
     // =========================================================
     match /drivers/{driverId} {
-      allow read: if isAuthenticated(); // Public read for booking
+      // Allow new drivers to register themselves
+      allow create: if isOwner(driverId);
+      
+      // Public read for booking/profiles
+      allow read: if isAuthenticated(); 
 
-      // Combine specific updates for driver vs rating updates from users into a single OR block
-      // Hardened update rules for drivers
       allow update: if 
         (
           // Driver updating their own profile
-          isDriver()
-          && uid() == driverId
+          isOwner(driverId)
           && (
-             request.resource.data.diff(resource.data).changedKeys()
-              .hasOnly(["location", "currentLocation", "isOnline", "lastActive", "heading", "speed", "lastLocationUpdate", "fcmToken", "lastTokenUpdate", "totalRides", "dailyCommissionDue", "status", "phone", "deletedAt", "deletionReason", "documents", "vehicleDetails", "name", "age", "vehicleNumber", "vehicleMake"]) 
+          request.resource.data.diff(resource.data).changedKeys()
+              .hasOnly(["location", "currentLocation", "isOnline", "lastActive", "heading", "speed", "lastLocationUpdate", "fcmToken", "lastTokenUpdate", "totalRides", "dailyCommissionDue", "status", "phone", "deletedAt", "deletionReason", "documents", "vehicleDetails", "name", "age", "vehicleNumber", "vehicleMake", "walletBalance", "updatedAt"]) 
           )
         ) 
         || 
         (
-          // initial setup for pending drivers
-          isDriver() && uid() == driverId && resource.data.status == 'pending'
-        )
-        || 
-        (
-          // User adding/updating a rating
+          // Allow anyone to update ratings (Users rating drivers)
           isAuthenticated()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'ratingSum', 'ratingCount'])
-        );
+        )
+        || 
+        isAdmin();
 
-      // Admins can fully manage drivers
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin();
+      allow delete: if isAdmin();
       
       // Allow driver to manage their vehicles
       match /vehicles/{vehicleId} {
@@ -137,6 +133,12 @@ service cloud.firestore {
       
       // Allow driver to write to their earnings
       match /earnings/{earningId} {
+        allow read: if isAuthenticated() && (uid() == driverId || isAdmin());
+        allow create: if isAuthenticated() && uid() == driverId;
+      }
+
+      // Allow driver to manage their wallet history
+      match /walletHistory/{historyId} {
         allow read: if isAuthenticated() && (uid() == driverId || isAdmin());
         allow create: if isAuthenticated() && uid() == driverId;
       }
@@ -184,8 +186,8 @@ service cloud.firestore {
         // DRIVER UPDATES STATUS OR SUBMITS REVIEW
         (uid() == resource.data.driverId &&
          request.resource.data.status in ["accepted", "arrived", "in_progress", "started", "completed", "cancelled", "closed"] &&
-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(["fare", "commission", "userId", "driverId"]) &&
-         request.resource.data.diff(resource.data).affectedKeys().hasAny(["status", "driverReview", "driverRating", "dropLocation", "driverLocation", "distance", "endRideRequested", "endRideRejected", "endRideApproved"])) ||
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(["userId", "driverId"]) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasAny(["status", "driverReview", "driverRating", "dropLocation", "driverLocation", "distance", "endRideRequested", "endRideRejected", "endRideApproved", "commission", "finalFare", "completedAt"])) ||
 
         // ADMIN OVERRIDE
         isAdmin()
@@ -254,6 +256,16 @@ service cloud.firestore {
     match /suggestions/{suggestionId} {
       allow create: if isAuthenticated();
       allow read: if isAdmin();
+    }
+
+    // =========================================================
+    // HELP REQUESTS (Driver Alliance)
+    // =========================================================
+    match /helpRequests/{helpId} {
+      allow create: if isDriver();
+      allow read: if isAuthenticated();
+      allow update: if isDriver() || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =========================================================

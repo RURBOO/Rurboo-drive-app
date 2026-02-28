@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_voice_service.dart';
@@ -23,11 +25,14 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final TextEditingController otpController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
+  final FocusNode _pinFocusNode = FocusNode();
   final _voiceService = DriverVoiceService();
+
   bool _isVerifying = false;
   bool _isResending = false;
-  int _resendCooldown = 0;
+  int _resendCooldown = 60;
+  Timer? _cooldownTimer;
   String _currentVerificationId = '';
 
   @override
@@ -36,6 +41,7 @@ class _OtpScreenState extends State<OtpScreen> {
     _currentVerificationId = widget.verificationId;
     debugPrint("OtpScreen: initState called. isRegistration: ${widget.isRegistration}");
     _initVoice();
+    _startCooldownTimer();
   }
 
   Future<void> _initVoice() async {
@@ -44,12 +50,15 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _startCooldownTimer() {
+    _cooldownTimer?.cancel();
     setState(() => _resendCooldown = 60);
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
-      setState(() => _resendCooldown--);
-      return _resendCooldown > 0;
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      if (_resendCooldown > 0) {
+        setState(() => _resendCooldown--);
+      } else {
+        t.cancel();
+      }
     });
   }
 
@@ -65,7 +74,6 @@ class _OtpScreenState extends State<OtpScreen> {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         verificationCompleted: (credential) async {
-          // Auto-retrieval scenario
           debugPrint("OTP Resend: Auto-verification triggered");
         },
         verificationFailed: (e) {
@@ -113,8 +121,9 @@ class _OtpScreenState extends State<OtpScreen> {
     debugPrint("OtpScreen: _handleVerify TRIGGERED");
     setState(() => _isVerifying = true);
 
-    final cleanOtp = otpController.text.replaceAll(' ', '');
+    final cleanOtp = _pinController.text.trim();
     debugPrint("Clean OTP: $cleanOtp (Length: ${cleanOtp.length})");
+
     if (cleanOtp.length != 6) {
       debugPrint("OTP Length Invalid");
       setState(() => _isVerifying = false);
@@ -144,16 +153,45 @@ class _OtpScreenState extends State<OtpScreen> {
     } catch (e) {
       debugPrint("OTP Verification Exception Caught: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isVerifying = false);
-      }
+      if (mounted) setState(() => _isVerifying = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    _pinFocusNode.dispose();
+    _cooldownTimer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
+    final defaultPinTheme = PinTheme(
+      width: 50,
+      height: 58,
+      textStyle: theme.textTheme.headlineMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+    );
+
+    final focusedPinTheme = defaultPinTheme.copyDecorationWith(
+      border: Border.all(color: theme.colorScheme.primary, width: 2),
+      color: Colors.white.withValues(alpha: 0.1),
+    );
+
+    final submittedPinTheme = defaultPinTheme.copyDecorationWith(
+      border: Border.all(color: theme.colorScheme.primary),
+    );
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -177,7 +215,8 @@ class _OtpScreenState extends State<OtpScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white),
                     ),
                   ),
 
@@ -190,9 +229,11 @@ class _OtpScreenState extends State<OtpScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2)),
                       ),
-                      child: const Icon(Icons.lock_outline_rounded, size: 48, color: Colors.white),
+                      child: const Icon(Icons.lock_outline_rounded,
+                          size: 48, color: Colors.white),
                     ),
                   ).animate().scale(delay: 100.ms, duration: 400.ms, curve: Curves.easeOutBack),
 
@@ -210,7 +251,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Phone Number Display
+                  // Subtitle
                   Text(
                     "Enter the 6-digit code sent to\n+91 ${widget.phoneNumber}",
                     textAlign: TextAlign.center,
@@ -222,63 +263,55 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   const SizedBox(height: 48),
 
-                  // OTP Input Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                    ),
-                    child: TextField(
-                      controller: otpController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 6,
-                      textAlign: TextAlign.center,
+                  // ─── Pinput OTP ──────────────────────────────────────
+                  Center(
+                    child: Pinput(
+                      length: 6,
+                      controller: _pinController,
+                      focusNode: _pinFocusNode,
                       autofocus: true,
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        fontSize: 32,
-                        letterSpacing: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      defaultPinTheme: defaultPinTheme,
+                      focusedPinTheme: focusedPinTheme,
+                      submittedPinTheme: submittedPinTheme,
+                      keyboardType: TextInputType.number,
+                      closeKeyboardWhenCompleted: true,
+                      onCompleted: (_) => _handleVerify(),
+                      cursor: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 9),
+                            width: 22,
+                            height: 2,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ],
                       ),
-                      onTap: () => _voiceService.announceOTPField(),
-                      decoration: InputDecoration(
-                        hintText: "_ _ _ _ _ _",
-                        hintStyle: theme.textTheme.headlineLarge?.copyWith(
-                          color: Colors.grey.shade600,
-                          letterSpacing: 16,
-                        ),
-                        counterText: "",
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                      ),
-                      cursorColor: Colors.white,
                     ),
                   ).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 32),
 
-                  // Verify Button
+                  // ─── Verify Button ───────────────────────────────────
                   _isVerifying
-                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.white))
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            backgroundColor: theme.colorScheme.primary, 
+                            backgroundColor: theme.colorScheme.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
                             elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                            shadowColor:
+                                theme.colorScheme.primary.withValues(alpha: 0.5),
                           ),
                           onPressed: _handleVerify,
                           child: Text(
-                            widget.isRegistration ? "Verify & Register" : "Verify & Login",
+                            widget.isRegistration
+                                ? "Verify & Register"
+                                : "Verify & Login",
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -289,15 +322,24 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Resend Code Button
+                  // ─── Resend ──────────────────────────────────────────
                   _isResending
-                      ? const Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)))
+                      ? const Center(
+                          child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white)))
                       : TextButton(
                           onPressed: _resendCooldown > 0 ? null : _resendOTP,
                           child: Text(
-                            _resendCooldown > 0 ? "Resend OTP in ${_resendCooldown}s" : "Didn't receive code? Resend",
+                            _resendCooldown > 0
+                                ? "Resend OTP in ${_resendCooldown}s"
+                                : "Didn't receive code? Resend",
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: _resendCooldown > 0 ? Colors.grey.shade600 : Colors.grey.shade300,
+                              color: _resendCooldown > 0
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade300,
                             ),
                           ),
                         ).animate().fade(delay: 600.ms),
@@ -308,11 +350,5 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    otpController.dispose();
-    super.dispose();
   }
 }

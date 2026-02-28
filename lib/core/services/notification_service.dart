@@ -36,7 +36,7 @@ class NotificationService {
     }
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_stat_notify');
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings();
 
@@ -94,7 +94,7 @@ class NotificationService {
       priority: Priority.max,
       playSound: true,
       sound: RawResourceAndroidNotificationSound('alert_sound'),
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_stat_notify',
       fullScreenIntent: true,
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.call,

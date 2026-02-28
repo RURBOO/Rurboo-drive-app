@@ -796,7 +796,10 @@ class HomeViewModel extends ChangeNotifier {
 
   // 1️⃣ REQUEST HELP (SOS)
   Future<void> requestHelp(BuildContext context, String type, String description) async {
+    debugPrint("🆘 Driver Alliance requestHelp triggered! Type: $type, Desc: $description");
+    
     if (_driverLocation == null) {
+      debugPrint("❌ requestHelp failed: driverLocation is null");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Location not available!")),
       );
@@ -834,16 +837,17 @@ class HomeViewModel extends ChangeNotifier {
 
       if (context.mounted) {
         Navigator.pop(context); // Close dialog
+        debugPrint("✅ requestHelp successful: $type");
         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(
-             content: Text("Help Signal Sent to nearby drivers!"),
+           SnackBar(
+             content: Text("Help Signal Sent to nearby drivers! ($type)"),
              backgroundColor: Colors.redAccent,
-             duration: Duration(seconds: 5),
+             duration: const Duration(seconds: 5),
            ),
         );
       }
     } catch (e) {
-      debugPrint("Help Request Error: $e");
+      debugPrint("❌ Help Request Error: $e");
     }
   }
 
