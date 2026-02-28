@@ -503,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsPrivacyLogin.
   ///
   /// In en, this message translates to:
-  /// **'By continuing, you agree to our\\nTerms of Service & Privacy Policy'**
+  /// **'By continuing, you agree to our\nTerms of Service & Privacy Policy'**
   String get termsPrivacyLogin;
 
   /// No description provided for @driverRegistration.

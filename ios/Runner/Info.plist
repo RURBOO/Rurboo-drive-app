@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Rubo Driver</string>
+	<string>Rurboo Driver</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>rubo_driver</string>
+	<string>Rurboo Driver</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -66,5 +66,11 @@
 	<true/>
 	<key>io.flutter.embedded_views_preview</key>
         <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to your camera to take a profile picture and verify your identity documents.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photo library to allow you to upload a profile picture and identity documents.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to the microphone for potential in-app communication.</string>
 </dict>
 </plist>

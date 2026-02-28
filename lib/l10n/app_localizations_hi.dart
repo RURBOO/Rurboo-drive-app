@@ -214,7 +214,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get termsPrivacyLogin =>
-      'जारी रखकर, आप हमारी\\nसेवा की शर्तों और गोपनीयता नीति से सहमत हैं';
+      'जारी रखकर, आप हमारी\nसेवा की शर्तों और गोपनीयता नीति से सहमत हैं';
 
   @override
   String get driverRegistration => 'ड्राइवर पंजीकरण';

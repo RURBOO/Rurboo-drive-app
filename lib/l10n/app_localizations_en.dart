@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsPrivacyLogin =>
-      'By continuing, you agree to our\\nTerms of Service & Privacy Policy';
+      'By continuing, you agree to our\nTerms of Service & Privacy Policy';
 
   @override
   String get driverRegistration => 'Driver Registration';
