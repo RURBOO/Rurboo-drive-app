@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../core/services/driver_voice_service.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/login_viewmodel.dart';
-import 'registration_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 
@@ -25,7 +24,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _initVoice() async {
     await _voiceService.init();
-    _voiceService.announceLoginScreen();
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    _voiceService.speak(loc.login_screen_voice);
   }
 
   @override
@@ -118,7 +119,10 @@ class _LoginScreenBody extends StatelessWidget {
                         color: Colors.white, 
                         letterSpacing: 2,
                       ),
-                      onTap: () => voiceService.announcePhoneNumberField(),
+                      onTap: () {
+                        final loc = AppLocalizations.of(context)!;
+                        voiceService.speak(loc.phone_number_voice);
+                      },
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.phoneNumber,
                         labelStyle: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
@@ -163,30 +167,7 @@ class _LoginScreenBody extends StatelessWidget {
                           ),
                         ).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0),
 
-                  const SizedBox(height: 32),
-
-                  // Registration Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "${AppLocalizations.of(context)!.newDriver} ",
-                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistrationScreen()));
-                        },
-                        child: Text(
-                          AppLocalizations.of(context)!.registerHere,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ).animate().fade(delay: 600.ms),
+                  const SizedBox(height: 24),
 
                   const SizedBox(height: 24),
 

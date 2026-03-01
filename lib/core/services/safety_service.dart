@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 
@@ -27,9 +29,25 @@ class SafetyService {
     }
   }
 
-  /// Sends an emergency alert to Firestore (Simulated for now)
-  Future<void> sendEmergencyAlert(String rideId, String location) async {
-    // TODO: Implement actual Firestore trigger
-    debugPrint("SOS Alert Sent for Ride: $rideId at $location");
+  /// Sends an emergency alert to Firestore
+  Future<void> sendEmergencyAlert(String? rideId, String? location) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await FirebaseFirestore.instance.collection('sos_incidents').add({
+        'driverId': user.uid,
+        'userId': null, // Can be populated if rideId is provided and fetched
+        'timestamp': FieldValue.serverTimestamp(),
+        'rideId': rideId,
+        'status': 'active',
+        'type': 'driver_sos',
+        'location': location,
+        'source': 'driver_app',
+      });
+      debugPrint("✅ SOS Incident Logged to Backend");
+    } catch (e) {
+      debugPrint("❌ Failed to log SOS: $e");
+    }
   }
 }

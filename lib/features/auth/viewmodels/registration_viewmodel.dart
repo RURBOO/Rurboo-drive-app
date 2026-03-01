@@ -10,12 +10,21 @@ import '../../../core/utils/image_utils.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../views/otp_screen.dart';
 import '../../../navigation/views/auth_gate.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class RegistrationViewModel extends ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController ageController = TextEditingController(); // 🆕 Added Age
+  String? gender; // 🆕 Added Gender
+  final TextEditingController emergencyPhoneController = TextEditingController();
   final TextEditingController vehicleModelController = TextEditingController();
   final TextEditingController vehicleNumberController = TextEditingController();
+
+  void setGender(String? value) {
+    gender = value;
+    notifyListeners();
+  }
 
   String vehicleType = 'Bike taxi';
   File? licenseFile;
@@ -55,11 +64,29 @@ class RegistrationViewModel extends ChangeNotifier {
     }
   }
 
+  String? prefilledId;
+  String? prefilledPhone;
+
+  void initializePrefilled(String? id, String? phone) {
+    if (id != null && phone != null) {
+      prefilledId = id;
+      prefilledPhone = phone;
+      phoneController.text = phone;
+      notifyListeners();
+    }
+  }
+
   Future<void> startRegistration(BuildContext context) async {
     if (licenseFile == null || registrationFile == null || profileFile == null || vehicleImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please upload all documents including Vehicle Photo.")),
       );
+      return;
+    }
+
+    // 🆕 SKIP OTP IF ARRIVED FROM LOGIN FLOW
+    if (prefilledId != null) {
+      await _completeRegistration(context, prefilledId!);
       return;
     }
 
@@ -75,9 +102,6 @@ class RegistrationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Note: We skip the unauthed firestore check here to avoid Permission Denied.
-      // Phone uniqueness is handled by Firebase Auth.
-
       final String phone = "+91$cleanPhone";
 
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -177,6 +201,9 @@ class RegistrationViewModel extends ChangeNotifier {
       final newDriver = {
         'id': uid,
         'name': nameController.text.trim(),
+        'age': int.tryParse(ageController.text.trim()) ?? 0, // 🆕 Added Age
+        'gender': gender, // 🆕 Added Gender
+        'emergencyContactPhone': emergencyPhoneController.text.trim(),
         'phone': cleanPhone,
         'vehicleType': vehicleType,
         'vehicleModel': vehicleModelController.text.trim(),
@@ -197,7 +224,9 @@ class RegistrationViewModel extends ChangeNotifier {
         'lastSettlementDate': null,
       };
 
+      debugPrint("RegistrationViewModel: Writing to Firestore 'drivers' collection for UID: $uid");
       await FirebaseFirestore.instance.collection('drivers').doc(uid).set(newDriver);
+      debugPrint("RegistrationViewModel: Firestore write SUCCESS");
 
       await DriverPreferences.saveDriverId(uid);
       await DriverPreferences.saveVehicleType(vehicleType);
@@ -212,7 +241,12 @@ class RegistrationViewModel extends ChangeNotifier {
       notifyListeners();
 
       // VOICE ANNOUNCEMENT for success
-      DriverVoiceService().announceRegistrationSuccess();
+      try {
+        if (context.mounted) {
+          final loc = AppLocalizations.of(context)!;
+          DriverVoiceService().speak(loc.payment_success_voice); // Can reuse or create a specific key
+        }
+      } catch (_) {}
 
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
@@ -221,12 +255,18 @@ class RegistrationViewModel extends ChangeNotifier {
           (route) => false,
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint("RegistrationViewModel: FATAL ERROR during _completeRegistration: $e");
+      debugPrintStack(stackTrace: stack);
       isLoading = false;
       notifyListeners();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Registration Error: $e"), 
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 10),
+          ),
         );
       }
     }

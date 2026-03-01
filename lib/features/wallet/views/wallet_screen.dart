@@ -47,7 +47,9 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Future<void> _initVoice() async {
     await _voiceService.init();
-    _voiceService.announceWalletScreen();
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    _voiceService.speak(loc.wallet_screen_voice);
   }
 
   @override
@@ -307,8 +309,9 @@ class _WalletScreenState extends State<WalletScreen> {
       }
     }
 
-    // Voice announcement
-    _voiceService.announceSuccess("Payment successful! Your wallet has been recharged.");
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    _voiceService.speak(loc.payment_success_voice);
     
     if (!mounted) return;
 
@@ -327,8 +330,9 @@ class _WalletScreenState extends State<WalletScreen> {
   void _handlePaymentError(PaymentFailureResponse response) {
     debugPrint('❌ Payment error: ${response.code} - ${response.message}');
     
-    // Voice announcement
-    _voiceService.announceError("Payment failed. Please try again.");
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    _voiceService.speak(loc.payment_failed_voice);
     
     if (!mounted) return;
 

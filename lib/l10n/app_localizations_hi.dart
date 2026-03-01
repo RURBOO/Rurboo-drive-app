@@ -544,4 +544,130 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get goToAssist => 'सहायता के लिए जाएं';
+
+  @override
+  String get tutOnlineTitle => 'ऑनलाइन जाएं';
+
+  @override
+  String get tutOnlineBody =>
+      'आस-पास के ग्राहकों से राइड अनुरोध प्राप्त करना शुरू करने के लिए इस स्विच को खिसकाएं।';
+
+  @override
+  String get tutGpsTitle => 'GPS स्थिति';
+
+  @override
+  String get tutGpsBody =>
+      'अपनी वर्तमान गति और GPS सटीकता देखने के लिए यहां टैप करें। हरे रंग का मतलब है कि आप तैयार हैं!';
+
+  @override
+  String get tutSosTitle => 'आपातकालीन SOS';
+
+  @override
+  String get tutSosBody =>
+      'आपात स्थिति में, स्थानीय अधिकारियों को तुरंत सचेत करने के लिए इस बटन पर टैप करें।';
+
+  @override
+  String get tutAllianceTitle => 'ड्राइवर गठबंधन';
+
+  @override
+  String get tutAllianceBody =>
+      'यांत्रिक विफलता या चिकित्सा आपातकाल? आस-पास के ड्राइवरों से मदद मांगने के लिए यहां टैप करें।';
+
+  @override
+  String get tutNavTitle => 'नेविगेशन बार';
+
+  @override
+  String get tutNavBody =>
+      'यहाँ से मैप, अपनी कमाई और प्रोफाइल विवरण के बीच आसानी से स्विच करें।';
+
+  @override
+  String get slideToStart => 'ट्रिप शुरू करने के लिए स्लाइड करें';
+
+  @override
+  String get slideToEnd => 'ट्रिप समाप्त करने के लिए स्लाइड करें';
+
+  @override
+  String get tripStartedMsg => 'ट्रिप शुरू हो गई!';
+
+  @override
+  String get incorrectOtpMsg => 'गलत OTP';
+
+  @override
+  String get askOtpDescription =>
+      'राइड शुरू करने के लिए ग्राहक से 4-अंकीय OTP मांगें।';
+
+  @override
+  String onTripHeader(Object status) {
+    return 'ट्रिप पर - $status';
+  }
+
+  @override
+  String get welcome => 'स्वागत है';
+
+  @override
+  String get selectPreferredLanguage => 'कृपया अपनी पसंदीदा भाषा चुनें';
+
+  @override
+  String get gender => 'लिंग';
+
+  @override
+  String get male => 'पुरुष';
+
+  @override
+  String get female => 'महिला';
+
+  @override
+  String get other => 'अन्य';
+
+  @override
+  String get age => 'उम्र';
+
+  @override
+  String get ageRequired => 'उम्र आवश्यक है';
+
+  @override
+  String get underageError => 'आपकी उम्र कम से कम 18 वर्ष होनी चाहिए';
+
+  @override
+  String get genderRequired => 'कृपया अपना लिंग चुनें';
+
+  @override
+  String get emergencyContactPhone => 'आपातकालीन संपर्क फोन';
+
+  @override
+  String get validEmergencyPhoneError => 'वैध 10-अंकीय फोन आवश्यक है';
+
+  @override
+  String get otp_screen_voice =>
+      'OTP स्क्रीन। कृपया अपने मोबाइल पर भेजा गया 6 अंकों का सत्यापन कोड दर्ज करें।';
+
+  @override
+  String get otp_resend_failed =>
+      'OTP फिर से भेजने में विफल। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get otp_resend_success => 'नया OTP सफलतापूर्वक भेज दिया गया है!';
+
+  @override
+  String get otp_send_error => 'OTP भेजने में त्रुटि';
+
+  @override
+  String get otp_6_digit_error => 'कृपया 6 अंकों का OTP दर्ज करें';
+
+  @override
+  String get login_screen_voice =>
+      'लॉगिन स्क्रीन। कृपया अपना फ़ोन नंबर दर्ज करें।';
+
+  @override
+  String get phone_number_voice => 'फ़ोन नंबर';
+
+  @override
+  String get wallet_screen_voice => 'वॉलेट स्क्रीन';
+
+  @override
+  String get payment_success_voice =>
+      'भुगतान सफल रहा! आपका वॉलेट रिचार्ज कर दिया गया है।';
+
+  @override
+  String get payment_failed_voice => 'भुगतान विफल रहा। कृपया पुनः प्रयास करें।';
 }

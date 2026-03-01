@@ -52,6 +52,24 @@ class ProfileViewModel extends ChangeNotifier {
 
         totalRides = (data['totalRides'] ?? 0).toString();
 
+        // Dynamic ride fetch fallback
+        try {
+          final query = await FirebaseFirestore.instance
+              .collection('rideRequests')
+              .where('driverId', isEqualTo: did)
+              .get();
+          int currentRides = 0;
+          for (var doc in query.docs) {
+            final status = doc.data()['status'];
+            if (status == 'completed' || status == 'closed') {
+              currentRides++;
+            }
+          }
+          if (currentRides > (data['totalRides'] ?? 0)) {
+            totalRides = currentRides.toString();
+          }
+        } catch (_) {}
+
         final double bal = (data['walletBalance'] as num?)?.toDouble() ?? 0.0;
         earnings = "₹${bal.toStringAsFixed(0)}";
 

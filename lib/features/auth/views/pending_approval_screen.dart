@@ -68,75 +68,119 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.hourglass_top_rounded,
-                  size: 60,
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              const Text(
-                "Application Submitted",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              const Text(
-                "Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
-              ),
-
-              const Spacer(),
-
-              TextButton.icon(
-                onPressed: isChecking ? null : _checkStatus,
-                icon: isChecking
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh),
-                label: Text(isChecking ? "Checking..." : "Check Status"),
-              ),
-
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _handleSignOut(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F0F0F), Color(0xFF1A1A1A)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                // Animated Icon
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.2), width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.hourglass_empty_rounded,
+                      size: 64,
+                      color: Colors.orange,
                     ),
                   ),
-                  child: const Text(
-                    "Go Back to Login",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                
+                const SizedBox(height: 40),
+
+                const Text(
+                  "Application Pending",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 28, 
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1,
                   ),
                 ),
-              ),
-            ],
+                
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Your docs approval is pending now",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18, 
+                    color: Colors.orange, 
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+
+                Text(
+                  "Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16, 
+                    color: Colors.grey.shade400, 
+                    height: 1.5,
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Status Check Button
+                TextButton.icon(
+                  onPressed: isChecking ? null : _checkStatus,
+                  icon: isChecking
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue),
+                        )
+                      : const Icon(Icons.refresh, color: Colors.blue),
+                  label: Text(
+                    isChecking ? "Checking Status..." : "Refresh Status",
+                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Secondary Sign Out Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _handleSignOut(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      "Sign Out / Go Back",
+                      style: TextStyle(
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold, 
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),

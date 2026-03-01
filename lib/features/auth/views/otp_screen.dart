@@ -7,6 +7,7 @@ import '../../../core/services/driver_voice_service.dart';
 import '../viewmodels/login_viewmodel.dart';
 import '../viewmodels/registration_viewmodel.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -46,7 +47,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _initVoice() async {
     await _voiceService.init();
-    _voiceService.announceOTPScreen();
+    if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    _voiceService.speak(loc.otp_screen_voice);
   }
 
   void _startCooldownTimer() {
@@ -65,7 +68,10 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> _resendOTP() async {
     if (_isResending || _resendCooldown > 0) return;
 
-    setState(() => _isResending = true);
+    setState(() {
+      _isResending = true;
+      _pinController.clear(); 
+    });
     _voiceService.speak("Resending OTP");
 
     final String phone = "+91${widget.phoneNumber}";
@@ -78,8 +84,10 @@ class _OtpScreenState extends State<OtpScreen> {
         },
         verificationFailed: (e) {
           if (!mounted) return;
+          if (!mounted) return;
+          final loc = AppLocalizations.of(context)!;
           setState(() => _isResending = false);
-          _voiceService.announceError("Failed to resend OTP. Please try again.");
+          _voiceService.speak(loc.otp_resend_failed);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("Resend failed: ${e.message}"),
@@ -89,12 +97,14 @@ class _OtpScreenState extends State<OtpScreen> {
         },
         codeSent: (newVerificationId, resendToken) {
           if (!mounted) return;
+          if (!mounted) return;
+          final loc = AppLocalizations.of(context)!;
           setState(() {
             _currentVerificationId = newVerificationId;
             _isResending = false;
           });
           _startCooldownTimer();
-          _voiceService.announceSuccess("New OTP sent successfully!");
+          _voiceService.speak(loc.otp_resend_success);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("New OTP sent successfully!"),
@@ -109,8 +119,10 @@ class _OtpScreenState extends State<OtpScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
       setState(() => _isResending = false);
-      _voiceService.announceError("Error sending OTP");
+      _voiceService.speak(loc.otp_send_error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: ${e.toString()}")),
       );
@@ -127,7 +139,10 @@ class _OtpScreenState extends State<OtpScreen> {
     if (cleanOtp.length != 6) {
       debugPrint("OTP Length Invalid");
       setState(() => _isVerifying = false);
-      _voiceService.announceError("Please enter 6 digit OTP");
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        _voiceService.speak(loc.otp_6_digit_error);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter 6 digit OTP")),
       );
@@ -136,7 +151,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
     try {
       if (widget.isRegistration) {
-        debugPrint("Calling RegistrationViewModel.registerWithOtp");
+        debugPrint("RegistrationViewModel: Calling _completeRegistration...");
         await context.read<RegistrationViewModel>().registerWithOtp(
           context,
           _currentVerificationId,

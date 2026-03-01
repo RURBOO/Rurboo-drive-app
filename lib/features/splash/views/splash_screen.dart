@@ -11,6 +11,8 @@ import '../../../state/app_state_viewmodel.dart';
 import '../../auth/views/location_disclosure_screen.dart';
 import '../../auth/views/login_screen.dart';
 import '../../auth/views/pending_approval_screen.dart';
+import '../../language/views/language_selection_screen.dart';
+import '../../../state/language_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,7 +32,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initVoice() async {
     final voiceService = DriverVoiceService();
     await voiceService.init();
-    voiceService.announceAppLaunch();
+    // We removed announceAppLaunch. You can add a specific key for this if needed.
+    // Assuming we just want it silent or use a generic welcome here for now.
+    // voiceService.speak(loc.appLaunchVoice); // Or similar
   }
 
   Future<void> _checkInternetAndStart() async {
@@ -66,7 +70,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-    await Future.delayed(const Duration(seconds: 1));
+    final langProvider = context.read<LanguageProvider>();
+
+    // 0. Mandatory Language Selection
+    if (!langProvider.isLanguageSelected) {
+      if (mounted) _nav(const LanguageSelectionScreen());
+      return;
+    }
 
     final driverId = await DriverPreferences.getDriverId();
 

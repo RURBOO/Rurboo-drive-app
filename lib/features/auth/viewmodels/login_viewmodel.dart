@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../views/otp_screen.dart';
+import '../views/registration_screen.dart';
 import '../../../navigation/views/auth_gate.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -117,18 +118,29 @@ class LoginViewModel extends ChangeNotifier {
         .get();
 
     debugPrint("LoginViewModel: Driver doc exists: ${doc.exists}");
-    if (!doc.exists) {
+    
+    final data = doc.data();
+    final bool isDeleted = doc.exists && data?['status'] == 'deleted';
+
+    if (!doc.exists || isDeleted || data == null) {
       isLoading = false;
       notifyListeners();
+      
+      // 🆕 REDIRECT TO REGISTRATION FOR NEW OR DELETED DRIVERS
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No driver account found. Please register.")),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RegistrationScreen(
+              prefilledId: uid, 
+              prefilledPhone: phoneController.text.trim(),
+            ),
+          ),
         );
       }
       return;
     }
 
-    final data = doc.data()!;
     await DriverPreferences.saveDriverId(uid);
     if (data['vehicleType'] != null) {
       await DriverPreferences.saveVehicleType(data['vehicleType']);

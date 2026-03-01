@@ -110,8 +110,19 @@ service cloud.firestore {
           // Driver updating their own profile
           isOwner(driverId)
           && (
-          request.resource.data.diff(resource.data).changedKeys()
-              .hasOnly(["location", "currentLocation", "isOnline", "lastActive", "heading", "speed", "lastLocationUpdate", "fcmToken", "lastTokenUpdate", "totalRides", "dailyCommissionDue", "status", "phone", "deletedAt", "deletionReason", "documents", "vehicleDetails", "name", "age", "vehicleNumber", "vehicleMake", "walletBalance", "updatedAt"]) 
+            // 1. If not verified, allow full registration/updates
+            resource.data.status != 'verified'
+            ||
+            // 2. If verified, prevent updating sensitive fields (EXCEPT for deletion)
+            (
+              !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(["rating", "ratingSum", "ratingCount", "walletBalance", "dailyCommissionDue", "status"])
+            ) || (
+              // Case 3: Allow self-deletion even if verified
+              request.resource.data.status == 'deleted' &&
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(["status", "fcmToken", "phone", "phoneNumber", "deletedAt", "deletionReason", "isOnline"])
+            )
           )
         ) 
         || 
@@ -230,22 +241,24 @@ service cloud.firestore {
     }
 
     // =========================================================
-    // SUPPORT TICKETS (User App)
+    // SUPPORT TICKETS (User & Driver App)
     // =========================================================
     match /support_tickets/{ticketId} {
-      // App sends 'Open' (Capitalized)
+      // App sends 'open' (lowercase)
       allow create: if isAuthenticated()
-        && request.resource.data.userId == uid()
-        && request.resource.data.status == "Open";
+        && (request.resource.data.userId == uid() || request.resource.data.driverId == uid())
+        && request.resource.data.status == "open";
 
       allow read: if isAuthenticated() && (
         resource.data.userId == uid() ||
+        resource.data.driverId == uid() ||
         isAdmin()
       );
 
       // User adds messages, Admin resolves
       allow update: if isAuthenticated() && (
         resource.data.userId == uid() ||
+        resource.data.driverId == uid() ||
         isAdmin()
       );
     }

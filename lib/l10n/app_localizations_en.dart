@@ -543,4 +543,129 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goToAssist => 'Go to Assist';
+
+  @override
+  String get tutOnlineTitle => 'Go Online';
+
+  @override
+  String get tutOnlineBody =>
+      'Slide this switch to start receiving ride requests from nearby customers.';
+
+  @override
+  String get tutGpsTitle => 'GPS Status';
+
+  @override
+  String get tutGpsBody =>
+      'Tap here to see your current speed and GPS accuracy. Green means you\'re ready!';
+
+  @override
+  String get tutSosTitle => 'Emergency SOS';
+
+  @override
+  String get tutSosBody =>
+      'In case of emergency, tap this button to immediately alert local authorities.';
+
+  @override
+  String get tutAllianceTitle => 'Driver Alliance';
+
+  @override
+  String get tutAllianceBody =>
+      'Mechanical failure or medical emergency? Tap this to ask nearby drivers for help.';
+
+  @override
+  String get tutNavTitle => 'Navigation Bar';
+
+  @override
+  String get tutNavBody =>
+      'Switch between Map, your Earnings, and Profile details easily from here.';
+
+  @override
+  String get slideToStart => 'Slide to Start Trip';
+
+  @override
+  String get slideToEnd => 'Slide to End Trip';
+
+  @override
+  String get tripStartedMsg => 'Trip Started!';
+
+  @override
+  String get incorrectOtpMsg => 'Incorrect OTP';
+
+  @override
+  String get askOtpDescription =>
+      'Ask the customer for the 4-digit OTP to start the ride.';
+
+  @override
+  String onTripHeader(Object status) {
+    return 'On Trip - $status';
+  }
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String get selectPreferredLanguage => 'Please select your preferred language';
+
+  @override
+  String get gender => 'Gender';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get age => 'Age';
+
+  @override
+  String get ageRequired => 'Age is required';
+
+  @override
+  String get underageError => 'You must be at least 18 years old';
+
+  @override
+  String get genderRequired => 'Please select your gender';
+
+  @override
+  String get emergencyContactPhone => 'Emergency Contact Phone';
+
+  @override
+  String get validEmergencyPhoneError => 'Valid 10-digit phone required';
+
+  @override
+  String get otp_screen_voice =>
+      'OTP screen. Please enter the 6 digit verification code sent to your mobile.';
+
+  @override
+  String get otp_resend_failed => 'Failed to resend OTP. Please try again.';
+
+  @override
+  String get otp_resend_success => 'New OTP sent successfully!';
+
+  @override
+  String get otp_send_error => 'Error sending OTP';
+
+  @override
+  String get otp_6_digit_error => 'Please enter 6 digit OTP';
+
+  @override
+  String get login_screen_voice =>
+      'Login screen. Please enter your phone number.';
+
+  @override
+  String get phone_number_voice => 'Phone number';
+
+  @override
+  String get wallet_screen_voice => 'Wallet screen';
+
+  @override
+  String get payment_success_voice =>
+      'Payment successful! Your wallet has been recharged.';
+
+  @override
+  String get payment_failed_voice => 'Payment failed. Please try again.';
 }

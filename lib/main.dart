@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,13 +32,15 @@ Future<void> main() async {
   try {
     await FirebaseAppCheck.instance.activate(
       // ignore: deprecated_member_use
-      androidProvider: AndroidProvider.playIntegrity,
+      androidProvider: kDebugMode 
+          ? AndroidProvider.debug 
+          : AndroidProvider.playIntegrity,
       // ignore: deprecated_member_use
       appleProvider: AppleProvider.appAttest,
     );
-     // ✅ PROPER TOKEN REFRESH
+    // ✅ PROPER TOKEN REFRESH
     await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
-    debugPrint('🔐 App Check: Play Integrity active');
+    debugPrint('🔐 App Check: ${kDebugMode ? "Debug" : "Play Integrity"} active');
   } catch (e) {
     debugPrint('⚠️ App Check init issue: $e');
   }

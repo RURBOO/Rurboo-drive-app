@@ -310,18 +310,85 @@ exports.dailySettlement = functions
 // RIDE COMPLETION TRIGGER
 // ============================================================================
 
+// ============================================================================
+// FARE CALCULATION & COMMISSION CONFIG
+// ============================================================================
+
+/**
+ * Provides secure fare calculation for requested distance and vehicle type.
+ * Preventing client-side fare tampering.
+ * 
+ * CALLABLE: provideFare({ vehicleKey, distanceKm })
+ */
+exports.provideFare = functions
+  .region('asia-south1')
+  .https.onCall(async (data, context) => {
+    // 1. Auth check
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    }
+
+    const { vehicleKey, distanceKm } = data;
+    if (!vehicleKey || distanceKm === undefined) {
+      throw new functions.https.HttpsError('invalid-argument', 'Missing vehicleKey or distanceKm');
+    }
+
+    try {
+      // 2. Fetch latest rates from Firestore config
+      const configDoc = await db.collection('config').doc('rates').get();
+      const rates = configDoc.exists ? configDoc.data() : {};
+
+      const _defaultRates = {
+        'bike': { 'base_fare': 40, 'per_km': 9, 'night_charge': 10 },
+        'auto': { 'base_fare': 80, 'per_km': 16, 'night_charge': 20 },
+        'car': { 'base_fare': 150, 'per_km': 25, 'night_charge': 40 },
+        'erickshaw': { 'base_fare': 60, 'per_km': 13, 'night_charge': 15 },
+        'bigcar': { 'base_fare': 200, 'per_km': 30, 'night_charge': 50 },
+        'carriertruck': { 'base_fare': 250, 'per_km': 40, 'night_charge': 60 },
+      };
+
+      let rateData = rates[vehicleKey] || _defaultRates[vehicleKey] || _defaultRates['car'];
+
+      const baseFare = parseFloat(rateData.base_fare || 100);
+      const perKmRate = parseFloat(rateData.per_km || 20);
+      const includedKm = 2;
+
+      // 3. Distance math
+      let fare = baseFare;
+      if (distanceKm > includedKm) {
+        fare = baseFare + ((distanceKm - includedKm) * perKmRate);
+      }
+
+      // 4. Night Charge (10 PM to 5 AM IST)
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istTime = new Date(now.getTime() + istOffset);
+      const hour = istTime.getUTCHours();
+
+      if (hour >= 22 || hour < 5) {
+        fare += parseFloat(rateData.night_charge || 0);
+      }
+
+      const finalFare = Math.round(fare);
+
+      console.log(`💰 Secure Fare Calculated for ${vehicleKey}: ₹${finalFare} (${distanceKm}km)`);
+
+      return {
+        fare: finalFare,
+        vehicleKey: vehicleKey,
+        distanceKm: distanceKm,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+    } catch (error) {
+      console.error('❌ Fare calculation error:', error);
+      throw new functions.https.HttpsError('internal', 'Failed to calculate fare');
+    }
+  });
+
 /**
  * Firestore trigger that updates dailyCommissionDue when ride is completed
- * 
- * TRIGGER: rideRequests/{rideId} onUpdate
- * 
- * LOGIC:
- * - Detects status change from any state to 'completed'
- * - Calculates 20% commission from finalFare
- * - Increments driver's dailyCommissionDue
- * 
- * NOTE: Wallet balance is NOT updated here
- * Commission is accumulated and deducted at 11:59 PM by dailySettlement
+ * USES DYNAMIC RATES from config/rates
  */
 exports.onRideCompleted = functions
   .region('asia-south1')
@@ -332,65 +399,106 @@ exports.onRideCompleted = functions
     const afterData = change.after.data();
     const rideId = context.params.rideId;
 
-    // Only trigger when status changes to 'completed'
     if (beforeData.status !== 'completed' && afterData.status === 'completed') {
       const driverId = afterData.driverId;
-      const fare = afterData.finalFare || 0;
-      const commissionRate = 0.20; // 20%
-      const commission = fare * commissionRate;
-
-      if (!driverId) {
-        console.error(`❌ Ride ${rideId} marked complete but no driverId found`);
-        return;
-      }
-
-      if (commission === 0) {
-        console.log(`ℹ️  Ride ${rideId} has zero fare/commission`);
-        return;
-      }
-
-      console.log(`🚗 Ride completed: ${rideId}`);
-      console.log(`   Driver ID: ${driverId}`);
-      console.log(`   Fare: ₹${fare}`);
-      console.log(`   Commission (20%): ₹${commission}`);
+      const fare = afterData.finalFare || afterData.fare || 0;
 
       try {
+        // 1. Fetch dynamic commission rate
+        const configDoc = await db.collection('config').doc('rates').get();
+        let commissionRate = 0.20; // Default 20%
+        if (configDoc.exists && configDoc.data().commission_percent) {
+          commissionRate = configDoc.data().commission_percent / 100;
+        }
+
+        const commission = fare * commissionRate;
+
+        if (!driverId || commission === 0) return;
+
         const driverRef = db.collection('drivers').doc(driverId);
 
-        // Increment dailyCommissionDue
-        await driverRef.update({
-          dailyCommissionDue: admin.firestore.FieldValue.increment(commission)
+        // 2. Transact wallet history + commission due + user ride count
+        await db.runTransaction(async (transaction) => {
+          // Update driver commission
+          transaction.update(driverRef, {
+            dailyCommissionDue: admin.firestore.FieldValue.increment(commission)
+          });
+
+          // Update user ride count
+          if (afterData.userId) {
+            const userRef = db.collection('users').doc(afterData.userId);
+            transaction.update(userRef, {
+              totalRides: admin.firestore.FieldValue.increment(1)
+            });
+          }
+
+          // Log the commission for transparency
+          const logRef = driverRef.collection('walletHistory').doc();
+          transaction.set(logRef, {
+            amount: commission,
+            type: 'debit_pending',
+            description: `Commission for ride ${rideId}`,
+            rideId: rideId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
         });
 
-        console.log(`✅ Added ₹${commission} to driver ${driverId}'s commission due`);
+        console.log(`✅ Commission ₹${commission.toFixed(2)} (${(commissionRate * 100)}%) applied for ride ${rideId}`);
 
       } catch (error) {
-        console.error(`❌ Error updating commission for driver ${driverId}:`, error);
-        console.error('Stack:', error.stack);
+        console.error(`❌ Error updating commission for ride ${rideId}:`, error);
       }
     }
   });
 
 
 // ============================================================================
-// UTILITY FUNCTIONS (FOR TESTING/MIGRATION)
+// STALE RIDE CLEANUP (AUTO-CANCEL)
 // ============================================================================
 
 /**
- * Manual trigger for testing settlement
- * Call via: firebase functions:shell > testSettlement()
+ * Scheduled function that runs every 5 minutes.
+ * Cancels rides that are in 'searching' status for more than 5 minutes.
  */
-exports.testSettlement = functions
+exports.autoCancelRide = functions
   .region('asia-south1')
-  .https.onRequest(async (req, res) => {
-    console.log('🧪 TEST SETTLEMENT TRIGGERED MANUALLY');
+  .pubsub
+  .schedule('every 5 minutes')
+  .onRun(async (context) => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+    console.log(`🧹 Checking for stale rides created before: ${fiveMinutesAgo.toISOString()}`);
 
     try {
-      // Call the actual settlement function logic
-      await exports.dailySettlement.run(null);
-      res.status(200).send('Test settlement completed successfully');
+      const staleRidesSnapshot = await db.collection('rideRequests')
+        .where('status', '==', 'searching')
+        .where('createdAt', '<', fiveMinutesAgo)
+        .get();
+
+      if (staleRidesSnapshot.empty) {
+        console.log('🧹 No stale rides found.');
+        return null;
+      }
+
+      console.log(`🧹 Found ${staleRidesSnapshot.size} stale rides. Cancelling...`);
+
+      const batch = db.batch();
+      staleRidesSnapshot.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          status: 'cancelled',
+          cancelledBy: 'system',
+          cancelReason: 'No drivers found within timeout',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+      console.log('✅ Successfully cancelled stale rides.');
+      return null;
+
     } catch (error) {
-      console.error('Test settlement failed:', error);
-      res.status(500).send('Test settlement failed: ' + error.message);
+      console.error('❌ Error in autoCancelRide:', error);
+      return null;
     }
   });
+

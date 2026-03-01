@@ -1129,6 +1129,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to Assist'**
   String get goToAssist;
+
+  /// No description provided for @tutOnlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Online'**
+  String get tutOnlineTitle;
+
+  /// No description provided for @tutOnlineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide this switch to start receiving ride requests from nearby customers.'**
+  String get tutOnlineBody;
+
+  /// No description provided for @tutGpsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Status'**
+  String get tutGpsTitle;
+
+  /// No description provided for @tutGpsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to see your current speed and GPS accuracy. Green means you\'re ready!'**
+  String get tutGpsBody;
+
+  /// No description provided for @tutSosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency SOS'**
+  String get tutSosTitle;
+
+  /// No description provided for @tutSosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'In case of emergency, tap this button to immediately alert local authorities.'**
+  String get tutSosBody;
+
+  /// No description provided for @tutAllianceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Alliance'**
+  String get tutAllianceTitle;
+
+  /// No description provided for @tutAllianceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mechanical failure or medical emergency? Tap this to ask nearby drivers for help.'**
+  String get tutAllianceBody;
+
+  /// No description provided for @tutNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation Bar'**
+  String get tutNavTitle;
+
+  /// No description provided for @tutNavBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between Map, your Earnings, and Profile details easily from here.'**
+  String get tutNavBody;
+
+  /// No description provided for @slideToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to Start Trip'**
+  String get slideToStart;
+
+  /// No description provided for @slideToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to End Trip'**
+  String get slideToEnd;
+
+  /// No description provided for @tripStartedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Started!'**
+  String get tripStartedMsg;
+
+  /// No description provided for @incorrectOtpMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect OTP'**
+  String get incorrectOtpMsg;
+
+  /// No description provided for @askOtpDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the customer for the 4-digit OTP to start the ride.'**
+  String get askOtpDescription;
+
+  /// No description provided for @onTripHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'On Trip - {status}'**
+  String onTripHeader(Object status);
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// No description provided for @selectPreferredLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your preferred language'**
+  String get selectPreferredLanguage;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @male.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get male;
+
+  /// No description provided for @female.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get female;
+
+  /// No description provided for @other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get other;
+
+  /// No description provided for @age.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get age;
+
+  /// No description provided for @ageRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Age is required'**
+  String get ageRequired;
+
+  /// No description provided for @underageError.
+  ///
+  /// In en, this message translates to:
+  /// **'You must be at least 18 years old'**
+  String get underageError;
+
+  /// No description provided for @genderRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your gender'**
+  String get genderRequired;
+
+  /// No description provided for @emergencyContactPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Contact Phone'**
+  String get emergencyContactPhone;
+
+  /// No description provided for @validEmergencyPhoneError.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid 10-digit phone required'**
+  String get validEmergencyPhoneError;
+
+  /// No description provided for @otp_screen_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP screen. Please enter the 6 digit verification code sent to your mobile.'**
+  String get otp_screen_voice;
+
+  /// No description provided for @otp_resend_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to resend OTP. Please try again.'**
+  String get otp_resend_failed;
+
+  /// No description provided for @otp_resend_success.
+  ///
+  /// In en, this message translates to:
+  /// **'New OTP sent successfully!'**
+  String get otp_resend_success;
+
+  /// No description provided for @otp_send_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sending OTP'**
+  String get otp_send_error;
+
+  /// No description provided for @otp_6_digit_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter 6 digit OTP'**
+  String get otp_6_digit_error;
+
+  /// No description provided for @login_screen_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Login screen. Please enter your phone number.'**
+  String get login_screen_voice;
+
+  /// No description provided for @phone_number_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get phone_number_voice;
+
+  /// No description provided for @wallet_screen_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet screen'**
+  String get wallet_screen_voice;
+
+  /// No description provided for @payment_success_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful! Your wallet has been recharged.'**
+  String get payment_success_voice;
+
+  /// No description provided for @payment_failed_voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed. Please try again.'**
+  String get payment_failed_voice;
 }
 
 class _AppLocalizationsDelegate

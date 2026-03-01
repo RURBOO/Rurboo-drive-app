@@ -25,14 +25,23 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+         context.read<AppStateViewModel>().signOut();
+         Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (r) => false,
+        );
+        return;
+      }
 
       final driverDoc = await FirebaseFirestore.instance
           .collection('drivers')
           .doc(user.uid)
           .get();
-      final double balance =
-          (driverDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+      
+      final data = driverDoc.data() ?? {};
+      final double balance = (data['walletBalance'] as num?)?.toDouble() ?? 0.0;
 
       if (balance < 0) {
         throw Exception(
@@ -40,19 +49,38 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
         );
       }
 
+      // 1. Update Firestore FIRST so account is marked deleted even if Auth deletion fails later
+      // We clear fcmToken and suffix the phone numbers to allow reuse for fresh registration
+      final String originalPhone = data['phone'] ?? data['phoneNumber'] ?? user.phoneNumber ?? '';
+      final String deletedSuffix = "_deleted_${DateTime.now().millisecondsSinceEpoch}";
+
       await FirebaseFirestore.instance
           .collection('drivers')
           .doc(user.uid)
           .update({
             'status': 'deleted',
             'fcmToken': FieldValue.delete(),
-            'phone': '${driverDoc.data()?['phone']}_deleted',
+            'phone': originalPhone.isNotEmpty ? "$originalPhone$deletedSuffix" : FieldValue.delete(),
+            'phoneNumber': originalPhone.isNotEmpty ? "$originalPhone$deletedSuffix" : FieldValue.delete(),
             'deletedAt': FieldValue.serverTimestamp(),
             'deletionReason': _reasonController.text.trim(),
+            'isOnline': false,
           });
 
-      await user.delete();
+      // 2. Delete the Auth User
+      try {
+        await user.delete();
+      } on FirebaseAuthException catch (authError) {
+        if (authError.code == 'requires-recent-login') {
+          // IMPORTANT: If Auth deletion fails due to stale session, 
+          // we don't revert Firestore yet, but we MUST tell the user to relogin.
+          _showReauthDialog();
+          return;
+        }
+        rethrow;
+      }
 
+      // 3. Clear preferences and navigate
       await DriverPreferences.clearDriver();
       if (mounted) {
         context.read<AppStateViewModel>().signOut();
@@ -64,12 +92,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.accountDeletedSuccess)),
         );
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        _showReauthDialog();
-      } else {
-        _showError(e.message ?? "Error deleting account");
       }
     } catch (e) {
       _showError(e.toString());

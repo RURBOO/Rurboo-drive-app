@@ -12,22 +12,27 @@ import '../../../core/services/safety_service.dart';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/ride_request.dart';
+import '../../../core/services/driver_preferences.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final GlobalKey? navBarKey;
+  const HomeScreen({super.key, this.navBarKey});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => HomeViewModel(),
-      child: const _HomeScreenBody(),
+      child: _HomeScreenBody(navBarKey: navBarKey),
     );
   }
 }
 
 class _HomeScreenBody extends StatefulWidget {
-  const _HomeScreenBody();
+  final GlobalKey? navBarKey;
+  const _HomeScreenBody({this.navBarKey});
 
   @override
   _HomeScreenBodyState createState() => _HomeScreenBodyState();
@@ -38,6 +43,15 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
   bool isGpsEnabled = true;
   bool _initialized = false;
   StreamSubscription<ServiceStatus>? _serviceStatusStream;
+
+  // Onboarding Keys
+  final GlobalKey _onlineKey = GlobalKey();
+  final GlobalKey _gpsKey = GlobalKey();
+  final GlobalKey _sosKey = GlobalKey();
+  final GlobalKey _allianceKey = GlobalKey();
+  late TutorialCoachMark tutorialCoachMark;
+  List<TargetFocus> targets = [];
+
 
   @override
   void initState() {
@@ -60,11 +74,195 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
     if (!appState.isLoading && !_initialized) {
       _initialized = true;
       final voiceVm = context.read<DriverVoiceViewModel>();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _vm.initialize(appState, voiceVm: voiceVm);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          _vm.initialize(appState, voiceVm: voiceVm);
+          
+          // Check for first time onboarding
+          final isFirstTime = await DriverPreferences.isFirstTime();
+          if (isFirstTime && mounted) {
+            _showOnboarding();
+          }
+        }
       });
     }
   }
+
+  void _showOnboarding() {
+    _initTargets();
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      onClickTarget: (target) {
+        debugPrint('onClickTarget: $target');
+      },
+      onClickOverlay: (target) {
+        debugPrint('onClickOverlay: $target');
+      },
+      onSkip: () {
+        debugPrint("skip");
+        DriverPreferences.setFirstTime(false);
+        return true;
+      },
+      onFinish: () {
+        debugPrint("finish");
+        DriverPreferences.setFirstTime(false);
+      },
+    )..show(context: context);
+  }
+
+  void _initTargets() {
+    final l10n = AppLocalizations.of(context)!;
+    targets.clear();
+    
+    targets.add(
+      TargetFocus(
+        identify: "Target Online",
+        keyTarget: _onlineKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.tutOnlineTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    l10n.tutOnlineBody,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "Target GPS",
+        keyTarget: _gpsKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.tutGpsTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    l10n.tutGpsBody,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "Target SOS",
+        keyTarget: _sosKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.tutSosTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    l10n.tutSosBody,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "Target Alliance",
+        keyTarget: _allianceKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.tutAllianceTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Text(
+                    l10n.tutAllianceBody,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+
+    if (widget.navBarKey != null) {
+      targets.add(
+        TargetFocus(
+          identify: "Target Navigation",
+          keyTarget: widget.navBarKey,
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.tutNavTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      l10n.tutNavBody,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+      );
+    }
+  }
+
 
   Future<void> _checkGps() async {
     bool enabled = await Geolocator.isLocationServiceEnabled();
@@ -193,7 +391,9 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                   Transform.scale(
                                     scale: 0.8,
                                     child: Switch(
+                                      key: _onlineKey,
                                       value: isOnline,
+
                                       onChanged: (newStatus) {
                                           if (appState.currentState == DriverState.onTrip) {
                                           ScaffoldMessenger.of(context).showSnackBar(
@@ -223,7 +423,9 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             
                             // GPS Status
                             GestureDetector(
+                              key: _gpsKey,
                               onTap: () {
+
                                 homeVm.recenterMap();
                                 showModalBottomSheet(
                                   context: context,
@@ -258,7 +460,18 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             
                             // SOS Button
                             GestureDetector(
-                              onTap: () => SafetyService().callPolice(),
+                              key: _sosKey,
+                              onTap: () async {
+                                // Log to Firestore first
+                                await SafetyService().sendEmergencyAlert(
+                                  appState.currentState == DriverState.onTrip ? 'current_ride' : null,
+                                  homeVm.driverLocation != null 
+                                    ? "${homeVm.driverLocation!.latitude},${homeVm.driverLocation!.longitude}"
+                                    : "Unknown"
+                                );
+                                await SafetyService().callPolice();
+                              },
+
                               child: Container(
                                 width: 40,
                                 height: 40,
@@ -410,6 +623,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                     right: 16,
                     bottom: 240, // Above Ride Request Sheet area
                     child: FloatingActionButton(
+                      key: _allianceKey,
                       heroTag: 'alliance_btn',
                       onPressed: () => _showHelpRequestDialog(context, homeVm),
                       backgroundColor: Colors.amber[700],

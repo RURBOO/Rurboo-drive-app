@@ -12,7 +12,6 @@ import 'package:geocoding/geocoding.dart' as geo;
 import '../../../core/utils/safe_parser.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
-import '../../../core/services/driver_voice_service.dart';
 import '../../../core/services/notification_service.dart';
 
 import '../../wallet/views/wallet_screen.dart';
@@ -426,7 +425,6 @@ class HomeViewModel extends ChangeNotifier {
     BuildContext context,
   ) async {
     debugPrint("TOGGLE ONLINE: Requesting status -> $newStatus");
-    final voiceService = DriverVoiceService();
     
     if (!context.mounted) {
       debugPrint("TOGGLE ONLINE: Context not mounted, aborting.");
@@ -435,7 +433,7 @@ class HomeViewModel extends ChangeNotifier {
 
     if (!newStatus) {
       debugPrint("TOGGLE ONLINE: Going OFFLINE");
-      voiceService.announceGoingOffline();
+      _voiceVm?.announceStateChange(DriverState.offline);
       appState.goOffline();
       _stopListeningToRides();
       _locationSubscription?.cancel();
@@ -508,7 +506,7 @@ class HomeViewModel extends ChangeNotifier {
       if (context.mounted) {
         if (walletBalance < 0) {
           debugPrint("TOGGLE ONLINE: Blocked due to Negative Balance");
-          voiceService.announceNegativeWallet();
+          _voiceVm?.announceNegativeWallet();
           _showBlockScreen(
             context,
             walletBalance,
@@ -519,7 +517,7 @@ class HomeViewModel extends ChangeNotifier {
         }
 
         debugPrint("TOGGLE ONLINE: Success! Proceeding Online.");
-        voiceService.announceGoingOnline();
+        _voiceVm?.announceStateChange(DriverState.online);
         _proceedOnline(appState);
       }
     } catch (e) {
@@ -627,6 +625,7 @@ class HomeViewModel extends ChangeNotifier {
 
     _stopListeningToRides();
     _locationSubscription?.cancel();
+    NotificationService().cancelNotification(0);
     notifyListeners();
 
     if (context.mounted) {
@@ -779,6 +778,7 @@ class HomeViewModel extends ChangeNotifier {
   void rejectRide() {
     _newRideRequest = null;
     _clearRoute();
+    NotificationService().cancelNotification(0);
     _safeNotifyListeners();
   }
 

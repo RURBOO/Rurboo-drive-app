@@ -64,9 +64,9 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
     final l10n = AppLocalizations.of(context)!;
     final voiceService = DriverVoiceService();
     if (value) {
-      voiceService.announceSuccess(l10n.voiceAnnouncementsEnabled);
+      voiceService.speak(l10n.voiceAnnouncementsEnabled);
     } else {
-      voiceService.announceSuccess(l10n.voiceAnnouncementsDisabled);
+      voiceService.speak(l10n.voiceAnnouncementsDisabled);
     }
   }
 

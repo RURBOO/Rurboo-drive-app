@@ -11,6 +11,16 @@ import 'driver_preferences.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint("🌙 Background Message: ${message.notification?.title}");
+  
+  // Directly show local notification from background handler
+  final notification = message.notification;
+  if (notification != null) {
+     final service = NotificationService();
+     await service.showLocalNotification(
+       title: notification.title ?? "New Ride Request!",
+       body: notification.body ?? "Check the app for details.",
+     );
+  }
 }
 
 class NotificationService {
@@ -86,32 +96,39 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'ride_request_channel',
       'Ride Alerts',
       channelDescription: 'High priority alerts for new rides',
       importance: Importance.max,
       priority: Priority.max,
       playSound: true,
-      sound: RawResourceAndroidNotificationSound('alert_sound'),
+      sound: const RawResourceAndroidNotificationSound('alert_sound'),
       icon: '@drawable/ic_stat_notify',
       fullScreenIntent: true,
-      visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.call,
-      timeoutAfter: 30000, // Auto-dismiss after 30s if improved
+      visibility: NotificationVisibility.public,
+      ongoing: false,
+      autoCancel: true,
+      timeoutAfter: 10000, // 10 seconds for approx 2-3 rings
+      // Removed FLAG_INSISTENT ([4]) to stop looping
     );
 
-    const NotificationDetails details = NotificationDetails(
+    final NotificationDetails details = NotificationDetails(
       android: androidDetails,
     );
 
     await _localNotifications.show(
-      DateTime.now().millisecond, // Unique ID
+      0, // Static ID for ride requests to avoid clutter but allow replacement
       title,
       body,
       details,
       payload: payload,
     );
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await _localNotifications.cancel(id);
   }
 
   void _showLocalNotification(RemoteMessage message) {

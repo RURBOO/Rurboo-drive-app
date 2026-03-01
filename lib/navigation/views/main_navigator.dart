@@ -12,12 +12,19 @@ class MainNavigator extends StatefulWidget {
 
 class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
+  final GlobalKey _navBarKey = GlobalKey();
 
-  final List<Widget> _pages = [
-    const HomeScreen(),
-    const EarningsScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomeScreen(navBarKey: _navBarKey),
+      const EarningsScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -33,6 +40,7 @@ class _MainNavigatorState extends State<MainNavigator> {
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        key: _navBarKey,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.drive_eta_outlined),

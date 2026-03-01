@@ -15,6 +15,7 @@
     ],
     "firestore": {
         "rules": "firestore.rules",
-        "indexes": "firestore.indexes.json"
+        "indexes": "firestore.indexes.json",
+        "predeploy": "cp ../firestore.rules firestore.rules"
     }
 }

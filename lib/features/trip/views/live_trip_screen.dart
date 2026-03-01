@@ -63,6 +63,14 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      vm.voiceNavigatingToPickup = loc.arrivingAtPickup; // Will add more specific voice strings later if needed
+      vm.voiceTripStarted = loc.tripStarted;
+      vm.voiceCustomerCancelled = loc.rideCancelledByUser;
+      // Reusing 'trip started' style for simplicity unless new arb keys are made
+      vm.voiceTripCompletedPrefix = "Trip completed. Total fare rupees "; // Replace with loc later
+      
       vm.init(context.read<AppStateViewModel>());
     });
   }
@@ -101,7 +109,7 @@ class _LiveTripScreenBody extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Ask the customer for the 4-digit OTP to start the ride."),
+            Text(AppLocalizations.of(context)!.askOtpDescription),
             const SizedBox(height: 20),
             TextField(
               controller: otpController,
@@ -146,13 +154,13 @@ class _LiveTripScreenBody extends StatelessWidget {
       final verified = await vm.verifyOtpAndStartTrip(otpController.text);
       if (!context.mounted) return;
       if (verified) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text("Trip Started!"), backgroundColor: Colors.green),
-         );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.tripStarted), backgroundColor: Colors.green),
+          );
       } else {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text("Incorrect OTP"), backgroundColor: Colors.red),
-         );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.incorrectOtp), backgroundColor: Colors.red),
+          );
          // Reset swipe button if needed? 
          // SwipeButton automatically resets on exception, so we might want to throw or handle UI reset.
          throw Exception("Incorrect OTP");
@@ -229,7 +237,9 @@ class _LiveTripScreenBody extends StatelessWidget {
     final statusColor = isArriving ? Colors.blue : Colors.green;
     final statusText = isArriving 
         ? AppLocalizations.of(context)!.arrivingAtPickup 
-        : "On Trip - ${AppLocalizations.of(context)!.droppingCustomer}";
+        : AppLocalizations.of(context)!.onTripHeader(
+            AppLocalizations.of(context)!.droppingCustomer
+          );
 
     return Scaffold(
       body: Stack(
@@ -425,7 +435,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                      children: [
                        _buildInfoChip(Icons.attach_money, "₹${vm.tripDetails?.fare.toStringAsFixed(0) ?? '0'}"),
                        const SizedBox(width: 12),
-                       _buildInfoChip(Icons.access_time, vm.tripDurationMins == null ? "Calculating..." : "${vm.tripDurationMins} min"),
+                        _buildInfoChip(Icons.access_time, vm.tripDurationMins == null ? AppLocalizations.of(context)!.calculating : "${vm.tripDurationMins} ${AppLocalizations.of(context)!.mins}"),
                      ],
                    ),
                    
@@ -464,18 +474,18 @@ class _LiveTripScreenBody extends StatelessWidget {
                    else
                      SwipeButton(
                        key: ValueKey('swipe_${vm.currentStage}'), // Forces reset when stage changes
-                       text: isArriving 
-                           ? "Slide to Start Trip" 
-                           : "Slide to End Trip",
+                        text: isArriving 
+                            ? AppLocalizations.of(context)!.slideToStart 
+                            : AppLocalizations.of(context)!.slideToEnd,
                        color: isArriving ? Colors.black : Colors.red,
                        icon: isArriving ? Icons.play_arrow : Icons.stop,
                        onSwipe: () async {
                           final connectivity = await Connectivity().checkConnectivity();
                           if (connectivity.contains(ConnectivityResult.none)) {
                           if (!context.mounted) return;
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
-                             );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
+                              );
                              throw Exception("No Internet");
                           }
   

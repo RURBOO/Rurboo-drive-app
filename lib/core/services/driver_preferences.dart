@@ -63,4 +63,17 @@ class DriverPreferences {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyVoiceEnabled) ?? true; // Default ON
   }
+
+  // Onboarding
+  static const String _keyFirstTime = 'firstTimeOnboarding';
+
+  static Future<bool> isFirstTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyFirstTime) ?? true;
+  }
+
+  static Future<void> setFirstTime(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyFirstTime, value);
+  }
 }

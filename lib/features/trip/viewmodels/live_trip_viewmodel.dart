@@ -48,6 +48,13 @@ class LiveTripViewModel extends ChangeNotifier {
 
   String tripEta = "Calculating...";
 
+  // Localized Voice Strings
+  String voiceNavigatingToPickup = "Navigating to pickup location.";
+  String voiceTripStarted = "Trip started. Navigate to destination.";
+  String voiceCustomerCancelled = "Customer has cancelled the ride.";
+  String voiceTripCompletedPrefix = "Trip completed. Total fare rupees ";
+
+
   Future<void> init(AppStateViewModel appState) async {
     isLoading = true;
     errorMsg = null;
@@ -138,9 +145,9 @@ class LiveTripViewModel extends ChangeNotifier {
       debugPrint("🚀 LiveTripViewModel: Final Stage resolved to $_currentStage");
 
       if (_currentStage == TripStage.arrivingToPickup) {
-        _voiceService.announceNavigatingToPickup();
+        _voiceService.speak(voiceNavigatingToPickup);
       } else {
-        _voiceService.announceTripStarted();
+        _voiceService.speak(voiceTripStarted);
       }
 
       _updateRouteLine();
@@ -212,7 +219,7 @@ class LiveTripViewModel extends ChangeNotifier {
           
           if (status == 'cancelled') {
             if (cancelledBy == 'user') {
-               _voiceService.announceCustomerCancelled();
+               _voiceService.speak(voiceCustomerCancelled);
               _gpsStream?.cancel();
               isWaitingForApproval = false;
               notifyListeners();
@@ -372,7 +379,7 @@ class LiveTripViewModel extends ChangeNotifier {
 
       _currentStage = TripStage.tripInProgress;
       
-      _voiceService.announceTripStarted();
+      _voiceService.speak(voiceTripStarted);
 
       await _updateRouteLine();
 
@@ -398,48 +405,18 @@ class LiveTripViewModel extends ChangeNotifier {
       }
 
 
-      final configDoc = await FirebaseFirestore.instance
-          .collection('config')
-          .doc('rates')
-          .get();
-
-      final configData = configDoc.data();
-
-      final double totalFare = tripDetails!.fare;
-      final double percent =
-          (configData?['commission_percent'] as num?)?.toDouble() ?? 20.0;
-      final double commission = (totalFare * percent) / 100;
-
-      final WriteBatch batch = FirebaseFirestore.instance.batch();
+      final double totalFare = tripDetails?.fare ?? 0.0;
+      
       final rideRef = FirebaseFirestore.instance
           .collection('rideRequests')
           .doc(currentRideId);
-      final driverRef = FirebaseFirestore.instance
-          .collection('drivers')
-          .doc(driverId);
-      final earningsRef = driverRef.collection('earnings').doc();
 
-      batch.update(rideRef, {
+      await rideRef.update({
         'status': 'completed',
         'completedAt': FieldValue.serverTimestamp(),
         'finalFare': totalFare,
-        'commission': commission,
-      });
+      }).timeout(const Duration(seconds: 10));
 
-      batch.update(driverRef, {
-        'totalRides': FieldValue.increment(1),
-        'dailyCommissionDue': FieldValue.increment(commission),
-        'isOnline': true,
-      });
-
-      batch.set(earningsRef, {
-        'rideId': currentRideId,
-        'amount': totalFare,
-        'commission': commission,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      await batch.commit().timeout(const Duration(seconds: 10));
       await DriverPreferences.clearCurrentRideId();
 
       appState.endTrip();
@@ -457,7 +434,7 @@ class LiveTripViewModel extends ChangeNotifier {
         );
       }
       
-      _voiceService.announceTripCompleted(totalFare.toStringAsFixed(0));
+      _voiceService.speak("$voiceTripCompletedPrefix${totalFare.toStringAsFixed(0)}");
       
     } catch (e) {
       debugPrint("EndTrip Error: $e");
