@@ -348,8 +348,45 @@ class _WalletScreenState extends State<WalletScreen> {
   void _handleExternalWallet(ExternalWalletResponse response) {
     debugPrint('🔄 External wallet: ${response.walletName}');
   }
+  
+  Future<void> _syncManualBalance() async {
+    if (_currentDriverId == null) return;
+    try {
+      if (walletBalance > 0 && transactions.isEmpty) {
+        await FirebaseFirestore.instance
+            .collection('drivers')
+            .doc(_currentDriverId)
+            .collection('walletHistory')
+            .add({
+          'amount': walletBalance,
+          'type': 'credit',
+          'description': 'Manual Firebase Deposit',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(
+               content: Text("Missing record synced successfully!"),
+               backgroundColor: Colors.green,
+             ),
+           );
+        }
+        _fetchWalletData();
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("History already exists or balance is 0.")),
+           );
+        }
+      }
+    } catch (e) {
+      debugPrint("Sync Error: $e");
+    }
+  }
 
   Widget _buildCard(String title, double amount, Color bg, {bool showWarning = false}) {
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -396,6 +433,13 @@ class _WalletScreenState extends State<WalletScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync_problem, color: Colors.blue),
+            tooltip: "Sync Missing Manual Edits",
+            onPressed: _syncManualBalance,
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/app_theme.dart';
@@ -78,13 +79,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      // If new profile photo was selected, upload it
+      // If new profile photo was selected, convert to Base64
       if (_newProfileImage != null) {
-        final ref = FirebaseStorage.instance
-            .ref('driver_profile_photos/$_driverId.jpg');
-        await ref.putFile(_newProfileImage!);
-        final url = await ref.getDownloadURL();
-        updateData['profilePhotoUrl'] = url;
+        final bytes = await _newProfileImage!.readAsBytes();
+        final base64Image = base64Encode(bytes);
+        updateData['profileImage'] = base64Image;
       }
 
       await FirebaseFirestore.instance

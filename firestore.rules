@@ -116,7 +116,7 @@ service cloud.firestore {
             // 2. If verified, prevent updating sensitive fields (EXCEPT for deletion)
             (
               !request.resource.data.diff(resource.data).affectedKeys()
-                .hasAny(["rating", "ratingSum", "ratingCount", "walletBalance", "dailyCommissionDue", "status"])
+                .hasAny(["rating", "ratingSum", "ratingCount", "status"])
             ) || (
               // Case 3: Allow self-deletion even if verified
               request.resource.data.status == 'deleted' &&

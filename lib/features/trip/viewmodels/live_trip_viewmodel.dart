@@ -222,6 +222,10 @@ class LiveTripViewModel extends ChangeNotifier {
                _voiceService.speak(voiceCustomerCancelled);
               _gpsStream?.cancel();
               isWaitingForApproval = false;
+              
+              // CRITICAL FIX: Clear the ride immediately so the driver is not stuck
+              DriverPreferences.clearCurrentRideId();
+              
               notifyListeners();
               onRideCancelledByUser?.call();
             }
@@ -230,6 +234,10 @@ class LiveTripViewModel extends ChangeNotifier {
 
           if (status == 'closed') {
             _gpsStream?.cancel();
+            
+            // CRITICAL FIX: Clear the ride immediately
+            DriverPreferences.clearCurrentRideId();
+            
             onRideCancelledByUser?.call();
             return;
           }

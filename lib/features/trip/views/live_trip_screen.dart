@@ -32,8 +32,15 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
     WakelockPlus.enable();
 
     // Handle Ride Cancelled by User
-    vm.onRideCancelledByUser = () {
+    vm.onRideCancelledByUser = () async {
       if (!mounted) return;
+      
+      // CRITICAL FIX: Instantly force the state out of the trip
+      await DriverPreferences.clearCurrentRideId();
+      if (mounted) {
+        context.read<AppStateViewModel>().endTrip();
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -42,12 +49,8 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
           content: Text(AppLocalizations.of(context)!.rideCancelledByUser),
           actions: [
             TextButton(
-              onPressed: () async {
+              onPressed: () {
                 Navigator.pop(ctx);
-                await DriverPreferences.clearCurrentRideId();
-                if (mounted) {
-                  context.read<AppStateViewModel>().endTrip();
-                }
               },
               child: Text(AppLocalizations.of(context)!.ok),
             ),
