@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../features/home/views/home_screen.dart';
 import '../../features/earnings/views/earnings_screen.dart';
 import '../../features/profile/views/profile_screen.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class MainNavigator extends StatefulWidget {
   const MainNavigator({super.key});
@@ -34,6 +35,7 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
@@ -41,21 +43,21 @@ class _MainNavigatorState extends State<MainNavigator> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         key: _navBarKey,
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.drive_eta_outlined),
-            activeIcon: Icon(Icons.drive_eta),
-            label: 'Home',
+            icon: const Icon(Icons.drive_eta_outlined),
+            activeIcon: const Icon(Icons.drive_eta),
+            label: l10n.navHome,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Earnings',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            activeIcon: const Icon(Icons.account_balance_wallet),
+            label: l10n.navEarnings,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: l10n.navProfile,
           ),
         ],
         currentIndex: _selectedIndex,

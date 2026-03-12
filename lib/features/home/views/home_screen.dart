@@ -699,7 +699,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 45),
         ),
-        onPressed: () => vm.requestHelp(context, type, "Emergency Assistance Requested"),
+        onPressed: () => vm.requestHelp(context, type, AppLocalizations.of(context)!.emergencyRequest),
         child: Text(label),
       ),
     );
@@ -752,7 +752,7 @@ class _NearbyHelpAlertSheet extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Text("Driver: ${request.driverName} • ${request.driverPhone}"),
+          Text(AppLocalizations.of(context)!.driverLabel(request.driverName ?? '', request.driverPhone ?? '')),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () {

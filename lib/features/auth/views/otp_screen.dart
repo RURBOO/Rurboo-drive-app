@@ -72,7 +72,7 @@ class _OtpScreenState extends State<OtpScreen> {
       _isResending = true;
       _pinController.clear(); 
     });
-    _voiceService.speak("Resending OTP");
+    _voiceService.speak(AppLocalizations.of(context)!.resendingOtp);
 
     final String phone = "+91${widget.phoneNumber}";
 
@@ -90,7 +90,7 @@ class _OtpScreenState extends State<OtpScreen> {
           _voiceService.speak(loc.otp_resend_failed);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Resend failed: ${e.message}"),
+              content: Text(AppLocalizations.of(context)!.resendFailed(e.message ?? '')),
               backgroundColor: Colors.red,
             ),
           );
@@ -106,8 +106,8 @@ class _OtpScreenState extends State<OtpScreen> {
           _startCooldownTimer();
           _voiceService.speak(loc.otp_resend_success);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("New OTP sent successfully!"),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.otp_resend_success),
               backgroundColor: Colors.green,
             ),
           );
@@ -124,7 +124,7 @@ class _OtpScreenState extends State<OtpScreen> {
       setState(() => _isResending = false);
       _voiceService.speak(loc.otp_send_error);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
+        SnackBar(content: Text(loc.errorSendOtp(e.toString()))),
       );
     }
   }
@@ -144,7 +144,7 @@ class _OtpScreenState extends State<OtpScreen> {
         _voiceService.speak(loc.otp_6_digit_error);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter 6 digit OTP")),
+        SnackBar(content: Text(AppLocalizations.of(context)!.otp_6_digit_error)),
       );
       return;
     }
@@ -256,7 +256,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   // Title
                   Text(
-                    "Verify Phone",
+                    AppLocalizations.of(context)!.verifyPhone,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.displayMedium?.copyWith(
                       color: Colors.white,
@@ -268,7 +268,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   // Subtitle
                   Text(
-                    "Enter the 6-digit code sent to\n+91 ${widget.phoneNumber}",
+                    AppLocalizations.of(context)!.enterOtpSent(widget.phoneNumber),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.grey.shade400,
@@ -325,8 +325,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           onPressed: _handleVerify,
                           child: Text(
                             widget.isRegistration
-                                ? "Verify & Register"
-                                : "Verify & Login",
+                                ? AppLocalizations.of(context)!.verifyAndRegister
+                                : AppLocalizations.of(context)!.verifyAndLogin,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -349,8 +349,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           onPressed: _resendCooldown > 0 ? null : _resendOTP,
                           child: Text(
                             _resendCooldown > 0
-                                ? "Resend OTP in ${_resendCooldown}s"
-                                : "Didn't receive code? Resend",
+                                ? AppLocalizations.of(context)!.resendOtpIn("${_resendCooldown}s")
+                                : AppLocalizations.of(context)!.didntReceiveCode,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: _resendCooldown > 0
                                   ? Colors.grey.shade600

@@ -68,12 +68,11 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final loc = AppLocalizations.of(context)!;
-      vm.voiceNavigatingToPickup = loc.arrivingAtPickup; // Will add more specific voice strings later if needed
+      vm.voiceNavigatingToPickup = loc.arrivingAtPickup;
       vm.voiceTripStarted = loc.tripStarted;
       vm.voiceCustomerCancelled = loc.rideCancelledByUser;
-      // Reusing 'trip started' style for simplicity unless new arb keys are made
-      vm.voiceTripCompletedPrefix = "Trip completed. Total fare rupees "; // Replace with loc later
-      
+      vm.voiceTripCompletedPrefix = loc.tripCompletedFare(""); // Will be formatted with fare in VM
+
       vm.init(context.read<AppStateViewModel>());
     });
   }
@@ -224,11 +223,11 @@ class _LiveTripScreenBody extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Error: ${vm.errorMsg}", style: const TextStyle(color: Colors.red)),
+              Text(AppLocalizations.of(context)!.errorGeneric(vm.errorMsg ?? ''), style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => context.read<AppStateViewModel>().endTrip(),
-                child: const Text("Go Back"),
+                child: Text(AppLocalizations.of(context)!.goBack),
               ),
             ],
           ),
@@ -487,7 +486,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                           if (connectivity.contains(ConnectivityResult.none)) {
                           if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("No Internet Connection"), backgroundColor: Colors.red),
+                                SnackBar(content: Text(AppLocalizations.of(context)!.noInternet), backgroundColor: Colors.red),
                               );
                              throw Exception("No Internet");
                           }

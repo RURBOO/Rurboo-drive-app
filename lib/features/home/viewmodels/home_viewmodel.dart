@@ -244,7 +244,7 @@ class HomeViewModel extends ChangeNotifier {
             _updateDriverMarker();
 
             // --- 🔹 LIVE TRACKING: Update Firestore for Admin/User ---
-            if (DateTime.now().difference(_lastLocationUpdate).inSeconds > 5) {
+            if (DateTime.now().difference(_lastLocationUpdate).inSeconds >= 10) {
                _lastLocationUpdate = DateTime.now();
                DriverPreferences.getDriverId().then((driverId) {
                  if (driverId != null) {

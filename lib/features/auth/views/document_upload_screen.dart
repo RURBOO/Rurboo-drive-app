@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/registration_viewmodel.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class DocumentUploadScreen extends StatelessWidget {
   const DocumentUploadScreen({super.key});
@@ -9,40 +10,41 @@ class DocumentUploadScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<RegistrationViewModel>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Upload Documents (3/3)")),
+      appBar: AppBar(title: Text(l10n.uploadDocsTitle)),
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                const Text(
-                  "Required Documents",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.myDocuments,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
 
                 _buildUploadTile(
-                  title: 'Driving License',
+                  title: l10n.drivingLicense,
                   fileName: vm.licenseFile?.path,
                   onTap: () => vm.pickImage('license'),
                 ),
 
                 _buildUploadTile(
-                  title: 'Vehicle Registration (RC)',
+                  title: l10n.rc,
                   fileName: vm.registrationFile?.path,
                   onTap: () => vm.pickImage('registration'),
                 ),
 
                 _buildUploadTile(
-                  title: 'Profile Photo',
+                  title: l10n.editProfile,
                   fileName: vm.profileFile?.path,
                   onTap: () => vm.pickImage('profile'),
                 ),
 
                 _buildUploadTile(
-                  title: 'Vehicle Photo (Front)',
+                  title: l10n.vehicleFront,
                   fileName: vm.vehicleImageFile?.path,
                   onTap: () => vm.pickImage('vehicle'),
                 ),

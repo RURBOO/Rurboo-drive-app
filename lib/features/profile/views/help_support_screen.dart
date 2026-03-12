@@ -16,17 +16,26 @@ class HelpSupportScreen extends StatefulWidget {
 
 class _HelpSupportScreenState extends State<HelpSupportScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedReason;
+  int? _selectedReasonIndex;
   File? _screenshotFile;
   final TextEditingController _descController = TextEditingController();
   bool _isSubmitting = false;
 
-  final List<String> _reasons = [
+  // English keys for Firestore storage (admin-friendly)
+  final List<String> _reasonKeys = [
     "Payment Issue",
     "App Bug",
     "Ride Issue",
     "Account Issue",
     "Other"
+  ];
+
+  List<String> _getReasons(AppLocalizations l10n) => [
+    l10n.helpReason1,
+    l10n.helpReason2,
+    l10n.helpReason3,
+    l10n.helpReason4,
+    l10n.helpReason5,
   ];
 
   Future<void> _pickImage() async {
@@ -40,10 +49,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   }
 
   Future<void> _submitTicket() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       final driverId = await DriverPreferences.getDriverId();
       if (driverId == null) throw Exception("Driver not found");
@@ -60,7 +70,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
       await FirebaseFirestore.instance.collection('support_tickets').add({
         'driverId': driverId,
-        'reason': _selectedReason,
+        'reason': _selectedReasonIndex != null ? _reasonKeys[_selectedReasonIndex!] : 'Other',
         'description': _descController.text.trim(),
         'imageUrl': imageUrl,
         'status': 'open',
@@ -70,10 +80,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Ticket submitted successfully. We will contact you soon.")),
+          SnackBar(content: Text(l10n.ticketSubmitted)),
         );
         setState(() {
-          _selectedReason = null;
+          _selectedReasonIndex = null;
           _descController.clear();
           _screenshotFile = null;
         });
@@ -81,7 +91,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to submit ticket: $e")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.ticketFailed(e.toString()))),
         );
       }
     } finally {
@@ -91,9 +101,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final reasons = _getReasons(l10n);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.helpAndSupport),
+        title: Text(l10n.helpAndSupport),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -103,23 +116,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "How can we help you?",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            Text(
+              l10n.helpHowCanWeHelp,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text(
-              "Our dedicated support team is here to assist you with any questions or issues you may have.",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+            Text(
+              l10n.helpSubheading,
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 30),
-            // --- NEW: Submit a Ticket Form ---
+
+            // Submit a Ticket Form
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -132,41 +140,47 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Submit a Ticket",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    Text(
+                      l10n.helpSubmitTicket,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: "Reason",
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+
+                    DropdownButtonFormField<int>(
+                      decoration: InputDecoration(
+                        labelText: l10n.helpReason,
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                      initialValue: _selectedReason,
-                      items: _reasons.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                      onChanged: (val) => setState(() => _selectedReason = val),
-                      validator: (val) => val == null ? "Please select a reason" : null,
+                      value: _selectedReasonIndex,
+                      items: List.generate(
+                        reasons.length,
+                        (i) => DropdownMenuItem(value: i, child: Text(reasons[i])),
+                      ),
+                      onChanged: (val) => setState(() => _selectedReasonIndex = val),
+                      validator: (val) => val == null ? l10n.helpSelectReason : null,
                     ),
                     const SizedBox(height: 16),
+
                     TextFormField(
                       controller: _descController,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.helpDescription,
+                        border: const OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
                       maxLines: 3,
-                      validator: (val) => val == null || val.isEmpty ? "Please enter a description" : null,
+                      validator: (val) => val == null || val.isEmpty ? l10n.helpDescRequired : null,
                     ),
                     const SizedBox(height: 16),
+
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            _screenshotFile == null 
-                                ? "Attach a screenshot/document (Optional)" 
-                                : "Image attached: ${_screenshotFile!.path.split('/').last}",
+                            _screenshotFile == null
+                                ? l10n.helpAttachFile
+                                : l10n.helpImageAttached(_screenshotFile!.path.split('/').last),
                             style: TextStyle(color: Colors.grey[700], fontSize: 14),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -184,6 +198,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -193,9 +208,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         onPressed: _isSubmitting ? null : _submitTicket,
-                        child: _isSubmitting 
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Text("Submit Ticket", style: TextStyle(fontSize: 16, color: Colors.white)),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Text(
+                                l10n.submitTicket,
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
                       ),
                     ),
                   ],
@@ -206,7 +228,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             const SizedBox(height: 30),
             Center(
               child: Text(
-                "Version 1.0.0",
+                l10n.appVersion,
                 style: TextStyle(color: Colors.grey[400]),
               ),
             ),
@@ -216,5 +238,4 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       ),
     );
   }
-
 }

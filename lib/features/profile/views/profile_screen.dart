@@ -246,7 +246,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               _buildMenuItem(
                                 icon: Icons.account_balance_wallet_outlined,
                                 title: l10n.wallet,
-                                subtitle: "Recharge & Transaction History",
+                                subtitle: l10n.walletRechargeSubtitle,
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (_) => const WalletScreen()),
@@ -297,7 +297,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             ]).animate().fade(delay: 550.ms).slideY(begin: 0.2),
 
                             const SizedBox(height: 24),
-                            _buildSectionHeader("${l10n.helpAndSupport} & Legal"),
+                            _buildSectionHeader(l10n.helpAndLegal),
                             _buildMenuCard([
                               _buildMenuItem(
                                 icon: Icons.feedback_outlined,
@@ -367,7 +367,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             
                             const SizedBox(height: 30),
                             Text(
-                              "Rubo Driver v1.0.0",
+                              l10n.appVersion,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
                             ).animate().fade(delay: 700.ms),
                           ],

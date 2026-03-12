@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/utils/image_utils.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class VehiclesViewModel extends ChangeNotifier {
   List<Map<String, dynamic>> vehicles = [];
@@ -125,7 +126,7 @@ class VehiclesViewModel extends ChangeNotifier {
     if (!addVehicleFormKey.currentState!.validate()) return;
     if (rcFile == null || vehicleImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload both RC and Vehicle Photo")),
+        SnackBar(content: Text(AppLocalizations.of(context)!.uploadRcAndPhoto)),
       );
       return;
     }
@@ -134,7 +135,7 @@ class VehiclesViewModel extends ChangeNotifier {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
        ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Session Expired. Please login again.")),
+        SnackBar(content: Text(AppLocalizations.of(context)!.sessionExpired)),
       );
       return;
     }
@@ -172,7 +173,7 @@ class VehiclesViewModel extends ChangeNotifier {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Vehicle added! Waiting for verification.")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.vehicleAddedPending)),
         );
         Navigator.pop(context);
       }
@@ -188,7 +189,7 @@ class VehiclesViewModel extends ChangeNotifier {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorText(e.toString()))),
         );
       }
     } finally {

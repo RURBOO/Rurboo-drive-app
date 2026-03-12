@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../profile/viewmodels/vehicles_viewmodel.dart';
 import 'add_vehicle_screen.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 
 class MyVehiclesScreen extends StatefulWidget {
   const MyVehiclesScreen({super.key});
@@ -26,7 +27,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
     final vm = context.watch<VehiclesViewModel>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("My Vehicles")),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.myVehicles)),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -44,8 +45,8 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : vm.vehicles.isEmpty
-              ? const Center(
-                  child: Text("No vehicles found. Add one to start."),
+              ? Center(
+                  child: Text(AppLocalizations.of(context)!.noVehiclesFound),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -130,13 +131,13 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                                 // Active/Switch Button
                                 if (isVerified)
                                 isActive
-                                    ? const Chip(
-                                        label: Text("Active", style: TextStyle(color: Colors.white)),
+                                    ? Chip(
+                                        label: Text(AppLocalizations.of(context)!.activeLabel, style: const TextStyle(color: Colors.white)),
                                         backgroundColor: Colors.green,
                                       )
                                     : OutlinedButton(
                                         onPressed: () => vm.activateVehicle(vehicle['id'], vehicle),
-                                        child: const Text("Switch"),
+                                        child: Text(AppLocalizations.of(context)!.switchVehicle),
                                       ),
                               ],
                             ),

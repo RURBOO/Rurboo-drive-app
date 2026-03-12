@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../../core/services/driver_preferences.dart';
+import 'package:rubo_driver/l10n/app_localizations.dart';
 import 'login_screen.dart';
 
 class PendingApprovalScreen extends StatefulWidget {
@@ -38,8 +39,8 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Still Pending. Please wait for Admin approval."),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.pendingApprovalMsg),
             ),
           );
         }
@@ -104,7 +105,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 const SizedBox(height: 40),
 
                 const Text(
-                  "Application Pending",
+                  "आवेदन प्रक्रियाधीन है",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28, 
@@ -117,7 +118,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 const SizedBox(height: 20),
 
                 const Text(
-                  "Your docs approval is pending now",
+                  "आपके दस्तावेज़ों की जाँच हो रही है",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18, 
@@ -129,11 +130,11 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 const SizedBox(height: 16),
 
                 Text(
-                  "Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.",
+                  AppLocalizations.of(context)!.pendingApprovalBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16, 
-                    color: Colors.grey.shade400, 
+                    fontSize: 16,
+                    color: Colors.grey.shade400,
                     height: 1.5,
                   ),
                 ),
@@ -151,7 +152,9 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                         )
                       : const Icon(Icons.refresh, color: Colors.blue),
                   label: Text(
-                    isChecking ? "Checking Status..." : "Refresh Status",
+                    isChecking
+                        ? AppLocalizations.of(context)!.checkingStatus
+                        : AppLocalizations.of(context)!.refreshStatus,
                     style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -169,7 +172,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(
-                      "Sign Out / Go Back",
+                      AppLocalizations.of(context)!.signOutGoBack,
                       style: TextStyle(
                         fontSize: 16, 
                         fontWeight: FontWeight.bold, 

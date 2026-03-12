@@ -244,10 +244,9 @@ service cloud.firestore {
     // SUPPORT TICKETS (User & Driver App)
     // =========================================================
     match /support_tickets/{ticketId} {
-      // App sends 'open' (lowercase)
       allow create: if isAuthenticated()
         && (request.resource.data.userId == uid() || request.resource.data.driverId == uid())
-        && request.resource.data.status == "open";
+        && (request.resource.data.status == "Open" || request.resource.data.status == "open");
 
       allow read: if isAuthenticated() && (
         resource.data.userId == uid() ||
@@ -255,7 +254,7 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // User adds messages, Admin resolves
+      // User/Driver adds messages, Admin resolves
       allow update: if isAuthenticated() && (
         resource.data.userId == uid() ||
         resource.data.driverId == uid() ||

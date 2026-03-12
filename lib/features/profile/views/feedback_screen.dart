@@ -14,15 +14,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
-  String _selectedCategory = 'Suggestion';
+  int _selectedCategoryIndex = 0;
   bool _isSubmitting = false;
 
-  final List<String> _categories = [
-    'Suggestion',
-    'App Issue',
-    'Payment Issue',
-    'Safety Concern',
-    'Other'
+  List<String> _getCategories(AppLocalizations l10n) => [
+    l10n.feedbackCatSuggestion,
+    l10n.feedbackCatAppIssue,
+    l10n.feedbackCatPaymentIssue,
+    l10n.feedbackCatSafetyConcern,
+    l10n.feedbackCatOther,
+  ];
+
+  // English keys to store in Firestore regardless of UI locale
+  final List<String> _categoryKeys = [
+    'Suggestion', 'App Issue', 'Payment Issue', 'Safety Concern', 'Other'
   ];
 
   @override
@@ -33,8 +38,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   Future<void> _submitFeedback() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSubmitting = true);
 
     try {
@@ -43,13 +48,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
       await FirebaseFirestore.instance.collection('feedback').add({
         'driverId': user.uid,
-        'category': _selectedCategory,
+        'category': _categoryKeys[_selectedCategoryIndex],
         'subject': _subjectController.text.trim(),
         'message': _messageController.text.trim(),
         'timestamp': FieldValue.serverTimestamp(),
-        'status': 'new', 
-        'platform': 'android', // Or detect platform dynamically
-        'appVersion': '1.0.0', // Ideally fetch from package_info_plus
+        'status': 'new',
+        'platform': 'android',
+        'appVersion': '1.0.0',
       });
 
       if (!mounted) return;
@@ -57,15 +62,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text("Thank You!"),
-          content: const Text("Your feedback has been submitted successfully. We appreciate your input."),
+          title: Text(l10n.thankYou),
+          content: Text(l10n.feedbackSubmitted),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(ctx); // Close dialog
-                Navigator.pop(context); // Go back to profile
+                Navigator.pop(ctx);
+                Navigator.pop(context);
               },
-              child: const Text("OK"),
+              child: Text(l10n.ok),
             ),
           ],
         ),
@@ -73,7 +78,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error submitting feedback: $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.errorFeedback(e.toString())),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -82,9 +90,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final categories = _getCategories(l10n);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.feedbackAndSuggestions),
+        title: Text(l10n.feedbackAndSuggestions),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -96,13 +107,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "We value your feedback!",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                l10n.feedbackHeading,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                "Let us know how we can improve your experience.",
+                l10n.feedbackSubheading,
                 style: TextStyle(color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
@@ -110,25 +121,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               // Category Dropdown
               InputDecorator(
                 decoration: InputDecoration(
-                  labelText: "Category",
+                  labelText: l10n.feedbackCategory,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 ),
                 child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategory,
+                  child: DropdownButton<int>(
+                    value: _selectedCategoryIndex,
                     isExpanded: true,
-                    items: _categories.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
+                    items: List.generate(categories.length, (i) =>
+                      DropdownMenuItem<int>(value: i, child: Text(categories[i]))
+                    ),
+                    onChanged: (int? newValue) {
                       if (newValue != null) {
-                        setState(() {
-                          _selectedCategory = newValue;
-                        });
+                        setState(() => _selectedCategoryIndex = newValue);
                       }
                     },
                   ),
@@ -140,13 +146,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               TextFormField(
                 controller: _subjectController,
                 decoration: InputDecoration(
-                  labelText: "Subject",
+                  labelText: l10n.feedbackSubject,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a subject';
-                  }
+                  if (value == null || value.isEmpty) return l10n.feedbackSubjectRequired;
                   return null;
                 },
               ),
@@ -157,18 +161,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 controller: _messageController,
                 maxLines: 5,
                 decoration: InputDecoration(
-                  labelText: "Description",
+                  labelText: l10n.feedbackDescription,
                   alignLabelWithHint: true,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  hintText: "Describe your feedback or suggestion in detail...",
+                  hintText: l10n.feedbackDescriptionHint,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  if (value.length < 10) {
-                    return 'Description must be at least 10 characters';
-                  }
+                  if (value == null || value.isEmpty) return l10n.feedbackDescRequired;
+                  if (value.length < 10) return l10n.feedbackDescMin;
                   return null;
                 },
               ),
@@ -192,9 +192,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text(
-                          "Submit Feedback",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      : Text(
+                          l10n.feedbackSubmitBtn,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                 ),
               ),

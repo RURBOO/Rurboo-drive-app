@@ -668,4 +668,401 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payment_failed_voice => 'Payment failed. Please try again.';
+
+  @override
+  String errorGeneric(String msg) {
+    return 'Error: $msg';
+  }
+
+  @override
+  String get goBack => 'Go Back';
+
+  @override
+  String get emergencyRequest => 'Emergency Assistance Requested';
+
+  @override
+  String driverLabel(String name, String phone) {
+    return 'Driver: $name • $phone';
+  }
+
+  @override
+  String get noInternet => 'No Internet Connection';
+
+  @override
+  String tripCompletedFare(String fare) {
+    return 'Trip completed. Total fare rupees $fare';
+  }
+
+  @override
+  String get rideCompleted => 'Ride Completed';
+
+  @override
+  String get tripCompleted => 'Trip Completed';
+
+  @override
+  String droppedOff(String name) {
+    return 'You successfully dropped off $name.';
+  }
+
+  @override
+  String get amountToCollect => 'Amount to Collect / Final Fare';
+
+  @override
+  String get paymentModeCash => 'Cash';
+
+  @override
+  String get ratePassenger => 'Rate Passenger';
+
+  @override
+  String get addCommentPassenger => 'Add a comment about the passenger...';
+
+  @override
+  String get submitReviewExit => 'Submit Review & Exit';
+
+  @override
+  String get reportIssue => 'Report Issue';
+
+  @override
+  String get reportIssueHint => 'Describe the issue...';
+
+  @override
+  String get reportSuccess => 'Report submitted successfully!';
+
+  @override
+  String get submitText => 'Submit';
+
+  @override
+  String get skipText => 'Skip';
+
+  @override
+  String errorSubmitReview(String msg) {
+    return 'Error submitting review: $msg';
+  }
+
+  @override
+  String errorSkipReview(String msg) {
+    return 'Error skipping review: $msg';
+  }
+
+  @override
+  String errorReportSubmit(String msg) {
+    return 'Error: $msg';
+  }
+
+  @override
+  String get verifyPhone => 'Verify Phone';
+
+  @override
+  String enterOtpSent(String phone) {
+    return 'Enter the 6-digit code sent to +91 $phone';
+  }
+
+  @override
+  String get verifyAndRegister => 'Verify & Register';
+
+  @override
+  String get verifyAndLogin => 'Verify & Login';
+
+  @override
+  String resendOtpIn(String sec) {
+    return 'Resend OTP in ($sec)';
+  }
+
+  @override
+  String get didntReceiveCode => 'Didn\'t receive code? Resend';
+
+  @override
+  String get resendingOtp => 'Resending OTP';
+
+  @override
+  String resendFailed(String msg) {
+    return 'Resend failed: $msg';
+  }
+
+  @override
+  String errorSendOtp(String msg) {
+    return 'Error: $msg';
+  }
+
+  @override
+  String get invalidOtp => 'Invalid OTP';
+
+  @override
+  String get uploadDocsTitle => 'Upload Documents (3/3)';
+
+  @override
+  String get submitApplication => 'Submit Application';
+
+  @override
+  String get vehicleDetailsTitle2 => 'Vehicle Details (2/3)';
+
+  @override
+  String get nextUploadDocs => 'Next: Upload Documents';
+
+  @override
+  String get pendingApprovalMsg =>
+      'Still Pending. Please wait for Admin approval.';
+
+  @override
+  String get locationPermissionTitle => 'Permission Required';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get uploadRcAndPhoto => 'Please upload both RC and Vehicle Photo';
+
+  @override
+  String get sessionExpired => 'Session Expired. Please login again.';
+
+  @override
+  String get vehicleAddedPending => 'Vehicle added! Waiting for verification.';
+
+  @override
+  String errorText(String msg) {
+    return 'Error: $msg';
+  }
+
+  @override
+  String get noVehiclesFound => 'No vehicles found. Add one to start.';
+
+  @override
+  String get activeLabel => 'Active';
+
+  @override
+  String get switchVehicle => 'Switch';
+
+  @override
+  String get addNewVehicle => 'Add New Vehicle';
+
+  @override
+  String get uploadDocuments => 'Upload Documents';
+
+  @override
+  String get submitForVerification => 'Submit for Verification';
+
+  @override
+  String get thankYou => 'Thank You!';
+
+  @override
+  String get feedbackSubmitted =>
+      'Your feedback has been submitted successfully. We appreciate your input.';
+
+  @override
+  String errorFeedback(String msg) {
+    return 'Error submitting feedback: $msg';
+  }
+
+  @override
+  String get driverSupportTitle => 'Driver Support';
+
+  @override
+  String get cannotPerformAction => 'Cannot perform action';
+
+  @override
+  String get ticketSubmitted =>
+      'Ticket submitted successfully. We will contact you soon.';
+
+  @override
+  String ticketFailed(String msg) {
+    return 'Failed to submit ticket: $msg';
+  }
+
+  @override
+  String get submitTicket => 'Submit Ticket';
+
+  @override
+  String walletLoadFailed(String msg) {
+    return 'Failed to load wallet data: $msg';
+  }
+
+  @override
+  String get driverIdNotFound => 'Driver ID not found';
+
+  @override
+  String paymentStartError(String msg) {
+    return 'Error starting payment: $msg';
+  }
+
+  @override
+  String get recordSynced => 'Missing record synced successfully!';
+
+  @override
+  String get historyExistsOrZero => 'History already exists or balance is 0.';
+
+  @override
+  String cancelError(String msg) {
+    return 'Error cancelling: $msg';
+  }
+
+  @override
+  String get rechargeWalletEarnings => 'Recharge Wallet / वॉलेट रिचार्ज';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navEarnings => 'Earnings';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get faqQ1 => 'How much commission does Rurboo charge?';
+
+  @override
+  String get faqA1 =>
+      'Rurboo charges a standard commission of 20% on the total fare for each completed ride. This helps us maintain the platform, market to riders, and provide support to you.';
+
+  @override
+  String get faqQ2 => 'How do I get paid?';
+
+  @override
+  String get faqA2 =>
+      'Your earnings (minus the 20% commission) are accumulated in your driver wallet. Payouts are processed weekly to your registered bank account or UPI ID.';
+
+  @override
+  String get faqQ3 => 'What if a rider cancels?';
+
+  @override
+  String get faqA3 =>
+      'If a rider cancels after you have already traveled a significant distance towards the pickup location, you may be eligible for a cancellation fee.';
+
+  @override
+  String get faqQ4 => 'How can I improve my rating?';
+
+  @override
+  String get faqA4 =>
+      'Keep your vehicle clean, be polite to riders, drive safely, and follow the navigation route. Good service leads to higher ratings.';
+
+  @override
+  String get faqQ5 => 'Is there a penalty for declining rides?';
+
+  @override
+  String get faqA5 =>
+      'We understand you may not accept every ride. However, a high acceptance rate may unlock special incentives.';
+
+  @override
+  String get faqQ6 => 'How do I contact support?';
+
+  @override
+  String get faqA6 =>
+      'You can contact support via the \'Help & Support\' section in the app. Email: adarshpandey@rurboo.com or Phone: +91 8810220691';
+
+  @override
+  String get feedbackHeading => 'We value your feedback!';
+
+  @override
+  String get feedbackSubheading =>
+      'Let us know how we can improve your experience.';
+
+  @override
+  String get feedbackCategory => 'Category';
+
+  @override
+  String get feedbackSubject => 'Subject';
+
+  @override
+  String get feedbackDescription => 'Description';
+
+  @override
+  String get feedbackDescriptionHint =>
+      'Describe your feedback or suggestion in detail...';
+
+  @override
+  String get feedbackSubjectRequired => 'Please enter a subject';
+
+  @override
+  String get feedbackDescRequired => 'Please enter a description';
+
+  @override
+  String get feedbackDescMin => 'Description must be at least 10 characters';
+
+  @override
+  String get feedbackSubmitBtn => 'Submit Feedback';
+
+  @override
+  String get feedbackCatSuggestion => 'Suggestion';
+
+  @override
+  String get feedbackCatAppIssue => 'App Issue';
+
+  @override
+  String get feedbackCatPaymentIssue => 'Payment Issue';
+
+  @override
+  String get feedbackCatSafetyConcern => 'Safety Concern';
+
+  @override
+  String get feedbackCatOther => 'Other';
+
+  @override
+  String get helpHowCanWeHelp => 'How can we help you?';
+
+  @override
+  String get helpSubheading =>
+      'Our dedicated support team is here to assist you with any questions or issues.';
+
+  @override
+  String get helpSubmitTicket => 'Submit a Ticket';
+
+  @override
+  String get helpReason => 'Reason';
+
+  @override
+  String get helpSelectReason => 'Please select a reason';
+
+  @override
+  String get helpDescription => 'Description';
+
+  @override
+  String get helpDescRequired => 'Please enter a description';
+
+  @override
+  String get helpAttachFile => 'Attach a screenshot/document (Optional)';
+
+  @override
+  String helpImageAttached(String name) {
+    return 'Image attached: $name';
+  }
+
+  @override
+  String get helpReason1 => 'Payment Issue';
+
+  @override
+  String get helpReason2 => 'App Bug';
+
+  @override
+  String get helpReason3 => 'Ride Issue';
+
+  @override
+  String get helpReason4 => 'Account Issue';
+
+  @override
+  String get helpReason5 => 'Other';
+
+  @override
+  String get walletRechargeSubtitle => 'Recharge & Transaction History';
+
+  @override
+  String get helpAndLegal => 'Help & Support and Legal';
+
+  @override
+  String get appVersion => 'Rubo Driver v1.0.0';
+
+  @override
+  String get pendingApprovalBody =>
+      'Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.';
+
+  @override
+  String get checkingStatus => 'Checking Status...';
+
+  @override
+  String get refreshStatus => 'Refresh Status';
+
+  @override
+  String get signOutGoBack => 'Sign Out / Go Back';
+
+  @override
+  String get paymentModeLabel => 'Payment Mode';
 }

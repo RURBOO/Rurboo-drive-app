@@ -208,5 +208,225 @@
   "phone_number_voice": "Phone number",
   "wallet_screen_voice": "Wallet screen",
   "payment_success_voice": "Payment successful! Your wallet has been recharged.",
-  "payment_failed_voice": "Payment failed. Please try again."
+  "payment_failed_voice": "Payment failed. Please try again.",
+  "errorGeneric": "Error: {msg}",
+  "@errorGeneric": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "goBack": "Go Back",
+  "emergencyRequest": "Emergency Assistance Requested",
+  "driverLabel": "Driver: {name} \u2022 {phone}",
+  "@driverLabel": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "phone": { "type": "String" }
+    }
+  },
+  "noInternet": "No Internet Connection",
+  "tripCompletedFare": "Trip completed. Total fare rupees {fare}",
+  "@tripCompletedFare": {
+    "placeholders": {
+      "fare": { "type": "String" }
+    }
+  },
+
+  "rideCompleted": "Ride Completed",
+  "tripCompleted": "Trip Completed",
+  "droppedOff": "You successfully dropped off {name}.",
+  "@droppedOff": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "amountToCollect": "Amount to Collect / Final Fare",
+  "paymentModeCash": "Cash",
+  "ratePassenger": "Rate Passenger",
+  "addCommentPassenger": "Add a comment about the passenger...",
+  "submitReviewExit": "Submit Review & Exit",
+  "reportIssue": "Report Issue",
+  "reportIssueHint": "Describe the issue...",
+  "reportSuccess": "Report submitted successfully!",
+  "submitText": "Submit",
+  "skipText": "Skip",
+  "errorSubmitReview": "Error submitting review: {msg}",
+  "@errorSubmitReview": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "errorSkipReview": "Error skipping review: {msg}",
+  "@errorSkipReview": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "errorReportSubmit": "Error: {msg}",
+  "@errorReportSubmit": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+
+  "verifyPhone": "Verify Phone",
+  "enterOtpSent": "Enter the 6-digit code sent to +91 {phone}",
+  "@enterOtpSent": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
+  "verifyAndRegister": "Verify & Register",
+  "verifyAndLogin": "Verify & Login",
+  "resendOtpIn": "Resend OTP in ({sec})",
+  "@resendOtpIn": {
+    "placeholders": {
+      "sec": { "type": "String" }
+    }
+  },
+  "didntReceiveCode": "Didn't receive code? Resend",
+  "resendingOtp": "Resending OTP",
+  "resendFailed": "Resend failed: {msg}",
+  "@resendFailed": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "errorSendOtp": "Error: {msg}",
+  "@errorSendOtp": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "invalidOtp": "Invalid OTP",
+
+  "uploadDocsTitle": "Upload Documents (3/3)",
+  "submitApplication": "Submit Application",
+  "vehicleDetailsTitle2": "Vehicle Details (2/3)",
+  "nextUploadDocs": "Next: Upload Documents",
+  "pendingApprovalMsg": "Still Pending. Please wait for Admin approval.",
+  "locationPermissionTitle": "Permission Required",
+  "openSettings": "Open Settings",
+
+  "uploadRcAndPhoto": "Please upload both RC and Vehicle Photo",
+  "sessionExpired": "Session Expired. Please login again.",
+  "vehicleAddedPending": "Vehicle added! Waiting for verification.",
+  "errorText": "Error: {msg}",
+  "@errorText": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+
+  "noVehiclesFound": "No vehicles found. Add one to start.",
+  "activeLabel": "Active",
+  "switchVehicle": "Switch",
+  "addNewVehicle": "Add New Vehicle",
+  "uploadDocuments": "Upload Documents",
+  "submitForVerification": "Submit for Verification",
+
+  "thankYou": "Thank You!",
+  "feedbackSubmitted": "Your feedback has been submitted successfully. We appreciate your input.",
+  "errorFeedback": "Error submitting feedback: {msg}",
+  "@errorFeedback": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "driverSupportTitle": "Driver Support",
+  "cannotPerformAction": "Cannot perform action",
+  "ticketSubmitted": "Ticket submitted successfully. We will contact you soon.",
+  "ticketFailed": "Failed to submit ticket: {msg}",
+  "@ticketFailed": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "submitTicket": "Submit Ticket",
+
+  "walletLoadFailed": "Failed to load wallet data: {msg}",
+  "@walletLoadFailed": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "driverIdNotFound": "Driver ID not found",
+  "paymentStartError": "Error starting payment: {msg}",
+  "@paymentStartError": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "recordSynced": "Missing record synced successfully!",
+  "historyExistsOrZero": "History already exists or balance is 0.",
+  "cancelError": "Error cancelling: {msg}",
+  "@cancelError": {
+    "placeholders": {
+      "msg": { "type": "String" }
+    }
+  },
+  "rechargeWalletEarnings": "Recharge Wallet / \u0935\u0949\u0932\u0947\u091f \u0930\u093f\u091a\u093e\u0930\u094d\u091c",
+
+  "navHome": "Home",
+  "navEarnings": "Earnings",
+  "navProfile": "Profile",
+
+  "faqQ1": "How much commission does Rurboo charge?",
+  "faqA1": "Rurboo charges a standard commission of 20% on the total fare for each completed ride. This helps us maintain the platform, market to riders, and provide support to you.",
+  "faqQ2": "How do I get paid?",
+  "faqA2": "Your earnings (minus the 20% commission) are accumulated in your driver wallet. Payouts are processed weekly to your registered bank account or UPI ID.",
+  "faqQ3": "What if a rider cancels?",
+  "faqA3": "If a rider cancels after you have already traveled a significant distance towards the pickup location, you may be eligible for a cancellation fee.",
+  "faqQ4": "How can I improve my rating?",
+  "faqA4": "Keep your vehicle clean, be polite to riders, drive safely, and follow the navigation route. Good service leads to higher ratings.",
+  "faqQ5": "Is there a penalty for declining rides?",
+  "faqA5": "We understand you may not accept every ride. However, a high acceptance rate may unlock special incentives.",
+  "faqQ6": "How do I contact support?",
+  "faqA6": "You can contact support via the 'Help & Support' section in the app. Email: adarshpandey@rurboo.com or Phone: +91 8810220691",
+
+  "feedbackHeading": "We value your feedback!",
+  "feedbackSubheading": "Let us know how we can improve your experience.",
+  "feedbackCategory": "Category",
+  "feedbackSubject": "Subject",
+  "feedbackDescription": "Description",
+  "feedbackDescriptionHint": "Describe your feedback or suggestion in detail...",
+  "feedbackSubjectRequired": "Please enter a subject",
+  "feedbackDescRequired": "Please enter a description",
+  "feedbackDescMin": "Description must be at least 10 characters",
+  "feedbackSubmitBtn": "Submit Feedback",
+  "feedbackCatSuggestion": "Suggestion",
+  "feedbackCatAppIssue": "App Issue",
+  "feedbackCatPaymentIssue": "Payment Issue",
+  "feedbackCatSafetyConcern": "Safety Concern",
+  "feedbackCatOther": "Other",
+
+  "helpHowCanWeHelp": "How can we help you?",
+  "helpSubheading": "Our dedicated support team is here to assist you with any questions or issues.",
+  "helpSubmitTicket": "Submit a Ticket",
+  "helpReason": "Reason",
+  "helpSelectReason": "Please select a reason",
+  "helpDescription": "Description",
+  "helpDescRequired": "Please enter a description",
+  "helpAttachFile": "Attach a screenshot/document (Optional)",
+  "helpImageAttached": "Image attached: {name}",
+  "@helpImageAttached": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "helpReason1": "Payment Issue",
+  "helpReason2": "App Bug",
+  "helpReason3": "Ride Issue",
+  "helpReason4": "Account Issue",
+  "helpReason5": "Other",
+
+  "walletRechargeSubtitle": "Recharge & Transaction History",
+  "helpAndLegal": "Help & Support and Legal",
+  "appVersion": "Rubo Driver v1.0.0",
+
+  "pendingApprovalBody": "Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.",
+  "checkingStatus": "Checking Status...",
+  "refreshStatus": "Refresh Status",
+  "signOutGoBack": "Sign Out / Go Back",
+  "paymentModeLabel": "Payment Mode"
 }
