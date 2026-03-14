@@ -47,84 +47,91 @@ class EarningsViewModel extends ChangeNotifier {
 
     try {
       final now = DateTime.now();
-      
-      // 1. Today's Data
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final endOfDay = startOfDay.add(const Duration(days: 1));
-      final todayDocs = await _repository.getEarnings(startOfDay, endOfDay);
-      
+      final today = DateTime(now.year, now.month, now.day);
+      final weekStart = today.subtract(const Duration(days: 6));
+
+      // Fetch a larger batch of ride history to cover today and weekly stats
+      // Removed orderBy to avoid index requirement, sorting in-memory below
+      final historyDocs = await _repository.getRideHistoryDocs(limit: 50);
+
       todayGross = 0;
       todayCommission = 0;
-      todayRides = todayDocs.length;
-      
-      for (var doc in todayDocs) {
-        todayGross += (doc['amount'] as num?)?.toDouble() ?? 0.0;
-        todayCommission += (doc['commission'] as num?)?.toDouble() ?? 0.0;
-      }
+      todayRides = 0;
+      weeklyGross = 0;
+      weeklyCommission = 0;
 
-      // 2. Weekly Data
-      final startOfWeek = now.subtract(const Duration(days: 7));
-      final weeklyDocs = await _repository.getEarnings(startOfWeek, now);
-      
-      
       // Initialize daily earnings for the chart (last 7 days)
       dailyEarnings = List.filled(7, 0.0);
       dailyLabels = [];
-      
-      // Generate labels (e.g., M, T, W)
       for (int i = 0; i < 7; i++) {
-        // startOfWeek is now - 7 days. So today is day 7.
-        // Let's align 0 -> 6 days ago, 6 -> Today.
-        // Actually, startOfWeek = now - 7d. 
-        // day 0 = now - 6d.
-        // day 6 = now.
-        final day = now.subtract(Duration(days: 6 - i));
-        dailyLabels.add(DateFormat('E').format(day)[0]); // First letter of Day
+        final day = weekStart.add(Duration(days: i));
+        dailyLabels.add(DateFormat('E').format(day)[0]);
       }
 
-      weeklyGross = 0;
-      weeklyCommission = 0;
-      
-      for (var doc in weeklyDocs) {
-        final amount = (doc['amount'] as num?)?.toDouble() ?? 0.0;
-        final commission = (doc['commission'] as num?)?.toDouble() ?? 0.0;
-        final ts = doc['completedAt'] as Timestamp?;
-        final timestamp = ts != null ? ts.toDate() : DateTime.now();
-        
-        weeklyGross += amount;
-        weeklyCommission += commission;
+      rideHistory = [];
 
-        // Find which day bucket this falls into (0..6)
-        // 0 is 6 days ago, 6 is today.
-        final diff = now.difference(timestamp).inDays;
-        // diff = 0 (today) -> index 6
-        // diff = 6 (7 days ago) -> index 0
-        if (diff >= 0 && diff < 7) {
-          int index = 6 - diff;
-          dailyEarnings[index] += amount;
+      // In-memory sort since we can't use Firestore orderBy without index
+      final List<QueryDocumentSnapshot> sortedDocs = historyDocs;
+      sortedDocs.sort((a, b) {
+        final tsA = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+        final tsB = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+        if (tsA == null || tsB == null) return 0;
+        return tsB.compareTo(tsA); // Descending
+      });
+
+      for (var doc in sortedDocs) {
+        final data = doc.data() as Map<String, dynamic>;
+        // Map raw data for history view
+        final ts = (data['completedAt'] ?? data['createdAt']) as Timestamp?;
+        final timestamp = ts != null ? ts.toDate() : DateTime.now();
+        final rideDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+
+        final double gross = (data['finalFare'] as num?)?.toDouble() 
+                           ?? (data['fare'] as num?)?.toDouble() 
+                           ?? 0.0;
+        final double comm = (data['commission'] as num?)?.toDouble() ?? (gross * 0.20);
+
+        // Add to history list regardless of status (show all rides)
+        if (rideHistory.length < 10 && gross > 0) {
+          final dateStr = ts != null
+              ? DateFormat('dd MMM, hh:mm a').format(ts.toDate())
+              : 'Unknown Date';
+          rideHistory.add(EarningItem(
+            date: dateStr,
+            amount: gross,
+            commission: comm,
+            pickup: data['pickupAddress'] ?? 'Unknown Pickup',
+            drop: data['destinationAddress'] ?? 'Unknown Drop',
+          ));
+        }
+
+        // Aggregate stats: count any ride that has a fare (completed/closed/done etc.)
+        // Exclude actively ongoing rides (pending/accepted/in_progress/arrived)
+        final status = (data['status'] as String? ?? '').toLowerCase();
+        final isOngoing = ['pending', 'accepted', 'in_progress', 'arrived', 'started'].contains(status);
+        
+        if (!isOngoing && gross > 0) {
+          // Today's stats
+          if (rideDate.isAtSameMomentAs(today)) {
+            todayGross += gross;
+            todayCommission += comm;
+            todayRides++;
+          }
+
+          // Weekly stats & Chart
+          if (rideDate.isAfter(weekStart.subtract(const Duration(seconds: 1))) && rideDate.isBefore(today.add(const Duration(days: 1)))) {
+            weeklyGross += gross;
+            weeklyCommission += comm;
+
+            final diff = today.difference(rideDate).inDays;
+            if (diff >= 0 && diff < 7) {
+              int index = 6 - diff;
+              dailyEarnings[index] += gross;
+            }
+          }
         }
       }
 
-      // 3. Recent Rides History
-      final historyDocs = await _repository.getRideHistory(limit: 10);
-      rideHistory = historyDocs.map((data) {
-        final ts = (data['completedAt'] ?? data['createdAt']) as Timestamp?;
-        final dateStr = ts != null 
-            ? DateFormat('dd MMM, hh:mm a').format(ts.toDate()) 
-            : 'Unknown Date';
-        
-        final double gross = (data['finalFare'] as num?)?.toDouble() ?? 0.0;
-        final double comm = (data['commission'] as num?)?.toDouble() ?? (gross * 0.20);
-            
-        return EarningItem(
-          date: dateStr,
-          amount: gross,
-          commission: comm,
-          pickup: data['pickupAddress'] ?? 'Unknown Pickup',
-          drop: data['destinationAddress'] ?? 'Unknown Drop',
-        );
-      }).toList();
-      
     } catch (e) {
       debugPrint("Error loading earnings: $e");
     } finally {

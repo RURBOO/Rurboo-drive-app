@@ -64,12 +64,15 @@ class ProfileViewModel extends ChangeNotifier {
           final query = await FirebaseFirestore.instance
               .collection('rideRequests')
               .where('driverId', isEqualTo: did)
-              .where('status', whereIn: ['completed', 'closed'])
               .get()
               .timeout(const Duration(seconds: 5));
           
-          if (query.docs.length > SafeParser.toDouble(totalRides).toInt()) {
-            totalRides = query.docs.length.toString();
+          final completedDocs = query.docs.where((d) => 
+            ['completed', 'closed'].contains(d.data()['status'])
+          ).length;
+
+          if (completedDocs > SafeParser.toDouble(totalRides).toInt()) {
+            totalRides = completedDocs.toString();
           }
         } catch (e) {
           debugPrint("📍 DriverApp: Extra rides fetch skipped: $e");
@@ -78,21 +81,53 @@ class ProfileViewModel extends ChangeNotifier {
         // Calculate today's earnings from completed rides
         try {
           final now = DateTime.now();
-          final startOfDay = DateTime(now.year, now.month, now.day);
+          final today = DateTime(now.year, now.month, now.day);
           
           final earningsQuery = await FirebaseFirestore.instance
               .collection('rideRequests')
               .where('driverId', isEqualTo: did)
-              .where('status', isEqualTo: 'completed')
-              .where('createdAt', isGreaterThanOrEqualTo: startOfDay)
+              .limit(50)
               .get();
 
+          // In-memory sort
+          final List<QueryDocumentSnapshot> sortedDocs = earningsQuery.docs.toList();
+          sortedDocs.sort((a, b) {
+            final tsA = (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+            final tsB = (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp?;
+            if (tsA == null || tsB == null) return 0;
+            return tsB.compareTo(tsA);
+          });
+
           double totalToday = 0;
-          for (var rideDoc in earningsQuery.docs) {
-            final rideData = rideDoc.data();
-            totalToday += (rideData['finalFare'] as num?)?.toDouble() ?? 0.0;
+          for (var rideDoc in sortedDocs) {
+            final rideData = rideDoc.data() as Map<String, dynamic>;
+            final rideStatus = (rideData['status'] as String? ?? '').toLowerCase();
+            final isOngoing = ['pending', 'accepted', 'in_progress', 'arrived', 'started'].contains(rideStatus);
+            
+            if (!isOngoing) {
+               final ts = rideData['createdAt'] as Timestamp?;
+               if (ts != null) {
+                 final rideDate = ts.toDate();
+                 final dayOnly = DateTime(rideDate.year, rideDate.month, rideDate.day);
+                 if (dayOnly.isAtSameMomentAs(today)) {
+                   final fare = (rideData['finalFare'] as num?)?.toDouble() 
+                               ?? (rideData['fare'] as num?)?.toDouble() 
+                               ?? 0.0;
+                   totalToday += fare;
+                 }
+               }
+            }
           }
           earnings = "₹${totalToday.toStringAsFixed(0)}";
+          
+          // Count all rides that have a fare (regardless of exact status string)
+          final completedRides = sortedDocs.where((d) {
+            final rideStatus = ((d.data() as Map<String, dynamic>)['status'] as String? ?? '').toLowerCase();
+            return !['pending', 'accepted', 'in_progress', 'arrived', 'started'].contains(rideStatus);
+          }).length;
+          if (completedRides > SafeParser.toDouble(totalRides).toInt()) {
+            totalRides = completedRides.toString();
+          }
         } catch (e) {
           debugPrint("📍 DriverApp: Today's earnings calculation failed: $e");
           earnings = "₹0";
