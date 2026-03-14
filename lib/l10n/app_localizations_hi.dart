@@ -374,6 +374,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get turnOnOffVoice => 'ऐप की आवाज़ चालू/बंद करें';
 
   @override
+  String get darkMode => 'डार्क मोड';
+
+  @override
+  String get toggleAppTheme => 'एप्प थीम बदलें';
+
+  @override
   String get deleteAccount => 'खाता हटाएं';
 
   @override
@@ -1063,8 +1069,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get refreshStatus => 'स्थिति ताज़ा करें';
 
   @override
-  String get signOutGoBack => 'बाहर निकलें / वापस जाएं';
+  String get signOutGoBack => 'बाहर निकलें';
 
   @override
   String get paymentModeLabel => 'भुगतान का तरीका';
+
+  @override
+  String get alertMessageOptional => 'अतिरिक्त संदेश (वैकल्पिक)';
+
+  @override
+  String get writeAlertMessage => 'यहाँ संदेश लिखें...';
+
+  @override
+  String get helpSignalSent =>
+      'मदद का संकेत पास के ड्राइवरों को भेज दिया गया है!';
 }

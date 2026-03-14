@@ -403,15 +403,9 @@ class HomeViewModel extends ChangeNotifier {
           );
 
           // Show notification with localizations if context available
-          String title = "🚖 New Ride Request!";
-          String body = "Pickup: ${_newRideRequest!.pickupAddress}";
-
-          try {
-            // If we had a global context or static l10n, we could use it here.
-            // For now, these are the primary ones.
-            // I'll use a simple bilingual string as a backup.
-            title = "🚖 New Ride Request! / नई राइड!";
-          } catch (_) {}
+          // Shared bilingual notification title
+          final String title = "🚖 New Ride Request! / नई राइड!";
+          final String body = "Pickup: ${_newRideRequest!.pickupAddress}";
 
           NotificationService().showLocalNotification(
             title: title,
@@ -851,11 +845,22 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (context.mounted) {
-        Navigator.pop(context); // Close dialog
+        final l10n = AppLocalizations.of(context)!;
+        String localizedType = type;
+        if (type == 'mechanic') {
+          localizedType = l10n.mechanicalFailure;
+        } else if (type == 'medical') {
+          localizedType = l10n.medicalEmergency;
+        } else if (type == 'security') {
+          localizedType = l10n.securityThreat;
+        } else if (type == 'other') {
+          localizedType = l10n.otherHelp;
+        }
+
         debugPrint("✅ requestHelp successful: $type");
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(
-             content: Text("Help Signal Sent to nearby drivers! ($type)"),
+             content: Text("${l10n.helpSignalSent} ($localizedType)"),
              backgroundColor: Colors.redAccent,
              duration: const Duration(seconds: 5),
            ),

@@ -146,7 +146,7 @@ class ProfileViewModel extends ChangeNotifier {
              final dynamic createdAt = data['createdAt'];
              if (createdAt is Timestamp) {
                final DateTime date = createdAt.toDate();
-               joinDate = "Joined ${_getMonth(date.month)} ${date.year}";
+               joinDate = "${_getMonth(date.month)} ${date.year}";
              } else {
                joinDate = "Member";
              }

@@ -392,7 +392,7 @@ class _WalletScreenState extends State<WalletScreen> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: showWarning ? Border.all(color: Colors.red, width: 2) : null,
+        border: showWarning ? Border.all(color: Colors.red, width: 2) : Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         children: [
@@ -401,7 +401,12 @@ class _WalletScreenState extends State<WalletScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(
+                  color: bg == Theme.of(context).cardColor 
+                      ? Theme.of(context).textTheme.bodySmall?.color 
+                      : Colors.white70, 
+                  fontSize: 12
+                ),
               ),
               if (showWarning) ...[
                 const SizedBox(width: 4),
@@ -412,8 +417,10 @@ class _WalletScreenState extends State<WalletScreen> {
           const SizedBox(height: 6),
           Text(
             "₹${amount.toStringAsFixed(0)}",
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: bg == Theme.of(context).cardColor 
+                  ? Theme.of(context).textTheme.bodyLarge?.color 
+                  : Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -431,7 +438,7 @@ class _WalletScreenState extends State<WalletScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.myWalletTitle),
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).textTheme.titleLarge?.color,
         actions: [
           IconButton(
             icon: const Icon(Icons.sync_problem, color: Colors.blue),
@@ -449,7 +456,9 @@ class _WalletScreenState extends State<WalletScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    color: Colors.red.shade50,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.red.withValues(alpha: 0.2) 
+                        : Colors.red.shade50,
                     child: Row(
                       children: [
                         const Icon(Icons.error, color: Colors.red),
@@ -457,7 +466,10 @@ class _WalletScreenState extends State<WalletScreen> {
                         Expanded(
                           child: Text(
                             "Your wallet is negative. Recharge to go online!",
-                            style: TextStyle(color: Colors.red.shade700,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.redAccent 
+                                  : Colors.red.shade700,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -475,7 +487,9 @@ class _WalletScreenState extends State<WalletScreen> {
                         child: _buildCard(
                           "Wallet Balance",
                           walletBalance,
-                          isNegativeBalance ? Colors.red : Colors.black,
+                          isNegativeBalance 
+                              ? Colors.red 
+                              : Theme.of(context).cardColor,
                           showWarning: isNegativeBalance,
                         ),
                       ),

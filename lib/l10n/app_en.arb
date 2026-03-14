@@ -119,6 +119,8 @@
   "preferences": "Preferences",
   "voiceAnnouncements": "Voice Announcements",
   "turnOnOffVoice": "Turn on/off app voice",
+  "darkMode": "Dark Mode",
+  "toggleAppTheme": "Toggle app theme",
   "deleteAccount": "Delete Account",
   "logout": "Logout",
   "myVehicles": "My Vehicles",
@@ -427,6 +429,9 @@
   "pendingApprovalBody": "Your profile is currently under review by the Admin Team.\n\nOnce approved, you will be able to accept rides and start earning.",
   "checkingStatus": "Checking Status...",
   "refreshStatus": "Refresh Status",
-  "signOutGoBack": "Sign Out / Go Back",
-  "paymentModeLabel": "Payment Mode"
+  "signOutGoBack": "Sign Out",
+  "paymentModeLabel": "Payment Mode",
+  "alertMessageOptional": "Optional Message",
+  "writeAlertMessage": "Write alert message...",
+  "helpSignalSent": "Help Signal Sent to nearby drivers!"
 }

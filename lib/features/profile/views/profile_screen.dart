@@ -77,7 +77,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
     final vm = context.watch<ProfileViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -171,7 +171,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                   top: 260,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white, 
+                      color: Theme.of(context).cardColor, 
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                       boxShadow: [
                         BoxShadow(color: Colors.black.withValues(alpha: 0.05),
@@ -188,7 +188,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             Container(
                               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(color: Colors.black.withValues(alpha: 0.5),
@@ -201,9 +201,9 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
                                    _buildStat(l10n.rating, vm.rating, Icons.star, Colors.amber),
-                                  Container(width: 1, height: 40, ),
+                                  SizedBox(width: 1, height: 40, ),
                                   _buildStat(l10n.rides, vm.totalRides, Icons.local_taxi, Colors.blue),
-                                  Container(width: 1, height: 40, ),
+                                  SizedBox(width: 1, height: 40, ),
                                   _buildStat(
                                     l10n.wallet, 
                                     vm.earnings, 
@@ -225,7 +225,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             _buildMenuCard([
                               _buildMenuItem(
                                 icon: Icons.edit_outlined,
-                                title: '${l10n.editProfile} / प्रोफाइल संपादित करें',
+                                title: l10n.editProfile,
                                 subtitle: l10n.personalDetailsTitle,
                                 onTap: () async {
                                   final refreshed = await Navigator.push<bool>(
@@ -280,8 +280,8 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               _buildDivider(),
                               _buildMenuItem(
                                 icon: Icons.language,
-                                title: '${l10n.changeLanguage} / भाषा',
-                                subtitle: '${l10n.selectLanguage} / भाषा बदलें',
+                                title: l10n.changeLanguage,
+                                subtitle: l10n.selectLanguage,
                                 onTap: () => _showLanguageDialog(context),
                               ),
                             ]).animate().fade(delay: 500.ms).slideY(begin: 0.2),
@@ -291,8 +291,8 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             _buildMenuCard([
                               _buildSwitchMenuItem(
                                 icon: Icons.dark_mode_rounded,
-                                title: 'Dark Mode / डार्क मोड',
-                                subtitle: 'Toggle app theme',
+                                title: l10n.darkMode,
+                                subtitle: l10n.toggleAppTheme,
                                 value: context.watch<ThemeProvider>().isDarkMode,
                                 onChanged: (val) => context.read<ThemeProvider>().toggleTheme(val),
                                 color: Colors.indigo,
@@ -380,7 +380,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             const SizedBox(height: 30),
                             Text(
                               l10n.appVersion,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ).animate().fade(delay: 700.ms),
                           ],
                         ),
@@ -433,9 +433,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
         alignment: Alignment.centerLeft,
         child: Text(
           title.toUpperCase(),
-          style: TextStyle(fontSize: 12,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
+            color: Theme.of(context).primaryColor,
           ),
         ),
       ),
@@ -445,7 +446,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
   Widget _buildMenuCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.02),
@@ -458,7 +459,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
   }
   
   Widget _buildDivider() {
-    return const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFEEEEEE));
+    return Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).dividerColor);
   }
 
   Widget _buildStat(String label, String value, IconData icon, Color color, {VoidCallback? onTap}) {
@@ -476,12 +477,22 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                 const SizedBox(width: 4),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 16, 
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(fontSize: 12)),
+            Text(
+              label, 
+              style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
           ],
         ),
       ),
@@ -494,8 +505,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
     String? subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-    Color color = Colors.black87,
+    Color? color,
   }) {
+    final effectiveColor = color ?? Theme.of(context).textTheme.titleMedium?.color;
+
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
@@ -503,14 +516,15 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       secondary: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
+          color: effectiveColor?.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: color, size: 20),
+        child: Icon(icon, color: effectiveColor, size: 20),
       ),
       title: Text(
         title,
-        style: TextStyle(color: color,
+        style: TextStyle(
+          color: effectiveColor,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
@@ -518,7 +532,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, ),
+              style: TextStyle(
+                fontSize: 12, 
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             )
           : null,
       activeThumbColor: Colors.green, // Replaced activeColor
@@ -530,21 +547,24 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
     required IconData icon,
     required String title,
     String? subtitle,
-    Color color = Colors.black87,
+    Color? color,
     required VoidCallback onTap,
   }) {
+    final effectiveColor = color ?? Theme.of(context).textTheme.titleMedium?.color;
+
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
+          color: effectiveColor?.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: color, size: 20),
+        child: Icon(icon, color: effectiveColor, size: 20),
       ),
       title: Text(
         title,
-        style: TextStyle(color: color,
+        style: TextStyle(
+          color: effectiveColor,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
@@ -552,10 +572,17 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, ),
+              style: TextStyle(
+                fontSize: 12, 
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             )
           : null,
-      trailing: const Icon(Icons.chevron_right, size: 18, ),
+      trailing: Icon(
+        Icons.chevron_right, 
+        size: 18, 
+        color: Theme.of(context).dividerColor,
+      ),
       onTap: onTap,
     );
   }

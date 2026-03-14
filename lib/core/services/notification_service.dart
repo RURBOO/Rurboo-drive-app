@@ -108,10 +108,10 @@ class NotificationService {
       fullScreenIntent: true,
       category: AndroidNotificationCategory.call,
       visibility: NotificationVisibility.public,
-      ongoing: false,
-      autoCancel: true,
-      timeoutAfter: 10000, // 10 seconds for approx 2-3 rings
-      // Removed FLAG_INSISTENT ([4]) to stop looping
+      ongoing: true, // Mark as ongoing for higher priority background persistence
+      autoCancel: false, // Don't auto-cancel immediately
+      timeoutAfter: 10000, // 30 seconds for persistent alert window
+      additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: loops sound until dismissed
     );
 
     final NotificationDetails details = NotificationDetails(

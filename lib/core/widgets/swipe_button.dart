@@ -8,6 +8,7 @@ class SwipeButton extends StatefulWidget {
   final String text;
   final Future<void> Function() onSwipe;
   final Color color;
+  final Color? textColor;
   final IconData icon;
   final bool isLoading;
 
@@ -16,6 +17,7 @@ class SwipeButton extends StatefulWidget {
     required this.text,
     required this.onSwipe,
     this.color = Colors.green,
+    this.textColor,
     this.icon = Icons.chevron_right,
     this.isLoading = false,
   });
@@ -252,18 +254,19 @@ class _SwipeButtonState extends State<SwipeButton>
                                   children: [
                                     Icon(
                                       Icons.chevron_right,
-                                      color: widget.color.withValues(alpha: 0.5),
+                                      color: (widget.textColor ?? widget.color).withValues(alpha: 0.5),
                                       size: 20,
                                     ),
                                     Icon(
                                       Icons.chevron_right,
-                                      color: widget.color.withValues(alpha: 0.3),
+                                      color: (widget.textColor ?? widget.color).withValues(alpha: 0.3),
                                       size: 20,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       widget.text,
-                                      style: TextStyle(color: widget.color,
+                                      style: TextStyle(
+                                        color: widget.textColor ?? widget.color,
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.5,
@@ -344,7 +347,7 @@ class _SwipeButtonState extends State<SwipeButton>
                   : Icon(
                       widget.icon,
                       key: const ValueKey('arrow'),
-                      color: Colors.white,
+                      color: widget.color == Colors.white ? Colors.black : Colors.white,
                       size: 30,
                     ),
             ),

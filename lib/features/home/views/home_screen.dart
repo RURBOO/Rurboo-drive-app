@@ -294,7 +294,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
       body: homeVm.hasLocationError
           ? SizedBox.expand(
               child: Container(
-                color: Colors.white,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 child: SafeArea(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -358,7 +358,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
                                   BoxShadow(color: Colors.black.withValues(alpha: 0.1),
@@ -383,9 +383,10 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                     isOnline 
                                         ? AppLocalizations.of(context)!.youAreOnline 
                                         : AppLocalizations.of(context)!.youAreOffline,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
+                                      color: Theme.of(context).textTheme.bodyLarge?.color,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -394,7 +395,10 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                     child: Switch(
                                       key: _onlineKey,
                                       value: isOnline,
-
+                                      activeTrackColor: Colors.green,
+                                      activeThumbColor: Colors.white,
+                                      inactiveThumbColor: Colors.white,
+                                      inactiveTrackColor: Colors.grey[400],
                                       onChanged: (newStatus) {
                                           if (appState.currentState == DriverState.onTrip) {
                                           ScaffoldMessenger.of(context).showSnackBar(
@@ -412,8 +416,6 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                         }
                                         homeVm.toggleOnlineStatus(newStatus, appState, context);
                                       },
-                                      activeThumbColor: Colors.white,
-                                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ],
@@ -692,40 +694,110 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
   void _showHelpRequestDialog(BuildContext context, HomeViewModel vm) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.requestAlliance),
-        content: Column(
+      builder: (ctx) => _SOSRequestDialog(vm: vm, parentContext: context),
+    );
+  }
+}
+
+class _SOSRequestDialog extends StatefulWidget {
+  final HomeViewModel vm;
+  final BuildContext parentContext;
+
+  const _SOSRequestDialog({required this.vm, required this.parentContext});
+
+  @override
+  State<_SOSRequestDialog> createState() => _SOSRequestDialogState();
+}
+
+class _SOSRequestDialogState extends State<_SOSRequestDialog> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _sendHelp(String type, String label) {
+    if (!mounted) return;
+    final String customMsg = _controller.text.trim();
+    final String finalMsg = customMsg.isEmpty ? label : customMsg;
+    Navigator.pop(context);
+    widget.vm.requestHelp(widget.parentContext, type, finalMsg);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return AlertDialog(
+      title: Text(l10n.requestAlliance),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppLocalizations.of(context)!.allianceDescription),
+            Text(
+              l10n.allianceDescription,
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            
+            // Optional Message Field
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.alertMessageOptional,
+                hintText: l10n.writeAlertMessage,
+                prefixIcon: const Icon(Icons.message_outlined),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.send, color: Colors.blue),
+                  onPressed: () {
+                    final String msg = _controller.text.trim();
+                    if (msg.isNotEmpty) {
+                      _sendHelp("other", msg);
+                    }
+                  },
+                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+              ),
+              maxLines: 2,
+            ),
+            
             const SizedBox(height: 20),
-            _buildHelpOption(ctx, vm, "mechanic", AppLocalizations.of(context)!.mechanicalFailure, Colors.orange),
-            _buildHelpOption(ctx, vm, "medical", AppLocalizations.of(context)!.medicalEmergency, Colors.red),
-            _buildHelpOption(ctx, vm, "security", AppLocalizations.of(context)!.securityThreat, Colors.blueGrey),
-            _buildHelpOption(ctx, vm, "other", AppLocalizations.of(context)!.otherHelp, Colors.grey),
+            _buildOption(l10n.mechanicalFailure, "mechanic", Colors.orange),
+            _buildOption(l10n.medicalEmergency, "medical", Colors.red),
+            _buildOption(l10n.securityThreat, "security", Colors.blueGrey),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+      ],
     );
   }
 
-  Widget _buildHelpOption(BuildContext ctx, HomeViewModel vm, String type, String label, Color color) {
+  Widget _buildOption(String label, String type, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 45),
+          minimumSize: const Size(double.infinity, 50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        onPressed: () => vm.requestHelp(context, type, AppLocalizations.of(context)!.emergencyRequest),
-        child: Text(label),
+        onPressed: () => _sendHelp(type, label),
+        child: Text(
+          label, 
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
       ),
     );
   }
@@ -774,9 +846,46 @@ class _NearbyHelpAlertSheet extends StatelessWidget {
               request.type == 'security' ? AppLocalizations.of(context)!.securityThreat :
               AppLocalizations.of(context)!.otherHelp
             ),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+          
+          // Custom Message Display
+          if (request.description.isNotEmpty && 
+              request.description != AppLocalizations.of(context)!.mechanicalFailure &&
+              request.description != AppLocalizations.of(context)!.medicalEmergency &&
+              request.description != AppLocalizations.of(context)!.securityThreat &&
+              request.description != AppLocalizations.of(context)!.otherHelp)
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.grey.shade900 
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      request.description,
+                      style: TextStyle(
+                        fontSize: 15, 
+                        fontStyle: FontStyle.italic, 
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white70 
+                            : Colors.black87
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
           Text(AppLocalizations.of(context)!.driverLabel(request.driverName ?? '', request.driverPhone ?? '')),
           const SizedBox(height: 20),
           ElevatedButton.icon(
@@ -806,12 +915,13 @@ class _RideRequestSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.2),
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.2),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -851,7 +961,7 @@ class _RideRequestSheet extends StatelessWidget {
                   "₹${request.fare.toStringAsFixed(0)}",
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: Colors.green.shade700,
+                    color: isDark ? Colors.green.shade400 : Colors.green.shade700,
                   ),
                 ),
               ),
@@ -880,7 +990,11 @@ class _RideRequestSheet extends StatelessWidget {
                         ),
                         Text(
                           request.receiverName,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                       ],
                     ),
@@ -919,8 +1033,8 @@ class _RideRequestSheet extends StatelessWidget {
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.reject,
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color: isDark ? Colors.redAccent.shade100 : Colors.red,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -932,7 +1046,8 @@ class _RideRequestSheet extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onAccept,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -942,7 +1057,6 @@ class _RideRequestSheet extends StatelessWidget {
                   child: Text(
                     AppLocalizations.of(context)!.accept,
                     style: const TextStyle(
-                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -975,8 +1089,12 @@ class _RideRequestSheet extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white70 
+                      : Colors.grey[600],
                 ),
               ),
               const SizedBox(height: 4),
@@ -984,10 +1102,11 @@ class _RideRequestSheet extends StatelessWidget {
                 (address == 'current_location' || address == 'Current Location')
                     ? AppLocalizations.of(context)!.currentLocation
                     : address,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   height: 1.3,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1013,9 +1132,9 @@ class _GPSInfoSheet extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

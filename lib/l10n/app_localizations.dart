@@ -818,6 +818,18 @@ abstract class AppLocalizations {
   /// **'Turn on/off app voice'**
   String get turnOnOffVoice;
 
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @toggleAppTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle app theme'**
+  String get toggleAppTheme;
+
   /// No description provided for @deleteAccount.
   ///
   /// In en, this message translates to:
@@ -2045,7 +2057,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOutGoBack.
   ///
   /// In en, this message translates to:
-  /// **'Sign Out / Go Back'**
+  /// **'Sign Out'**
   String get signOutGoBack;
 
   /// No description provided for @paymentModeLabel.
@@ -2053,6 +2065,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment Mode'**
   String get paymentModeLabel;
+
+  /// No description provided for @alertMessageOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional Message'**
+  String get alertMessageOptional;
+
+  /// No description provided for @writeAlertMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Write alert message...'**
+  String get writeAlertMessage;
+
+  /// No description provided for @helpSignalSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Signal Sent to nearby drivers!'**
+  String get helpSignalSent;
 }
 
 class _AppLocalizationsDelegate

@@ -32,7 +32,7 @@ class _EarningsScreenBody extends StatelessWidget {
         title: Text(AppLocalizations.of(context)!.earnings),
         elevation: 0,
         centerTitle: true,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).textTheme.titleLarge?.color,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -85,7 +85,7 @@ class _EarningsScreenBody extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(color: Colors.black.withValues(alpha: 0.1),
@@ -382,7 +382,7 @@ class _EarningsScreenBody extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.08),

@@ -119,6 +119,8 @@
   "preferences": "प्राथमिकताएं",
   "voiceAnnouncements": "आवाज़ सूचनाएं",
   "turnOnOffVoice": "ऐप की आवाज़ चालू/बंद करें",
+  "darkMode": "डार्क मोड",
+  "toggleAppTheme": "एप्प थीम बदलें",
   "deleteAccount": "खाता हटाएं",
   "logout": "बाहर निकलें",
   "myVehicles": "मेरे वाहन",
@@ -427,6 +429,9 @@
   "pendingApprovalBody": "आपकी प्रोयाले एडमिन टीम द्वारा समीक्षा में है।\n\nस्वीकृति के बाद आप सवारियाँ स्वीकार कर सकते हैं और कमाना शुरू कर सकते हैं।",
   "checkingStatus": "स्थिति जाँची जा रही है...",
   "refreshStatus": "स्थिति ताज़ा करें",
-  "signOutGoBack": "बाहर निकलें / वापस जाएं",
-  "paymentModeLabel": "भुगतान का तरीका"
+  "signOutGoBack": "बाहर निकलें",
+  "paymentModeLabel": "भुगतान का तरीका",
+  "alertMessageOptional": "अतिरिक्त संदेश (वैकल्पिक)",
+  "writeAlertMessage": "यहाँ संदेश लिखें...",
+  "helpSignalSent": "मदद का संकेत पास के ड्राइवरों को भेज दिया गया है!"
 }

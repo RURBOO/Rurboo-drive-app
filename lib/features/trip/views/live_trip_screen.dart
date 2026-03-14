@@ -125,10 +125,12 @@ class _LiveTripScreenBody extends StatelessWidget {
               decoration: InputDecoration(
                 counterText: "",
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white.withValues(alpha: 0.05) 
+                    : Colors.grey[100],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 24),
               ),
@@ -316,10 +318,13 @@ class _LiveTripScreenBody extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
-                         BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+                         BoxShadow(
+                           color: Colors.black.withValues(alpha: 0.1), 
+                           blurRadius: 10
+                         ),
                       ],
                     ),
                     child: Row(
@@ -368,10 +373,10 @@ class _LiveTripScreenBody extends StatelessWidget {
             right: 0,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.15),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -392,9 +397,11 @@ class _LiveTripScreenBody extends StatelessWidget {
                    Row(
                      children: [
                        CircleAvatar(
-                         backgroundColor: Colors.grey[200],
+                         backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                             ? Colors.white.withValues(alpha: 0.1) 
+                             : Colors.grey[200],
                          radius: 24,
-                         child: const Icon(Icons.person, ),
+                         child: Icon(Icons.person, color: Theme.of(context).iconTheme.color),
                        ),
                        const SizedBox(width: 16),
                        Expanded(
@@ -436,9 +443,9 @@ class _LiveTripScreenBody extends StatelessWidget {
                    // Trip Details (Fare, Distance)
                    Row(
                      children: [
-                       _buildInfoChip(Icons.attach_money, "₹${vm.tripDetails?.fare.toStringAsFixed(0) ?? '0'}"),
-                       const SizedBox(width: 12),
-                        _buildInfoChip(Icons.access_time, vm.tripDurationMins == null ? AppLocalizations.of(context)!.calculating : "${vm.tripDurationMins} ${AppLocalizations.of(context)!.mins}"),
+                       _buildInfoChip(context, Icons.account_balance_wallet_rounded, "₹${vm.tripDetails?.fare.toStringAsFixed(0) ?? '0'}"),
+                       const SizedBox(width: 8),
+                        _buildInfoChip(context, Icons.access_time, vm.tripDurationMins == null ? AppLocalizations.of(context)!.calculating : "${vm.tripDurationMins} ${AppLocalizations.of(context)!.mins}"),
                      ],
                    ),
                    
@@ -475,13 +482,14 @@ class _LiveTripScreenBody extends StatelessWidget {
                         ),
                       )
                    else
-                     SwipeButton(
-                       key: ValueKey('swipe_${vm.currentStage}'), // Forces reset when stage changes
+                      SwipeButton(
+                        key: ValueKey('swipe_${vm.currentStage}'), // Forces reset when stage changes
                         text: isArriving 
                             ? AppLocalizations.of(context)!.slideToStart 
                             : AppLocalizations.of(context)!.slideToEnd,
-                       color: isArriving ? Colors.black : Colors.red,
-                       icon: isArriving ? Icons.play_arrow : Icons.stop,
+                        color: isArriving ? const Color(0xFF0F62FE) : Colors.red,
+                        textColor: Colors.white,
+                        icon: isArriving ? Icons.play_arrow : Icons.stop,
                        onSwipe: () async {
                           final connectivity = await Connectivity().checkConnectivity();
                           if (connectivity.contains(ConnectivityResult.none)) {
@@ -563,10 +571,13 @@ class _LiveTripScreenBody extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? Colors.white.withValues(alpha: 0.05) 
+            : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

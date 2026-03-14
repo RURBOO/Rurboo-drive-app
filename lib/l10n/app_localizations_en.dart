@@ -375,6 +375,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get turnOnOffVoice => 'Turn on/off app voice';
 
   @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get toggleAppTheme => 'Toggle app theme';
+
+  @override
   String get deleteAccount => 'Delete Account';
 
   @override
@@ -1061,8 +1067,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshStatus => 'Refresh Status';
 
   @override
-  String get signOutGoBack => 'Sign Out / Go Back';
+  String get signOutGoBack => 'Sign Out';
 
   @override
   String get paymentModeLabel => 'Payment Mode';
+
+  @override
+  String get alertMessageOptional => 'Optional Message';
+
+  @override
+  String get writeAlertMessage => 'Write alert message...';
+
+  @override
+  String get helpSignalSent => 'Help Signal Sent to nearby drivers!';
 }

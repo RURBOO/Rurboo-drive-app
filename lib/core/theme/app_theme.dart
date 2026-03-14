@@ -125,8 +125,8 @@ class AppTheme {
         titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimaryDark),
         titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimaryDark),
         bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400, color: textPrimaryDark),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: textSecondaryDark),
-        bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondaryDark),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: const Color(0xFFE1E1E1)),
+        bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFFE1E1E1)),
         labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5, color: textPrimaryDark),
       ),
       cardTheme: CardThemeData(

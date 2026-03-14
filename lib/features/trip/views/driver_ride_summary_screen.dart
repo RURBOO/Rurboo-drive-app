@@ -235,8 +235,9 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Column(
                   children: [
@@ -296,7 +297,14 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
                 controller: _commentController,
                 decoration: InputDecoration(
                   hintText: l10n.addCommentPassenger,
-                  border: const OutlineInputBorder(),
+                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withValues(alpha: 0.05) 
+                      : Colors.grey[100],
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  ),
                 ),
                 maxLines: 2,
               ),
@@ -307,8 +315,12 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitRating,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black,
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.black 
+                        : Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: _isSubmitting
