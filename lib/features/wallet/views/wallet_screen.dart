@@ -431,7 +431,6 @@ class _WalletScreenState extends State<WalletScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.myWalletTitle),
         elevation: 0,
-        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         actions: [
           IconButton(

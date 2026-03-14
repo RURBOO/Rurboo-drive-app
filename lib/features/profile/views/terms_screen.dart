@@ -6,15 +6,14 @@ class TermsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      
       appBar: AppBar(
         title: const Text(
           'Terms & Conditions',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(),
         ),
-        backgroundColor: Colors.white,
         elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(),
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(20.0),

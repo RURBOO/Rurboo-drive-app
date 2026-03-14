@@ -81,7 +81,6 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                                   child: Icon(
                                     _getVehicleIcon(vehicle['vehicleType']),
                                     size: 30,
-                                    color: Colors.black54,
                                   ),
                                 ),
                                 const SizedBox(width: 16),

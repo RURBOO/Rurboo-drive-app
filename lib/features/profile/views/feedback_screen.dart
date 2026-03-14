@@ -96,7 +96,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.feedbackAndSuggestions),
-        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),

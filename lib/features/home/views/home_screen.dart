@@ -637,7 +637,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
+                              
                               foregroundColor: Colors.red,
                             ),
                             onPressed: () => Geolocator.openLocationSettings(),
@@ -848,7 +848,6 @@ class _RideRequestSheet extends StatelessWidget {
                 AppLocalizations.of(context)!.newRideRequest,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: Colors.black87,
                 ),
               ),
               Container(
@@ -890,7 +889,7 @@ class _RideRequestSheet extends StatelessWidget {
                         ),
                         Text(
                           request.receiverName,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

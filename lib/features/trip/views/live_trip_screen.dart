@@ -192,7 +192,7 @@ class _LiveTripScreenBody extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(context)!.noGoBack, style: const TextStyle(color: Colors.black)),
+            child: Text(AppLocalizations.of(context)!.noGoBack, style: const TextStyle()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -268,8 +268,7 @@ class _LiveTripScreenBody extends StatelessWidget {
               if (vm.routePoints.isNotEmpty)
                 Polyline(
                   polylineId: const PolylineId("route"),
-                  points: vm.routePoints,
-                  color: Colors.black, // Premium black route
+                  points: vm.routePoints, // Premium black route
                   width: 5,
                   jointType: JointType.round,
                   startCap: Cap.roundCap,
@@ -355,7 +354,6 @@ class _LiveTripScreenBody extends StatelessWidget {
                 FloatingActionButton(
                   heroTag: "nav",
                   onPressed: () => NavigationService().launchMap(vm.currentTarget),
-                  backgroundColor: Colors.white,
                   foregroundColor: Colors.green,
                   child: const Icon(Icons.navigation),
                 ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
@@ -576,7 +574,7 @@ class _LiveTripScreenBody extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.black87),
+          Icon(icon, size: 16),
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ],

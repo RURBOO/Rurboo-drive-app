@@ -198,12 +198,11 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      
       appBar: AppBar(
-        title: Text(l10n.rideCompleted, style: const TextStyle(color: Colors.black)),
+        title: Text(l10n.rideCompleted, style: const TextStyle()),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           TextButton.icon(
@@ -252,7 +251,6 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
                       ),
                     ),
                     const Divider(height: 30),

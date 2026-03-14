@@ -23,10 +23,9 @@ class SupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      
       appBar: AppBar(
         title: const Text("Driver Support"),
-        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
       ),

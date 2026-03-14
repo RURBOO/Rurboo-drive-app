@@ -43,7 +43,6 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.history),
-        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
       ),

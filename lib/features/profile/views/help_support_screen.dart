@@ -107,7 +107,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.helpAndSupport),
-        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),

@@ -136,7 +136,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.deleteAccount),
-        backgroundColor: Colors.white,
         foregroundColor: Colors.red,
       ),
       body: Padding(

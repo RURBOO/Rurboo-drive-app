@@ -27,10 +27,9 @@ class _EarningsScreenBody extends StatelessWidget {
     final vm = context.watch<EarningsViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.earnings),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         foregroundColor: Colors.black,
@@ -196,7 +195,6 @@ class _EarningsScreenBody extends StatelessWidget {
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
-                                    color: Colors.black87,
                                   ),
                                 ),
                               ],
@@ -439,7 +437,6 @@ class _EarningsScreenBody extends StatelessWidget {
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Colors.black87,
               ),
             ),
             if (ride.commission > 0)
