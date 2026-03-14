@@ -108,15 +108,18 @@ class EarningsViewModel extends ChangeNotifier {
       // 3. Recent Rides History
       final historyDocs = await _repository.getRideHistory(limit: 10);
       rideHistory = historyDocs.map((data) {
-        final ts = data['completedAt'] as Timestamp?;
+        final ts = (data['completedAt'] ?? data['createdAt']) as Timestamp?;
         final dateStr = ts != null 
             ? DateFormat('dd MMM, hh:mm a').format(ts.toDate()) 
             : 'Unknown Date';
+        
+        final double gross = (data['finalFare'] as num?)?.toDouble() ?? 0.0;
+        final double comm = (data['commission'] as num?)?.toDouble() ?? (gross * 0.20);
             
         return EarningItem(
           date: dateStr,
-          amount: (data['finalFare'] as num?)?.toDouble() ?? 0.0,
-          commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+          amount: gross,
+          commission: comm,
           pickup: data['pickupAddress'] ?? 'Unknown Pickup',
           drop: data['destinationAddress'] ?? 'Unknown Drop',
         );

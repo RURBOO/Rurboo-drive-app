@@ -152,7 +152,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         border: const OutlineInputBorder(),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                      value: _selectedReasonIndex,
+                      initialValue: _selectedReasonIndex,
                       items: List.generate(
                         reasons.length,
                         (i) => DropdownMenuItem(value: i, child: Text(reasons[i])),

@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../core/services/driver_voice_service.dart';
-import '../../../core/utils/image_utils.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../views/otp_screen.dart';
 import '../../../navigation/views/auth_gate.dart';
@@ -182,20 +182,40 @@ class RegistrationViewModel extends ChangeNotifier {
     }
   }
 
+  Future<String?> _uploadImageToStorage(File? file, String uid, String documentName) async {
+    if (file == null) return null;
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('driver_documents')
+          .child(uid)
+          .child('$documentName.jpg');
+      
+      final uploadTask = await storageRef.putFile(
+        file, 
+        SettableMetadata(contentType: 'image/jpeg')
+      );
+      
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      debugPrint("RegistrationViewModel: Error uploading $documentName - $e");
+      return null;
+    }
+  }
+
   Future<void> _completeRegistration(BuildContext context, String uid) async {
     debugPrint("RegistrationViewModel: _completeRegistration started for UID: $uid");
     try {
       final String cleanPhone = phoneController.text.trim();
       
-      final String? licenseBase64 = await ImageUtils.convertFileToBase64(licenseFile!);
-      final String? rcBase64 = await ImageUtils.convertFileToBase64(registrationFile!);
-      final String? profileBase64 = await ImageUtils.convertFileToBase64(profileFile!);
-      final String? vehicleBase64 = vehicleImageFile != null 
-          ? await ImageUtils.convertFileToBase64(vehicleImageFile!) 
-          : null;
+      // Upload images to Firebase Storage instead of converting to Base64
+      final String? licenseUrl = await _uploadImageToStorage(licenseFile, uid, 'license');
+      final String? rcUrl = await _uploadImageToStorage(registrationFile, uid, 'rc');
+      final String? profileUrl = await _uploadImageToStorage(profileFile, uid, 'profile');
+      final String? vehicleUrl = await _uploadImageToStorage(vehicleImageFile, uid, 'vehicle');
 
-      if (licenseBase64 == null || rcBase64 == null || profileBase64 == null) {
-        throw Exception("Failed to process images. Please try again.");
+      if (licenseUrl == null || rcUrl == null || profileUrl == null) {
+        throw Exception("Failed to upload images to Storage. Please try again.");
       }
 
       final newDriver = {
@@ -208,10 +228,10 @@ class RegistrationViewModel extends ChangeNotifier {
         'vehicleType': vehicleType,
         'vehicleModel': vehicleModelController.text.trim(),
         'vehicleNumber': vehicleNumberController.text.trim().toUpperCase(),
-        'licenseImage': licenseBase64,
-        'rcImage': rcBase64,
-        'profileImage': profileBase64,
-        'vehicleImage': vehicleBase64,
+        'licenseImage': licenseUrl, // Changed to URL
+        'rcImage': rcUrl, // Changed to URL
+        'profileImage': profileUrl, // Changed to URL
+        'vehicleImage': vehicleUrl, // Changed to URL
         'isOnline': false,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),

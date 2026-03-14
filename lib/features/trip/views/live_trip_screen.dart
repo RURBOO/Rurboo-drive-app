@@ -40,6 +40,7 @@ class _LiveTripScreenState extends State<LiveTripScreen> {
       if (mounted) {
         context.read<AppStateViewModel>().endTrip();
       }
+      if (!mounted) return;
 
       showDialog(
         context: context,

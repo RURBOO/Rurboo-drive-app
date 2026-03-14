@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/services/driver_preferences.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../../auth/views/login_screen.dart';
+import '../../../core/utils/safe_parser.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   bool isLoading = true;
@@ -31,8 +32,14 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       final did = await DriverPreferences.getDriverId();
-      if (did == null) return;
+      if (did == null) {
+        debugPrint("📍 DriverApp: Profile fetch failed. Driver ID is NULL.");
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
       driverId = did;
+      debugPrint("📍 DriverApp: Fetching profile for ID: $did");
 
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
@@ -41,53 +48,88 @@ class ProfileViewModel extends ChangeNotifier {
 
       if (doc.exists) {
         final data = doc.data()!;
-        name = data['name'] ?? "Driver";
-        phone = data['phone'] ?? data['phoneNumber'] ?? '';
-        vehicleModel = data['vehicleModel'] ?? '';
-        vehicleNumber = data['vehicleNumber'] ?? '';
+        name = SafeParser.toStr(data['name'], fallback: "Driver");
+        phone = SafeParser.toStr(data['phone'] ?? data['phoneNumber']);
+        vehicleModel = SafeParser.toStr(data['vehicleModel']);
+        vehicleNumber = SafeParser.toStr(data['vehicleNumber']);
         vehicle = "$vehicleModel • $vehicleNumber".trim().replaceAll(RegExp(r'^•\s*|\s*•$'), '');
 
-        final double r = (data['rating'] as num?)?.toDouble() ?? 5.0;
+        final double r = SafeParser.toDouble(data['rating'], fallback: 5.0);
         rating = r.toStringAsFixed(1);
 
-        totalRides = (data['totalRides'] ?? 0).toString();
+        totalRides = SafeParser.toStr(data['totalRides'], fallback: "0");
 
-        // Dynamic ride fetch fallback
+        // Dynamic ride fetch fallback - Throttled/Safe
         try {
           final query = await FirebaseFirestore.instance
               .collection('rideRequests')
               .where('driverId', isEqualTo: did)
-              .get();
-          int currentRides = 0;
-          for (var doc in query.docs) {
-            final status = doc.data()['status'];
-            if (status == 'completed' || status == 'closed') {
-              currentRides++;
-            }
+              .where('status', whereIn: ['completed', 'closed'])
+              .get()
+              .timeout(const Duration(seconds: 5));
+          
+          if (query.docs.length > SafeParser.toDouble(totalRides).toInt()) {
+            totalRides = query.docs.length.toString();
           }
-          if (currentRides > (data['totalRides'] ?? 0)) {
-            totalRides = currentRides.toString();
-          }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint("📍 DriverApp: Extra rides fetch skipped: $e");
+        }
 
-        final double bal = (data['walletBalance'] as num?)?.toDouble() ?? 0.0;
-        earnings = "₹${bal.toStringAsFixed(0)}";
+        // Calculate today's earnings from completed rides
+        try {
+          final now = DateTime.now();
+          final startOfDay = DateTime(now.year, now.month, now.day);
+          
+          final earningsQuery = await FirebaseFirestore.instance
+              .collection('rideRequests')
+              .where('driverId', isEqualTo: did)
+              .where('status', isEqualTo: 'completed')
+              .where('createdAt', isGreaterThanOrEqualTo: startOfDay)
+              .get();
+
+          double totalToday = 0;
+          for (var rideDoc in earningsQuery.docs) {
+            final rideData = rideDoc.data();
+            totalToday += (rideData['finalFare'] as num?)?.toDouble() ?? 0.0;
+          }
+          earnings = "₹${totalToday.toStringAsFixed(0)}";
+        } catch (e) {
+          debugPrint("📍 DriverApp: Today's earnings calculation failed: $e");
+          earnings = "₹0";
+        }
+
+        SafeParser.toDouble(data['walletBalance']);
+        // walletBalance is already handled by the Wallet section if needed, 
+        // but here we keep earnings as today's gross income.
 
         profileImageBase64 = data['profileImage'];
         licenseImageBase64 = data['licenseImage'];
         rcImageBase64 = data['rcImage'];
 
         if (data['createdAt'] != null) {
-          final DateTime date = (data['createdAt'] as Timestamp).toDate();
-          joinDate = "Joined ${_getMonth(date.month)} ${date.year}";
+          try {
+             final dynamic createdAt = data['createdAt'];
+             if (createdAt is Timestamp) {
+               final DateTime date = createdAt.toDate();
+               joinDate = "Joined ${_getMonth(date.month)} ${date.year}";
+             } else {
+               joinDate = "Member";
+             }
+          } catch (e) {
+            joinDate = "Member";
+            debugPrint("📍 DriverApp: Date parse error: $e");
+          }
         }
+        debugPrint("📍 DriverApp: Profile loaded for $name");
+      } else {
+        debugPrint("📍 DriverApp: Driver document NOT found in Firestore.");
       }
     } catch (e) {
-      debugPrint("Profile Error: $e");
+      debugPrint("📍 DriverApp: Profile Fetch Error: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   String _getMonth(int month) {

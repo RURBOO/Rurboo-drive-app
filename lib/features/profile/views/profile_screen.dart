@@ -133,12 +133,13 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             child: CircleAvatar(
                               radius: 50,
                               backgroundColor: Colors.grey[800],
-                              backgroundImage:
-                                  (vm.profileImageBase64 != null &&
+                              backgroundImage: (vm.profileImageBase64 != null &&
                                       vm.profileImageBase64!.isNotEmpty)
-                                  ? MemoryImage(base64Decode(vm.profileImageBase64!))
+                                  ? (vm.profileImageBase64!.startsWith('http')
+                                      ? NetworkImage(vm.profileImageBase64!)
+                                      : MemoryImage(base64Decode(vm.profileImageBase64!))) as ImageProvider
                                   : null,
-                              child: (vm.profileImageBase64 == null)
+                              child: (vm.profileImageBase64 == null || vm.profileImageBase64!.isEmpty)
                                   ? const Icon(Icons.person, size: 50, color: Colors.white)
                                   : null,
                             ),
@@ -169,15 +170,18 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                 Positioned.fill(
                   top: 260,
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.grey, // Placeholder, usually white
+                    decoration: BoxDecoration(
+                      color: Colors.white, 
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50], // Background for list
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                      ),
-                      child: SingleChildScrollView(
+                    child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(20, 30, 20, 40),
                         child: Column(
                           children: [
@@ -234,6 +238,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                         currentPhone: vm.phone,
                                         currentVehicleModel: vm.vehicleModel,
                                         currentVehicleNumber: vm.vehicleNumber,
+                                        currentProfileImage: vm.profileImageBase64,
                                       ),
                                     ),
                                   );
@@ -375,8 +380,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
             ),
     );
   }

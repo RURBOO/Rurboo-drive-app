@@ -4,7 +4,7 @@ import '../../../../core/services/driver_preferences.dart';
 class EarningsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Fetches the list of earnings for a specific date range
+  /// Fetches the list of earnings for a specific date range from rideRequests
   Future<List<Map<String, dynamic>>> getEarnings(
     DateTime start,
     DateTime end,
@@ -13,15 +13,21 @@ class EarningsRepository {
     if (driverId == null) return [];
 
     final query = await _firestore
-        .collection('drivers')
-        .doc(driverId)
-        .collection('earnings')
+        .collection('rideRequests')
+        .where('driverId', isEqualTo: driverId)
+        .where('status', isEqualTo: 'completed')
         .where('createdAt', isGreaterThanOrEqualTo: start)
         .where('createdAt', isLessThanOrEqualTo: end)
         .orderBy('createdAt', descending: true)
         .get();
 
-    return query.docs.map((doc) => doc.data()).toList();
+    return query.docs.map((doc) {
+      final data = doc.data();
+      // Ensure fields expected by ViewModel exist
+      data['amount'] = (data['finalFare'] as num?)?.toDouble() ?? 0.0;
+      data['commission'] = (data['commission'] as num?)?.toDouble() ?? (data['amount'] * 0.20);
+      return data;
+    }).toList();
   }
 
   /// Fetches the ride history for the current driver

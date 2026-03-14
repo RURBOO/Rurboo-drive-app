@@ -14,6 +14,7 @@ class EditProfileScreen extends StatefulWidget {
   final String? currentPhone;
   final String? currentVehicleModel;
   final String? currentVehicleNumber;
+  final String? currentProfileImage;
 
   const EditProfileScreen({
     super.key,
@@ -21,6 +22,7 @@ class EditProfileScreen extends StatefulWidget {
     this.currentPhone,
     this.currentVehicleModel,
     this.currentVehicleNumber,
+    this.currentProfileImage,
   });
 
   @override
@@ -162,8 +164,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         backgroundColor: AppTheme.backgroundLight,
                         backgroundImage: _newProfileImage != null
                             ? FileImage(_newProfileImage!)
-                            : null,
-                        child: _newProfileImage == null
+                            : (widget.currentProfileImage != null &&
+                                    widget.currentProfileImage!.isNotEmpty)
+                                ? (widget.currentProfileImage!.startsWith('http')
+                                    ? NetworkImage(widget.currentProfileImage!)
+                                    : MemoryImage(base64Decode(widget.currentProfileImage!))) as ImageProvider
+                                : null,
+                        child: (_newProfileImage == null &&
+                                (widget.currentProfileImage == null ||
+                                    widget.currentProfileImage!.isEmpty))
                             ? Icon(Icons.person,
                                 size: 56, color: AppTheme.textSecondary)
                             : null,

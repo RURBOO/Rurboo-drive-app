@@ -180,7 +180,7 @@ service cloud.firestore {
 
         // USER CAN CANCEL
         (uid() == resource.data.userId &&
-         resource.data.status in ["pending", "scheduled", "accepted"] &&
+         resource.data.status in ["pending", "scheduled", "accepted", "arrived", "in_progress"] &&
          request.resource.data.status == "cancelled") ||
 
         // USER APPROVES/REJECTS EARLY END RIDE OR SUBMITS REVIEW
@@ -345,6 +345,14 @@ service cloud.firestore {
       );
       allow update: if isAdmin(); // Only admins can update/resolve SOS
       allow delete: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // SERVICE ZONES (Geofencing) 
+    // =========================================================
+    match /service_zones/{zoneId} {
+      allow read: if isAuthenticated(); // Both user/driver apps need to read active zones to block/allow UI
+      allow write: if isAdmin(); // Only admins can draw/toggle/delete polygons
     }
 
     // =========================================================

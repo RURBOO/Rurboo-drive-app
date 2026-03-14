@@ -39,7 +39,7 @@ class HomeViewModel extends ChangeNotifier {
   Position? get currentPosition => _currentPosition;
 
   StreamSubscription<Position>? _locationSubscription;
-  StreamSubscription<QuerySnapshot>? _rideSubscription;
+  StreamSubscription? _rideSubscription;
 
   RideRequest? _newRideRequest;
   RideRequest? get newRideRequest => _newRideRequest;
@@ -311,16 +311,31 @@ class HomeViewModel extends ChangeNotifier {
     _lastGeoQueryTime = DateTime.now();
 
     _driverVehicleType ??= await DriverPreferences.getVehicleType();
-    debugPrint("LISTENER: Monitoring 'pending' rides. Driver Vehicle Type: $_driverVehicleType");
+    debugPrint("LISTENER: Monitoring 'pending' rides via GeoFlutterFire. Driver Vehicle Type: $_driverVehicleType");
 
-    // Listen to all pending rides and filter by distance client-side for maximum reliability
-    _rideSubscription = FirebaseFirestore.instance
-        .collection('rideRequests')
-        .where('status', isEqualTo: 'pending')
-        .snapshots()
-        .listen((QuerySnapshot snapshot) {
+    if (_driverLocation == null) {
+      debugPrint("LISTENER: Driver location is null, skipping proximity check");
+      return;
+    }
+
+    final collection = FirebaseFirestore.instance.collection('rideRequests');
+    final geoCollection = GeoCollectionReference(collection);
+    final center = GeoFirePoint(GeoPoint(_driverLocation!.latitude, _driverLocation!.longitude));
+
+    // Listen to pending rides pre-filtered by 8km radius on the server
+    _rideSubscription = geoCollection
+        .subscribeWithin(
+          center: center,
+          radiusInKm: 8.0,
+          field: 'pickupGeo',
+          geopointFrom: (data) => data['pickupCoords'] as GeoPoint,
+          queryBuilder: (query) => query.where('status', isEqualTo: 'pending'),
+        )
+        .listen((dynamic docs) {
       if (_isDisposed) return;
-      debugPrint("LISTENER: Received snapshot with ${snapshot.docs.length} pending rides");
+      
+      final List<DocumentSnapshot> documentList = List<DocumentSnapshot>.from(docs);
+      debugPrint("LISTENER: Received ${documentList.length} geo-filtered pending rides");
 
       if (_appState.currentState != DriverState.online) {
         return;
@@ -328,14 +343,9 @@ class HomeViewModel extends ChangeNotifier {
 
       RideRequest? foundRequest;
       double closestDist = double.infinity;
-      const double maxRadiusMeters = 20000; // 20km
+      const double maxRadiusMeters = 8000; // 8km
       
-      if (_driverLocation == null) {
-        debugPrint("LISTENER: Driver location is null, skipping proximity check");
-        return;
-      }
-
-      for (var doc in snapshot.docs) {
+      for (var doc in documentList) {
         final data = doc.data() as Map<String, dynamic>?;
         if (data == null) continue;
 
@@ -355,7 +365,7 @@ class HomeViewModel extends ChangeNotifier {
         final String driverCategory = (_driverVehicleType ?? '').toLowerCase();
         bool categoryMatch = rideCategory == 'all' || rideCategory == driverCategory || rideCategory.isEmpty;
 
-        debugPrint("LISTENER: Checking Ride[${doc.id}] - Dist: ${dist.toStringAsFixed(0)}m, Cat: $rideCategory (Driver: $driverCategory), Match: $categoryMatch");
+        debugPrint("LISTENER: Checking Geo-Filtered Ride[${doc.id}] - Dist: ${dist.toStringAsFixed(0)}m, Cat: $rideCategory (Driver: $driverCategory), Match: $categoryMatch");
 
         if (dist <= maxRadiusMeters && categoryMatch) {
           if (dist < closestDist) {
@@ -678,6 +688,12 @@ class HomeViewModel extends ChangeNotifier {
           'driverRating': (driverData['rating'] as num?)?.toDouble() ?? 5.0,
           'driverLocation': GeoPoint(currentLoc.latitude, currentLoc.longitude),
           'acceptedAt': FieldValue.serverTimestamp(),
+        });
+
+        // 🚀 CRITICAL FIX: Update driver status atomically
+        transaction.update(driverRef, {
+           'isOnTrip': true,
+           'currentRideId': rideId,
         });
       });
 

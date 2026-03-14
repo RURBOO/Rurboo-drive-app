@@ -64,36 +64,45 @@ class AppStateViewModel extends ChangeNotifier {
 
   void goOnline() {
     _updateState(DriverState.online);
-    _syncStatusToFirestore(true);
+    _syncStatusToFirestore(online: true);
   }
 
   void goOffline() {
     _updateState(DriverState.offline);
-    _syncStatusToFirestore(false);
+    _syncStatusToFirestore(online: false);
   }
 
   void acceptRide(String rideId) {
     currentRideId = rideId;
     _saveRideId(rideId);
     _updateState(DriverState.onTrip);
-    _syncStatusToFirestore(true); // Still online/active
+    _syncStatusToFirestore(online: true, isOnTrip: true, rideId: rideId);
   }
 
   void endTrip() {
     currentRideId = null;
     _saveRideId(null);
     _updateState(DriverState.online);
-    _syncStatusToFirestore(true);
+    _syncStatusToFirestore(online: true, isOnTrip: false, rideId: null);
   }
 
   String? _driverId;
 
-  void _syncStatusToFirestore(bool online) async {
+  void _syncStatusToFirestore({required bool online, bool? isOnTrip, String? rideId}) async {
     final id = _driverId ?? await SharedPreferences.getInstance().then((p) => p.getString('driver_id'));
     if (id != null) {
-      FirebaseFirestore.instance.collection('drivers').doc(id).update({
+      final Map<String, dynamic> updateData = {
         'isOnline': online,
-      }).catchError((e) => debugPrint("Status Sync Error: $e"));
+      };
+      
+      if (isOnTrip != null) {
+        updateData['isOnTrip'] = isOnTrip;
+      }
+      if (rideId != null || updateData.containsKey('isOnTrip')) {
+        updateData['currentRideId'] = rideId;
+      }
+
+      FirebaseFirestore.instance.collection('drivers').doc(id).update(updateData).catchError((e) => debugPrint("Status Sync Error: $e"));
     }
   }
 

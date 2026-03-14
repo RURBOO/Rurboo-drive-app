@@ -41,7 +41,8 @@ class LiveTripViewModel extends ChangeNotifier {
 
   VoidCallback? onRideCancelledByUser;
   VoidCallback? onEndRideApproved;
-  bool _suspendAutoCamera = false;
+  final bool _suspendAutoCamera = false;
+  DateTime? _lastRouteUpdate;
 
 
   bool canCancelWithoutPenalty = false;
@@ -309,6 +310,15 @@ class LiveTripViewModel extends ChangeNotifier {
                 .onError(
                   (e, s) => debugPrint("Firestore loc update failed: $e"),
                 );
+
+            // 🚀 Throttled Periodic Route Refresh (Every 10 seconds)
+            final now = DateTime.now();
+            if (_lastRouteUpdate == null || 
+                now.difference(_lastRouteUpdate!).inSeconds > 10) {
+              debugPrint("🚀 LiveTripViewModel: Throttled route refresh triggered.");
+              _lastRouteUpdate = now;
+              _updateRouteLine(fitCamera: false); // Don't snap camera bound during driving
+            }
           }
         });
   }
@@ -454,7 +464,7 @@ class LiveTripViewModel extends ChangeNotifier {
 
   int? tripDurationMins;
 
-  Future<void> _updateRouteLine() async {
+  Future<void> _updateRouteLine({bool fitCamera = true}) async {
     LatLng? start;
     LatLng? end;
 
@@ -462,16 +472,19 @@ class LiveTripViewModel extends ChangeNotifier {
       start = driverLocation ?? pickupLocation;
       end = pickupLocation;
     } else {
-      start = pickupLocation;
+      start = driverLocation ?? pickupLocation;
       end = dropLocation;
     }
 
     if (start == null || end == null) return;
 
-    _suspendAutoCamera = true;
-
-    routePoints = [start, end];
-    tripDurationMins = null; // Reset to calculating
+    // 🚀 IMPROVEMENT: Don't clear existing points to prevent flickering
+    // Only set raw points if we have absolutely nothing
+    if (routePoints.isEmpty) {
+      routePoints = [start, end];
+    }
+    
+    tripDurationMins = null; 
     notifyListeners();
 
     try {
@@ -484,12 +497,13 @@ class LiveTripViewModel extends ChangeNotifier {
 
         notifyListeners();
 
-        _fitCameraToRoute(routePoints);
+        // 🚀 Only snap camera bounds if explicitly requested (e.g. stage change)
+        if (fitCamera) {
+          _fitCameraToRoute(routePoints);
+        }
       }
     } catch (e) {
       debugPrint("Route fetch failed: $e");
-    } finally {
-      _suspendAutoCamera = false;
     }
   }
 

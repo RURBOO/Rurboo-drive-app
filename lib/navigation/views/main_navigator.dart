@@ -28,6 +28,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   }
 
   void _onItemTapped(int index) {
+    debugPrint("📍 DriverApp: BottomNav Tap - Index: $index");
     setState(() {
       _selectedIndex = index;
     });
