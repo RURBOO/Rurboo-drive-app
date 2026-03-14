@@ -95,8 +95,7 @@ class _LoginScreenBody extends StatelessWidget {
                   Text(
                     AppLocalizations.of(context)!.driveEarnGrow,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey.shade400,
+                    style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey.shade400,
                       letterSpacing: 0.5,
                     ),
                   ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),

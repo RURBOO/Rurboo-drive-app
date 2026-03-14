@@ -41,7 +41,7 @@ class SupportScreen extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               "We are here to help you earn more.",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, ),
             ),
             const SizedBox(height: 24),
 

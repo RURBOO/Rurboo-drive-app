@@ -270,8 +270,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   Text(
                     AppLocalizations.of(context)!.enterOtpSent(widget.phoneNumber),
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey.shade400,
+                    style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey.shade400,
                       height: 1.5,
                     ),
                   ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),

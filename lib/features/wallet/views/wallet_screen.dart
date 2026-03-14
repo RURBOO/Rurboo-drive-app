@@ -151,7 +151,7 @@ class _WalletScreenState extends State<WalletScreen> {
           children: [
             Text(
               AppLocalizations.of(context)!.enterRechargeAmount,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -457,8 +457,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         Expanded(
                           child: Text(
                             "Your wallet is negative. Recharge to go online!",
-                            style: TextStyle(
-                              color: Colors.red.shade700,
+                            style: TextStyle(color: Colors.red.shade700,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -514,8 +513,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     AppLocalizations.of(context)!.commissionInfo,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(fontSize: 12,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -531,8 +529,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       AppLocalizations.of(context)!.transactionHistory,
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: TextStyle(fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -545,7 +542,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       ? Center(
                           child: Text(
                             AppLocalizations.of(context)!.noTransactions,
-                            style: const TextStyle(color: Colors.grey),
+                            style: const TextStyle(),
                           ),
                         )
                       : ListView.builder(
@@ -584,8 +581,7 @@ class _WalletScreenState extends State<WalletScreen> {
                               ),
                               trailing: Text(
                                 "${isCredit ? '+' : '-'} ₹${tx.amount.toStringAsFixed(0)}",
-                                style: TextStyle(
-                                  color: isSettlement
+                                style: TextStyle(color: isSettlement
                                       ? Colors.orange
                                       : isCredit
                                           ? Colors.green

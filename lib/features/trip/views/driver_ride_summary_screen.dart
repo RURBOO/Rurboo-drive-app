@@ -227,7 +227,7 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
               Text(
                 l10n.droppedOff(widget.passengerName),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(),
               ),
 
               const SizedBox(height: 40),
@@ -235,15 +235,14 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(),
                 ),
                 child: Column(
                   children: [
                     Text(
                       l10n.amountToCollect,
-                      style: const TextStyle(color: Colors.grey),
+                      style: const TextStyle(),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -342,7 +341,6 @@ class _DriverRideSummaryScreenState extends State<DriverRideSummaryScreen> {
                   child: Text(
                     l10n.skipText,
                     style: const TextStyle(
-                      color: Colors.grey,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

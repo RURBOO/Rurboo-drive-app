@@ -97,8 +97,7 @@ class LocationDisclosureScreen extends StatelessWidget {
 
               const Text(
                 "Rubo Driver collects location data to enable \"Ride Allocation\" and \"Trip Tracking\", even when the app is closed or not in use.",
-                style: TextStyle(
-                  fontSize: 16,
+                style: TextStyle(fontSize: 16,
                   height: 1.5,
                 ),
               ),
@@ -140,7 +139,7 @@ class LocationDisclosureScreen extends StatelessWidget {
                   onPressed: () => _handleDeny(context),
                   child: const Text(
                     "Deny & Logout",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(),
                   ),
                 ),
               ),

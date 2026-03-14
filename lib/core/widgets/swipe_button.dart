@@ -263,8 +263,7 @@ class _SwipeButtonState extends State<SwipeButton>
                                     const SizedBox(width: 4),
                                     Text(
                                       widget.text,
-                                      style: TextStyle(
-                                        color: widget.color,
+                                      style: TextStyle(color: widget.color,
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.5,

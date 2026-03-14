@@ -157,7 +157,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             Text(
               l10n.deleteAccountDesc,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 30),
             TextField(

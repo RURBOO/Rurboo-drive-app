@@ -67,7 +67,7 @@ class _FaqItem extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               answer,
-              style: TextStyle(color: Colors.grey[700], height: 1.4),
+              style: TextStyle(height: 1.4),
             ),
           ),
         ],

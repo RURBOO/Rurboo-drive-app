@@ -122,7 +122,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             const SizedBox(height: 10),
             Text(
               l10n.helpSubheading,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: const TextStyle(fontSize: 16, ),
             ),
             const SizedBox(height: 30),
 
@@ -130,9 +130,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(),
               ),
               child: Form(
                 key: _formKey,
@@ -180,7 +179,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             _screenshotFile == null
                                 ? l10n.helpAttachFile
                                 : l10n.helpImageAttached(_screenshotFile!.path.split('/').last),
-                            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                            style: TextStyle(fontSize: 14),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -228,7 +227,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             Center(
               child: Text(
                 l10n.appVersion,
-                style: TextStyle(color: Colors.grey[400]),
+                style: TextStyle(),
               ),
             ),
             const SizedBox(height: 20),

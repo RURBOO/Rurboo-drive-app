@@ -124,8 +124,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 3),
                               boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -175,8 +174,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                       color: Colors.white, 
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -193,8 +191,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.5),
                                     blurRadius: 15,
                                     offset: const Offset(0, 5),
                                   ),
@@ -204,9 +201,9 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
                                    _buildStat(l10n.rating, vm.rating, Icons.star, Colors.amber),
-                                  Container(width: 1, height: 40, color: Colors.grey[200]),
+                                  Container(width: 1, height: 40, ),
                                   _buildStat(l10n.rides, vm.totalRides, Icons.local_taxi, Colors.blue),
-                                  Container(width: 1, height: 40, color: Colors.grey[200]),
+                                  Container(width: 1, height: 40, ),
                                   _buildStat(
                                     l10n.wallet, 
                                     vm.earnings, 
@@ -383,7 +380,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             const SizedBox(height: 30),
                             Text(
                               l10n.appVersion,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(),
                             ).animate().fade(delay: 700.ms),
                           ],
                         ),
@@ -436,9 +433,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
         alignment: Alignment.centerLeft,
         child: Text(
           title.toUpperCase(),
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
+          style: TextStyle(fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
           ),
@@ -453,8 +448,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
           ),
         ],
@@ -487,7 +481,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
               ],
             ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(label, style: const TextStyle(fontSize: 12)),
           ],
         ),
       ),
@@ -516,8 +510,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: color,
+        style: TextStyle(color: color,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
@@ -525,7 +518,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, ),
             )
           : null,
       activeThumbColor: Colors.green, // Replaced activeColor
@@ -551,8 +544,7 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: color,
+        style: TextStyle(color: color,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
@@ -560,10 +552,10 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, ),
             )
           : null,
-      trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+      trailing: const Icon(Icons.chevron_right, size: 18, ),
       onTap: onTap,
     );
   }

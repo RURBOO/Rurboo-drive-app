@@ -138,7 +138,7 @@ class _LiveTripScreenBody extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle()),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -371,8 +371,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -385,7 +384,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                 children: [
                    // Handle Bar
                    Center(
-                     child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+                     child: Container(width: 40, height: 4, decoration: BoxDecoration(borderRadius: BorderRadius.circular(2))),
                    ),
                    const SizedBox(height: 20),
                    
@@ -395,7 +394,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                        CircleAvatar(
                          backgroundColor: Colors.grey[200],
                          radius: 24,
-                         child: const Icon(Icons.person, color: Colors.grey),
+                         child: const Icon(Icons.person, ),
                        ),
                        const SizedBox(width: 16),
                        Expanded(
@@ -413,7 +412,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                                vm.currentAddress,
                                maxLines: 1,
                                overflow: TextOverflow.ellipsis,
-                               style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                               style: TextStyle(fontSize: 14),
                              ),
                            ],
                          ),
@@ -551,7 +550,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                          onPressed: () => _showCancelConfirmation(context, vm, appState),
                          child: Text(
                            AppLocalizations.of(context)!.cancelRide,
-                           style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                           style: TextStyle(fontWeight: FontWeight.bold),
                          ),
                        ),
                      ),
@@ -568,7 +567,6 @@ class _LiveTripScreenBody extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

@@ -566,8 +566,7 @@ class HomeViewModel extends ChangeNotifier {
               style: const TextStyle(
                 fontSize: 16,
                 height: 1.4,
-                color: Colors.grey,
-              ),
+                ),
             ),
             const SizedBox(height: 24),
 
@@ -596,7 +595,7 @@ class HomeViewModel extends ChangeNotifier {
 
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
+              child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle()),
             ),
           ],
         ),

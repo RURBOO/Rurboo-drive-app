@@ -107,8 +107,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 const Text(
                   "आवेदन प्रक्रियाधीन है",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28, 
+                  style: TextStyle(fontSize: 28, 
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 1,
@@ -120,8 +119,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 const Text(
                   "आपके दस्तावेज़ों की जाँच हो रही है",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18, 
+                  style: TextStyle(fontSize: 18, 
                     color: Colors.orange, 
                     fontWeight: FontWeight.bold,
                   ),
@@ -132,9 +130,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                 Text(
                   AppLocalizations.of(context)!.pendingApprovalBody,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade400,
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade400,
                     height: 1.5,
                   ),
                 ),
@@ -173,10 +169,8 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen> {
                     ),
                     child: Text(
                       AppLocalizations.of(context)!.signOutGoBack,
-                      style: TextStyle(
-                        fontSize: 16, 
-                        fontWeight: FontWeight.bold, 
-                        color: Colors.grey.shade300,
+                      style: TextStyle(fontSize: 16, 
+                        fontWeight: FontWeight.bold, color: Colors.grey.shade300,
                       ),
                     ),
                   ),

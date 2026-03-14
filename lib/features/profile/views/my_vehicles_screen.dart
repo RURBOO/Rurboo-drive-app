@@ -75,7 +75,6 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: Colors.grey[200],
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
@@ -99,9 +98,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                                       ),
                                       Text(
                                         "${vehicle['vehicleType']} • ${vehicle['vehicleNumber']}",
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
+                                        style: TextStyle(fontSize: 14,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -115,8 +112,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                                           const SizedBox(width: 4),
                                           Text(
                                             isVerified ? "Verified" : "Pending Verification",
-                                            style: TextStyle(
-                                              color: isVerified ? Colors.green : Colors.orange,
+                                            style: TextStyle(color: isVerified ? Colors.green : Colors.orange,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                             ),

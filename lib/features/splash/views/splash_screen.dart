@@ -178,8 +178,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // Brand Name
             const Text(
               "RURBOO",
-              style: TextStyle(
-                color: Colors.white,
+              style: TextStyle(color: Colors.white,
                 fontSize: 32,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 4,
@@ -189,8 +188,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // Tagline
             Text(
               "DRIVER PARTNER",
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w600,

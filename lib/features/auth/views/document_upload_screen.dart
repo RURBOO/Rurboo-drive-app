@@ -92,10 +92,9 @@ class DocumentUploadScreen extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.upload_file, color: Colors.grey),
+                child: const Icon(Icons.upload_file, ),
               ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(

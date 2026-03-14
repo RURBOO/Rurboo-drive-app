@@ -89,7 +89,7 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
               children: [
                 Text(
                   dateStr,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(fontSize: 12),
                 ),
                 Text(
                   '₹${amount.toStringAsFixed(0)}',
@@ -109,7 +109,7 @@ class _RideHistoryScreenState extends State<RideHistoryScreen> {
              Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Text(AppLocalizations.of(context)!.status, style: const TextStyle(color: Colors.grey)),
+                 Text(AppLocalizations.of(context)!.status, style: const TextStyle()),
                  Container(
                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                    decoration: BoxDecoration(

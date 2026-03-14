@@ -247,8 +247,7 @@ class _DriverDocumentsScreenState extends State<DriverDocumentsScreen> {
             width: 1.5,
           ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -299,14 +298,12 @@ class _DriverDocumentsScreenState extends State<DriverDocumentsScreen> {
                                   Icon(
                                     _docIcon(key),
                                     size: 40,
-                                    color: Colors.grey[400],
-                                  ),
+                                    ),
                                   const SizedBox(height: 8),
                                   Text(
                                     l10n.tapToUpload,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.grey[500],
-                                    ),
+                                      ),
                                   ),
                                 ],
                               ),

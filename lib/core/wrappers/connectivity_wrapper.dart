@@ -60,8 +60,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                       SizedBox(width: 8),
                       Text(
                         "No Internet Connection",
-                        style: TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),

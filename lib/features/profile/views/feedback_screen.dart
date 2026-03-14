@@ -113,7 +113,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               const SizedBox(height: 8),
               Text(
                 l10n.feedbackSubheading,
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(),
               ),
               const SizedBox(height: 24),
 

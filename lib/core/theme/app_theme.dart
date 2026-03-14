@@ -32,7 +32,7 @@ class AppTheme {
         error: Colors.redAccent,
       ),
       scaffoldBackgroundColor: backgroundLight,
-      textTheme: GoogleFonts.interTextTheme().copyWith(
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
         displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: textPrimary, letterSpacing: -0.5),
         displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w700, color: textPrimary, letterSpacing: -0.5),
         headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: textPrimary),
@@ -117,7 +117,7 @@ class AppTheme {
         error: Colors.redAccent,
       ),
       scaffoldBackgroundColor: backgroundDark,
-      textTheme: GoogleFonts.interTextTheme().copyWith(
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
         displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: textPrimaryDark, letterSpacing: -0.5),
         displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w700, color: textPrimaryDark, letterSpacing: -0.5),
         headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: textPrimaryDark),

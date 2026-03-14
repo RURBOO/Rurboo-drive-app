@@ -88,8 +88,7 @@ class _EarningsScreenBody extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.1),
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           spreadRadius: 2,
                         ),
@@ -138,7 +137,6 @@ class _EarningsScreenBody extends StatelessWidget {
                                           child: Text(
                                             vm.dailyLabels[value.toInt()],
                                             style: const TextStyle(
-                                              color: Colors.grey,
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -169,8 +167,7 @@ class _EarningsScreenBody extends StatelessWidget {
                                         show: true,
                                         toY: (vm.dailyEarnings.isEmpty 
                                             ? 100 
-                                            : (vm.dailyEarnings.reduce((a, b) => a > b ? a : b) * 1.2)),
-                                        color: Colors.grey.withValues(alpha: 0.5),
+                                            : (vm.dailyEarnings.reduce((a, b) => a > b ? a : b) * 1.2)), color: Colors.black.withValues(alpha: 0.5),
                                       ),
                                     ),
                                   ],
@@ -188,7 +185,7 @@ class _EarningsScreenBody extends StatelessWidget {
                               children: [
                                 Text(
                                   "Total",
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  style: TextStyle(fontSize: 12),
                                 ),
                                 Text(
                                   "₹${vm.weeklyGross.toStringAsFixed(0)}",
@@ -204,7 +201,7 @@ class _EarningsScreenBody extends StatelessWidget {
                               children: [
                                 Text(
                                   "Net",
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  style: TextStyle(fontSize: 12),
                                 ),
                                 Text(
                                   "₹${vm.weeklyNet.toStringAsFixed(0)}",
@@ -388,8 +385,7 @@ class _EarningsScreenBody extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.08),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -419,12 +415,12 @@ class _EarningsScreenBody extends StatelessWidget {
               ride.drop,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-               style: TextStyle(color: Colors.grey[600], fontSize: 12),
+               style: TextStyle(fontSize: 12),
              ),
              const SizedBox(height: 4),
              Text(
                ride.date,
-               style: TextStyle(color: Colors.grey[400], fontSize: 10),
+               style: TextStyle(fontSize: 10),
              ),
           ],
         ),

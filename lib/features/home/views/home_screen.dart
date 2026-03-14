@@ -11,7 +11,6 @@ import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/driver_voice_viewmodel.dart';
 import '../../../core/services/safety_service.dart';
 import '../../../core/theme/map_styles.dart';
-import '../../../state/theme_provider.dart';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/ride_request.dart';
@@ -300,7 +299,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.location_off, size: 80, color: Colors.grey[400]),
+                      Icon(Icons.location_off, size: 80, ),
                       const SizedBox(height: 20),
                       Text(
                         AppLocalizations.of(context)!.locationPermissionNeeded,
@@ -362,8 +361,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -437,8 +435,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                    color: Theme.of(context).cardColor,
                                    shape: BoxShape.circle,
                                    boxShadow: [
-                                     BoxShadow(
-                                       color: Colors.black.withValues(alpha: 0.1),
+                                     BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                                        blurRadius: 8,
                                      ),
                                    ],
@@ -474,8 +471,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                                    color: Colors.white,
                                    shape: BoxShape.circle,
                                    boxShadow: [
-                                     BoxShadow(
-                                       color: Colors.black.withValues(alpha: 0.1),
+                                     BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                                        blurRadius: 8,
                                      ),
                                    ],
@@ -534,8 +530,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             color: Colors.blue.withValues(alpha: 0.9), // Slightly transparent blue
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -569,8 +564,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                     child: ClipRect(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          color: Colors.black.withValues(alpha: 0.6),
+                        child: Container(color: Colors.black.withValues(alpha: 0.6),
                           child: Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -612,8 +606,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 10,
                           )
                         ],
@@ -818,8 +811,7 @@ class _RideRequestSheet extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -835,7 +827,6 @@ class _RideRequestSheet extends StatelessWidget {
               width: 50,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -984,9 +975,7 @@ class _RideRequestSheet extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 12,
+                style: TextStyle(fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1073,7 +1062,6 @@ class _GPSInfoSheet extends StatelessWidget {
             AppLocalizations.of(context)!.currentLocation,
             style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1128,14 +1116,14 @@ class _GPSInfoSheet extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: Colors.grey[600], size: 20),
+        Icon(icon, size: 20),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: TextStyle(fontSize: 12),
             ),
             Text(
               value,
