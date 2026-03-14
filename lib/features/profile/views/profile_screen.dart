@@ -8,6 +8,7 @@ import 'driver_documents_screen.dart';
 import 'edit_profile_screen.dart';
 import 'my_vehicles_screen.dart';
 import '../../../state/language_provider.dart';
+import '../../../state/theme_provider.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
 import 'package:rubo_driver/features/profile/views/privacy_policy_screen.dart';
 import 'package:rubo_driver/features/profile/views/terms_conditions_screen.dart';
@@ -291,6 +292,15 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                             const SizedBox(height: 24),
                             _buildSectionHeader(l10n.preferences),
                             _buildMenuCard([
+                              _buildSwitchMenuItem(
+                                icon: Icons.dark_mode_rounded,
+                                title: 'Dark Mode / डार्क मोड',
+                                subtitle: 'Toggle app theme',
+                                value: context.watch<ThemeProvider>().isDarkMode,
+                                onChanged: (val) => context.read<ThemeProvider>().toggleTheme(val),
+                                color: Colors.indigo,
+                              ),
+                              _buildDivider(),
                               _buildSwitchMenuItem(
                                 icon: Icons.record_voice_over_rounded,
                                 title: l10n.voiceAnnouncements,

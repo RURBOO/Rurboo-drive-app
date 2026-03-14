@@ -6,6 +6,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../state/app_state_viewmodel.dart';
+import '../../../state/theme_provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/driver_voice_viewmodel.dart';
 import '../../../core/services/safety_service.dart';
@@ -420,6 +421,35 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             ),
                             
                             const Spacer(),
+
+                            // Dark Mode Toggle
+                            GestureDetector(
+                              onTap: () {
+                                final themeProvider = context.read<ThemeProvider>();
+                                themeProvider.toggleTheme(!themeProvider.isDarkMode);
+                              },
+                              child: Container(
+                                 width: 40,
+                                 height: 40,
+                                 decoration: BoxDecoration(
+                                   color: Theme.of(context).cardColor,
+                                   shape: BoxShape.circle,
+                                   boxShadow: [
+                                     BoxShadow(
+                                       color: Colors.black.withValues(alpha: 0.1),
+                                       blurRadius: 8,
+                                     ),
+                                   ],
+                                 ),
+                                 child: Icon(
+                                   context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                                   size: 20,
+                                   color: context.watch<ThemeProvider>().isDarkMode ? Colors.amber : Colors.indigo,
+                                 ),
+                              ),
+                            ),
+                            
+                            const SizedBox(width: 12),
                             
                             // GPS Status
                             GestureDetector(

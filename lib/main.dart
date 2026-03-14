@@ -15,6 +15,7 @@ import 'features/auth/viewmodels/login_viewmodel.dart';
 import 'features/auth/viewmodels/registration_viewmodel.dart';
 import 'features/profile/viewmodels/vehicles_viewmodel.dart';
 import 'state/language_provider.dart';
+import 'state/theme_provider.dart';
 import 'core/services/driver_voice_service.dart';
 import 'core/theme/app_theme.dart';
 
@@ -75,9 +76,10 @@ class DriverApp extends StatelessWidget {
           create: (_) => DriverVoiceViewModel()..init(),
         ),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, languageProvider, themeProvider, child) {
             return Listener(
               onPointerDown: (_) {
                 // Pause voice announcements on ANY screen touch
@@ -98,6 +100,8 @@ class DriverApp extends StatelessWidget {
                 locale: languageProvider.currentLocale,
                 debugShowCheckedModeBanner: false,
                 theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeProvider.themeMode,
                 builder: (context, child) {
                   return ConnectivityWrapper(child: child!);
                 },
