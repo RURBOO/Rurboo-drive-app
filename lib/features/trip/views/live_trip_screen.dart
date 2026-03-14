@@ -12,6 +12,8 @@ import '../../../core/widgets/swipe_button.dart';
 import '../../../state/app_state_viewmodel.dart';
 import '../viewmodels/live_trip_viewmodel.dart';
 import 'package:rubo_driver/l10n/app_localizations.dart';
+import '../../../core/theme/map_styles.dart';
+import '../../../state/theme_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -292,6 +294,7 @@ class _LiveTripScreenBody extends StatelessWidget {
             },
             myLocationEnabled: false,
             zoomControlsEnabled: false,
+            style: Provider.of<ThemeProvider>(context).isDarkMode ? MapStyles.darkMapStyle : null,
             padding: const EdgeInsets.only(top: 100, bottom: 320), // Map padding for overlays
           ),
 

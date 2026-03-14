@@ -10,6 +10,8 @@ import '../../../state/theme_provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/driver_voice_viewmodel.dart';
 import '../../../core/services/safety_service.dart';
+import '../../../core/theme/map_styles.dart';
+import '../../../state/theme_provider.dart';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/ride_request.dart';
@@ -325,7 +327,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                   myLocationEnabled: false,
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
-                  style: homeVm.mapStyle,
+                  style: Provider.of<ThemeProvider>(context).isDarkMode ? MapStyles.darkMapStyle : null,
                   markers: homeVm.markers,
                   polylines: homeVm.polylines,
                   padding: const EdgeInsets.only(top: 100, bottom: 200), // Adjusted padding
