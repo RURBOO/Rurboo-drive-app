@@ -16,6 +16,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final notification = message.notification;
   if (notification != null) {
      final service = NotificationService();
+     
+     // CRITICAL FIX: Initialize local notifications in the background isolate
+     const AndroidInitializationSettings androidSettings =
+         AndroidInitializationSettings('@drawable/ic_stat_notify');
+     const DarwinInitializationSettings iosSettings =
+         DarwinInitializationSettings();
+     await service._localNotifications.initialize(
+       const InitializationSettings(android: androidSettings, iOS: iosSettings),
+     );
+     
+     // Show custom ringing alarm instead of default silent FCM notification
      await service.showLocalNotification(
        title: notification.title ?? "New Ride Request!",
        body: notification.body ?? "Check the app for details.",
