@@ -43,9 +43,12 @@ class LiveTripViewModel extends ChangeNotifier {
   VoidCallback? onEndRideApproved;
   final bool _suspendAutoCamera = false;
   DateTime? _lastRouteUpdate;
-  // 🚀 COST OPTIMIZATION: Route refresh throttled to 45s.
-  // Driver MARKER updates every GPS event (real-time), only the polyline refreshes on this interval.
-  static const int _routeRefreshIntervalSeconds = 45;
+  // 🚀 COST OPTIMIZATION: Distance-based route refresh.
+  // Route only re-fetches when driver moves >250m from last fetch point.
+  // Reduces Directions API calls from ~20/ride (time-based 90s) to ~3-5/ride.
+  // Driver MARKER stays real-time. Route line updates only when actually stale.
+  LatLng? _lastRouteFetchPosition;
+  static const double _routeRefetchDistanceMeters = 250.0;
 
 
   bool canCancelWithoutPenalty = false;
@@ -301,8 +304,6 @@ class LiveTripViewModel extends ChangeNotifier {
           notifyListeners();
 
           if (currentRideId != null) {
-            // Only write GPS to Firestore if driver moved more than 20m since last update
-            // 🚀 COST OPTIMIZATION: Reduces writes from ~180/ride to ~30-40/ride
             FirebaseFirestore.instance
                 .collection('rideRequests')
                 .doc(currentRideId)
@@ -316,12 +317,23 @@ class LiveTripViewModel extends ChangeNotifier {
                   (e, s) => debugPrint("Firestore loc update failed: $e"),
                 );
 
-            // 🚀 Route Refresh: Throttled to 45 seconds (was 10s — 4.5x cheaper)
-            final now = DateTime.now();
-            if (_lastRouteUpdate == null || 
-                now.difference(_lastRouteUpdate!).inSeconds > _routeRefreshIntervalSeconds) {
-              debugPrint("🚀 LiveTripViewModel: Throttled route refresh triggered (45s).");
-              _lastRouteUpdate = now;
+            // 🚀 COST OPTIMIZATION: Distance-based route refresh.
+            // Only re-fetch route when driver moves >250m from last fetch position.
+            // On a straight road this = ~1-3 minutes, cutting calls from ~20/ride to ~3-5/ride.
+            // Route accuracy is MAINTAINED — reroutes happen exactly when needed (driver deviates).
+            final driverPos = LatLng(position.latitude, position.longitude);
+            final double distFromLastFetch = _lastRouteFetchPosition == null
+                ? double.infinity
+                : Geolocator.distanceBetween(
+                    _lastRouteFetchPosition!.latitude,
+                    _lastRouteFetchPosition!.longitude,
+                    driverPos.latitude,
+                    driverPos.longitude,
+                  );
+
+            if (distFromLastFetch > _routeRefetchDistanceMeters) {
+              debugPrint("🚀 Distance-based route refresh: ${distFromLastFetch.toStringAsFixed(0)}m moved from last fetch.");
+              _lastRouteFetchPosition = driverPos;
               _updateRouteLine(fitCamera: false);
             }
           }
