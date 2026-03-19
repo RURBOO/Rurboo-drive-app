@@ -42,7 +42,7 @@ class LiveTripViewModel extends ChangeNotifier {
   VoidCallback? onRideCancelledByUser;
   VoidCallback? onEndRideApproved;
   final bool _suspendAutoCamera = false;
-  DateTime? _lastRouteUpdate;
+
   // 🚀 COST OPTIMIZATION: Distance-based route refresh.
   // Route only re-fetches when driver moves >250m from last fetch point.
   // Reduces Directions API calls from ~20/ride (time-based 90s) to ~3-5/ride.
@@ -509,7 +509,9 @@ class LiveTripViewModel extends ChangeNotifier {
 
       if (routeInfo != null && routeInfo.points.isNotEmpty) {
         routePoints = routeInfo.points;
-        tripDurationMins = routeInfo.durationMins.round();
+        double mins = routeInfo.durationMins;
+        if (routeInfo.distanceKm < 50) mins *= 2;
+        tripDurationMins = mins.round();
         if (tripDurationMins! < 1) tripDurationMins = 1;
 
         notifyListeners();

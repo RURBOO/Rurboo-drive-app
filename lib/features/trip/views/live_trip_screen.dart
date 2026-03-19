@@ -488,7 +488,7 @@ class _LiveTripScreenBody extends StatelessWidget {
                             ? AppLocalizations.of(context)!.slideToStart 
                             : AppLocalizations.of(context)!.slideToEnd,
                         color: isArriving ? const Color(0xFF0F62FE) : Colors.red,
-                        textColor: Colors.white,
+                        textColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                         icon: isArriving ? Icons.play_arrow : Icons.stop,
                        onSwipe: () async {
                           final connectivity = await Connectivity().checkConnectivity();

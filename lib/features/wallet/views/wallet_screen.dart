@@ -465,7 +465,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            "Your wallet is negative. Recharge to go online!",
+                            AppLocalizations.of(context)!.negativeBalanceWarning,
                             style: TextStyle(
                               color: Theme.of(context).brightness == Brightness.dark 
                                   ? Colors.redAccent 
@@ -485,7 +485,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     children: [
                       Expanded(
                         child: _buildCard(
-                          "Wallet Balance",
+                          AppLocalizations.of(context)!.walletBalanceLabel,
                           walletBalance,
                           isNegativeBalance 
                               ? Colors.red 
@@ -496,7 +496,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: _buildCard(
-                          "Today's Due",
+                          AppLocalizations.of(context)!.todaysDueLabel,
                           todaysDue,
                           Colors.orange,
                         ),
@@ -587,7 +587,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 ),
                               ),
                               title: Text(
-                                tx.description,
+                                _getTransactionTitle(context, tx.description),
                                 style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                               subtitle: Text(
@@ -611,5 +611,22 @@ class _WalletScreenState extends State<WalletScreen> {
               ],
             ),
     );
+  }
+
+  String _getTransactionTitle(BuildContext context, String description) {
+    final loc = AppLocalizations.of(context)!;
+    if (description.startsWith("Commission for ride")) {
+      return description.replaceFirst("Commission for ride", loc.commissionForRide);
+    }
+    if (description.startsWith("Daily commission settlement")) {
+      return description.replaceFirst("Daily commission settlement", loc.dailyCommissionSettlement);
+    }
+    if (description.startsWith("Manual Firebase Deposit")) {
+      return description.replaceFirst("Manual Firebase Deposit", loc.manualFirebaseDeposit);
+    }
+    if (description.startsWith("Wallet Recharge (Razorpay)")) {
+      return description.replaceFirst("Wallet Recharge (Razorpay)", loc.walletRechargeDescription);
+    }
+    return description;
   }
 }

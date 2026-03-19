@@ -1058,6 +1058,24 @@ abstract class AppLocalizations {
   /// **'Wallet Recharge (Razorpay)'**
   String get walletRechargeDescription;
 
+  /// No description provided for @commissionForRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Commission for ride'**
+  String get commissionForRide;
+
+  /// No description provided for @dailyCommissionSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily commission settlement'**
+  String get dailyCommissionSettlement;
+
+  /// No description provided for @manualFirebaseDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Firebase Deposit'**
+  String get manualFirebaseDeposit;
+
   /// No description provided for @gpsNotReady.
   ///
   /// In en, this message translates to:

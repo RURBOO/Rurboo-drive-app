@@ -202,18 +202,25 @@ class _ProfileScreenBodyState extends State<_ProfileScreenBody> {
                                 children: [
                                    _buildStat(l10n.rating, vm.rating, Icons.star, Colors.amber),
                                   SizedBox(width: 1, height: 40, ),
-                                  _buildStat(l10n.rides, vm.totalRides, Icons.local_taxi, Colors.blue),
-                                  SizedBox(width: 1, height: 40, ),
-                                  _buildStat(
-                                    l10n.wallet, 
-                                    vm.earnings, 
-                                    Icons.account_balance_wallet, 
-                                    Colors.green,
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const WalletScreen()),
-                                    ),
-                                  ),
+                                   _buildStat(l10n.rides, vm.totalRides, Icons.local_taxi, Colors.blue),
+                                   const SizedBox(width: 1, height: 40,),
+                                   _buildStat(
+                                     "कमाई", 
+                                     vm.earnings, 
+                                     Icons.currency_rupee, 
+                                     Colors.orange,
+                                   ),
+                                   const SizedBox(width: 1, height: 40,),
+                                   _buildStat(
+                                     l10n.wallet, 
+                                     vm.walletBalance, 
+                                     Icons.account_balance_wallet, 
+                                     Colors.green,
+                                     onTap: () => Navigator.push(
+                                       context,
+                                       MaterialPageRoute(builder: (_) => const WalletScreen()),
+                                     ),
+                                   ),
                                 ],
                               ),
                             ).animate().fade(delay: 400.ms).slideY(begin: 0.2),

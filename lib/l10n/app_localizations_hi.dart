@@ -505,6 +505,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get walletRechargeDescription => 'वॉलेट रिचार्ज (रेज़रपे)';
 
   @override
+  String get commissionForRide => 'सवारी के लिए कमीशन';
+
+  @override
+  String get dailyCommissionSettlement => 'दैनिक कमीशन निपटान';
+
+  @override
+  String get manualFirebaseDeposit => 'मैन्युअल डिपॉजिट';
+
+  @override
   String get gpsNotReady => 'ऑनलाइन नहीं जा सकते: जीपीएस तैयार नहीं है';
 
   @override

@@ -505,6 +505,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletRechargeDescription => 'Wallet Recharge (Razorpay)';
 
   @override
+  String get commissionForRide => 'Commission for ride';
+
+  @override
+  String get dailyCommissionSettlement => 'Daily commission settlement';
+
+  @override
+  String get manualFirebaseDeposit => 'Manual Firebase Deposit';
+
+  @override
   String get gpsNotReady => 'Cannot go online: GPS not ready';
 
   @override

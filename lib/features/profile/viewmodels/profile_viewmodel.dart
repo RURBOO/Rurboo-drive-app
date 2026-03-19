@@ -23,6 +23,7 @@ class ProfileViewModel extends ChangeNotifier {
   String rating = "5.0";
   String totalRides = "0";
   String earnings = "0";
+  String walletBalance = "0";
   String joinDate = "";
   String driverId = "";
 
@@ -41,6 +42,9 @@ class ProfileViewModel extends ChangeNotifier {
       driverId = did;
       debugPrint("📍 DriverApp: Fetching profile for ID: $did");
 
+      // Start real-time listener for wallet balance
+      _listenToWallet(did);
+
       final doc = await FirebaseFirestore.instance
           .collection('drivers')
           .doc(did)
@@ -58,6 +62,11 @@ class ProfileViewModel extends ChangeNotifier {
         rating = r.toStringAsFixed(1);
 
         totalRides = SafeParser.toStr(data['totalRides'], fallback: "0");
+        
+        // Initial fetch of wallet balance
+        final dynamic rawWb = data['walletBalance'];
+        final double wb = SafeParser.toDouble(rawWb);
+        walletBalance = "₹${wb.toStringAsFixed(0)}";
 
         // Dynamic ride fetch fallback - Throttled/Safe
         try {
@@ -98,7 +107,9 @@ class ProfileViewModel extends ChangeNotifier {
             return tsB.compareTo(tsA);
           });
 
-          double totalToday = 0;
+          double totalTodayGross = 0;
+          double totalTodayCommission = 0;
+
           for (var rideDoc in sortedDocs) {
             final rideData = rideDoc.data() as Map<String, dynamic>;
             final rideStatus = (rideData['status'] as String? ?? '').toLowerCase();
@@ -113,12 +124,18 @@ class ProfileViewModel extends ChangeNotifier {
                    final fare = (rideData['finalFare'] as num?)?.toDouble() 
                                ?? (rideData['fare'] as num?)?.toDouble() 
                                ?? 0.0;
-                   totalToday += fare;
+                   totalTodayGross += fare;
+
+                   // Calculate commission (same logic as EarningsViewModel)
+                   final double comm = (rideData['commission'] as num?)?.toDouble() ?? (fare * 0.20);
+                   totalTodayCommission += comm;
                  }
                }
             }
           }
-          earnings = "₹${totalToday.toStringAsFixed(0)}";
+          
+          final double netProfit = totalTodayGross - totalTodayCommission;
+          earnings = "₹${netProfit.toStringAsFixed(0)}";
           
           // Count all rides that have a fare (regardless of exact status string)
           final completedRides = sortedDocs.where((d) {
@@ -132,10 +149,6 @@ class ProfileViewModel extends ChangeNotifier {
           debugPrint("📍 DriverApp: Today's earnings calculation failed: $e");
           earnings = "₹0";
         }
-
-        SafeParser.toDouble(data['walletBalance']);
-        // walletBalance is already handled by the Wallet section if needed, 
-        // but here we keep earnings as today's gross income.
 
         profileImageBase64 = data['profileImage'];
         licenseImageBase64 = data['licenseImage'];
@@ -165,6 +178,21 @@ class ProfileViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void _listenToWallet(String did) {
+    FirebaseFirestore.instance
+        .collection('drivers')
+        .doc(did)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        final data = snapshot.data()!;
+        final double wb = SafeParser.toDouble(data['walletBalance']);
+        walletBalance = "₹${wb.toStringAsFixed(0)}";
+        notifyListeners();
+      }
+    });
   }
 
   String _getMonth(int month) {
