@@ -31,7 +31,7 @@ class EarningsRepository {
           data['amount'] = (data['finalFare'] as num?)?.toDouble() 
                          ?? (data['fare'] as num?)?.toDouble() 
                          ?? 0.0;
-          data['commission'] = (data['commission'] as num?)?.toDouble() ?? (data['amount'] * 0.20);
+          data['commission'] = (data['commission'] as num?)?.toDouble() ?? (data['amount'] * 0.10);
           return data;
         })
         .toList();

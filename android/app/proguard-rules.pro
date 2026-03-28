@@ -45,3 +45,7 @@
 -dontwarn com.google.android.play.core.tasks.**
 -dontwarn com.google.android.play.core.**
 
+# Flutter Local Notifications
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class com.google.firebase.messaging.FirebaseMessagingService { *; }
+

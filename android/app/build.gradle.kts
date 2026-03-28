@@ -77,6 +77,8 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies.
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.android.play:integrity:1.6.0")
 }
 

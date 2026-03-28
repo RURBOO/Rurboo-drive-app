@@ -89,7 +89,7 @@ class EarningsViewModel extends ChangeNotifier {
         final double gross = (data['finalFare'] as num?)?.toDouble() 
                            ?? (data['fare'] as num?)?.toDouble() 
                            ?? 0.0;
-        final double comm = (data['commission'] as num?)?.toDouble() ?? (gross * 0.20);
+        final double comm = (data['commission'] as num?)?.toDouble() ?? (gross * 0.10);
 
         // Add to history list regardless of status (show all rides)
         if (rideHistory.length < 10 && gross > 0) {

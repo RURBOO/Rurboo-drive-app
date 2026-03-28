@@ -121,7 +121,7 @@ class NotificationService {
       visibility: NotificationVisibility.public,
       ongoing: true, // Mark as ongoing for higher priority background persistence
       autoCancel: false, // Don't auto-cancel immediately
-      timeoutAfter: 10000, // 30 seconds for persistent alert window
+      timeoutAfter: 20000, // 30 seconds for persistent alert window
       additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: loops sound until dismissed
     );
 

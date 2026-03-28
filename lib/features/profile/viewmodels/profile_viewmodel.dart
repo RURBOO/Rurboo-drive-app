@@ -127,7 +127,7 @@ class ProfileViewModel extends ChangeNotifier {
                    totalTodayGross += fare;
 
                    // Calculate commission (same logic as EarningsViewModel)
-                   final double comm = (rideData['commission'] as num?)?.toDouble() ?? (fare * 0.20);
+                   final double comm = (rideData['commission'] as num?)?.toDouble() ?? (fare * 0.10);
                    totalTodayCommission += comm;
                  }
                }
