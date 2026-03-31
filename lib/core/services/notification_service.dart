@@ -10,27 +10,39 @@ import 'driver_preferences.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint("🌙 Background Message: ${message.notification?.title}");
-  
-  // Directly show local notification from background handler
+
   final notification = message.notification;
   if (notification != null) {
-     final service = NotificationService();
-     
-     // CRITICAL FIX: Initialize local notifications in the background isolate
-     const AndroidInitializationSettings androidSettings =
-         AndroidInitializationSettings('@drawable/ic_stat_notify');
-     const DarwinInitializationSettings iosSettings =
-         DarwinInitializationSettings();
-     await service._localNotifications.initialize(
-       const InitializationSettings(android: androidSettings, iOS: iosSettings),
-     );
-     
-     // Show custom ringing alarm instead of default silent FCM notification
-     await service.showLocalNotification(
-       title: notification.title ?? "New Ride Request!",
-       body: notification.body ?? "Check the app for details.",
-     );
+    final service = NotificationService();
+
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@drawable/ic_stat_notify');
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings();
+    await service._localNotifications.initialize(
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
+    );
+
+    // CRITICAL: Channel must be created in background isolate
+    // Android 8+ silently drops notifications if channel doesn't exist here
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'ride_request_channel',
+      'Ride Alerts',
+      description: 'High priority alerts for new rides',
+      importance: Importance.max,
+      playSound: true,
+      sound: const RawResourceAndroidNotificationSound('alert_sound'),
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList(const [0, 1000, 500, 1000, 500, 1000]), // ✅ Added
+    );
+    await service._localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    await service.showLocalNotification(
+      title: notification.title ?? "New Ride Request!",
+      body: notification.body ?? "Check the app for details.",
+    );
   }
 }
 
@@ -74,19 +86,12 @@ class NotificationService {
       sound: const RawResourceAndroidNotificationSound('alert_sound'),
       enableVibration: true,
       vibrationPattern: Int64List.fromList(const [
-        0,
-        1000,
-        500,
-        1000,
-        500,
-        1000,
+        0, 1000, 500, 1000, 500, 1000,
       ]),
     );
 
     await _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -100,8 +105,6 @@ class NotificationService {
     _fcm.onTokenRefresh.listen(_updateTokenInFirestore);
   }
 
-
-  
   Future<void> showLocalNotification({
     required String title,
     required String body,
@@ -119,10 +122,10 @@ class NotificationService {
       fullScreenIntent: true,
       category: AndroidNotificationCategory.call,
       visibility: NotificationVisibility.public,
-      ongoing: true, // Mark as ongoing for higher priority background persistence
-      autoCancel: false, // Don't auto-cancel immediately
-      timeoutAfter: 20000, // 30 seconds for persistent alert window
-      additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: loops sound until dismissed
+      ongoing: true,
+      autoCancel: false,
+      timeoutAfter: 20000, // ✅ 20 seconds
+      additionalFlags: Int32List.fromList([4]),
     );
 
     final NotificationDetails details = NotificationDetails(
@@ -130,7 +133,7 @@ class NotificationService {
     );
 
     await _localNotifications.show(
-      0, // Static ID for ride requests to avoid clutter but allow replacement
+      0,
       title,
       body,
       details,

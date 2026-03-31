@@ -208,11 +208,18 @@ class RegistrationViewModel extends ChangeNotifier {
     try {
       final String cleanPhone = phoneController.text.trim();
       
-      // Upload images to Firebase Storage instead of converting to Base64
-      final String? licenseUrl = await _uploadImageToStorage(licenseFile, uid, 'license');
-      final String? rcUrl = await _uploadImageToStorage(registrationFile, uid, 'rc');
-      final String? profileUrl = await _uploadImageToStorage(profileFile, uid, 'profile');
-      final String? vehicleUrl = await _uploadImageToStorage(vehicleImageFile, uid, 'vehicle');
+      // Upload ALL images in PARALLEL instead of sequentially - ~4x faster
+      final results = await Future.wait([
+        _uploadImageToStorage(licenseFile, uid, 'license'),
+        _uploadImageToStorage(registrationFile, uid, 'rc'),
+        _uploadImageToStorage(profileFile, uid, 'profile'),
+        _uploadImageToStorage(vehicleImageFile, uid, 'vehicle'),
+      ]);
+
+      final String? licenseUrl = results[0];
+      final String? rcUrl = results[1];
+      final String? profileUrl = results[2];
+      final String? vehicleUrl = results[3];
 
       if (licenseUrl == null || rcUrl == null || profileUrl == null) {
         throw Exception("Failed to upload images to Storage. Please try again.");

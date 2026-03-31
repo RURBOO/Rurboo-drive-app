@@ -15,7 +15,29 @@ class DocumentUploadScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.uploadDocsTitle)),
       body: vm.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: Colors.green),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Uploading documents...\nPlease wait",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Do not close the app",
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            )
           : ListView(
               padding: const EdgeInsets.all(24),
               children: [
